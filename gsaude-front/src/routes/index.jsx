@@ -5,12 +5,26 @@ import Login from '../pages/login/login';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Home />,
+    element: <Login />,
   },
   {
     path: '/login',
     element: <Login />,
   },
+  {
+    path: '/home',
+    element: <Home />,
+    children: [
+      {
+        path: '/home',
+        element: <Marcacao />,
+      },
+      {
+        path: '/home/cadastros',
+        element: <Cadastros />,
+      },
+    ],
+  }
 ]);
 
 export default router;

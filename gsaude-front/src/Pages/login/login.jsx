@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Logo from '../../assets/logoGSaude.png';
 import PersonIcon from '@mui/icons-material/Person';
 import LoginIcon from '@mui/icons-material/Login';
@@ -7,21 +8,23 @@ import './login.css';
 
 function Login() {
   const [form, setForm] = useState({ usuario: '', senha: '' });
+  const navigate = useNavigate();
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    alert('Login realizado!');
-  }
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    // ...lógica de autenticação...
+    navigate('/home'); // Redireciona para a página home
+  };
 
   return (
     <div className="background">
       <div className="login-container">
         <img src={Logo} alt="Logo GSaude" style={{ width: 200, marginBottom: 24 }} />
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleLogin}>
           <div className='input-icon'>
             <PersonIcon />
             <input

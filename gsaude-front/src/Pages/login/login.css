@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: linear-gradient(to bottom, #ffffff 0%, #e2e2e2 100%);
 }
 
 .login-container {
