@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import AppBar from '@mui/material/AppBar';
@@ -12,11 +12,30 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import './home.css';
-import ListComponent from './list';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
+import SettingsIcon from '@mui/icons-material/Settings';
+
+// const drawerWidth = 240;
 
 function Home() {
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    // Limpar contexto do usuário se necessário
+    navigate('/login');
+  }
+
+  function handleMarcacao() {
+    navigate('/home');
+  }
+
+  function handleCadastro() {
+    navigate('/home/cadastros');
+  }
+
   return (
     <Box className="home-vertical-root">
       <CssBaseline />
@@ -35,17 +54,48 @@ function Home() {
           className="home-drawer"
           classes={{ paper: 'home-drawer-paper' }}
         >
-          <Toolbar />
-          <Box className="home-drawer-content">
-            <ListComponent />
-            <Divider />
+        <Toolbar />
+        <Box className="home-drawer-content">
+          {/*<Box className="home-drawer-content" style={{display: 'flex', flexDirection: 'column', height: '100%'}}>*/}
+            <div>
+              <List>
+                <ListItem disablePadding>
+                  <ListItemButton onClick={handleMarcacao}>
+                    <ListItemIcon>
+                      <AssignmentIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Marcação" />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton onClick={handleCadastro}>
+                    <ListItemIcon>
+                      <PersonAddIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Cadastro" />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+              <Divider />
+              <List>
+              <ListItem disablePadding>
+                <ListItemButton onClick={handleLogout}>
+                  <ListItemIcon>
+                    <SettingsIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Configurações" />
+                </ListItemButton>
+              </ListItem>
+              </List>
+            </div>
+            <div className="home-drawer-spacer" />
             <List>
-              <ListItem key={1} disablePadding>
-                <ListItemButton>
+              <ListItem disablePadding>
+                <ListItemButton onClick={handleLogout} className="logout-btn">
                   <ListItemIcon>
                     <InboxIcon />
                   </ListItemIcon>
-                  <ListItemText primary={"Deslogar"} />
+                  <ListItemText primary="Deslogar" />
                 </ListItemButton>
               </ListItem>
             </List>

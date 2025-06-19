@@ -84,9 +84,14 @@
 }
 
 .home-drawer-content {
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   background-color: #3399ff;
+}
+
+.home-drawer-spacer {
+  flex-grow: 1;
 }
 
 .home-main {
@@ -94,4 +99,15 @@
   padding: 24px;
   background: #fff;
   min-height: 100%;
+}
+
+/* Botão de deslogar: ícone e texto vermelhos ao hover */
+.home-drawer-paper .MuiListItemButton-root.logout-btn:hover,
+.home-drawer-paper .MuiListItemButton-root.logout-btn:hover .MuiListItemIcon-root,
+.home-drawer-paper .MuiListItemButton-root.logout-btn:hover .MuiListItemText-root {
+  color: #e53935 !important; /* vermelho */
+}
+
+.home-drawer-paper .MuiListItemButton-root.logout-btn:hover {
+  background-color: #fff0f0;
 }
