@@ -17,11 +17,12 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import './home.css';
 import { Outlet, useNavigate } from 'react-router-dom';
 import SettingsIcon from '@mui/icons-material/Settings';
-
+import ConfigDialog from '../../components/ConfigDialog';
 // const drawerWidth = 240;
 
 function Home() {
   const navigate = useNavigate();
+  const [openConfig, setOpenConfig] = React.useState(false);
 
   function handleLogout() {
     // Limpar contexto do usuário se necessário
@@ -34,6 +35,14 @@ function Home() {
 
   function handleCadastro() {
     navigate('/home/cadastros');
+  }
+
+  function handleOpenConfig() {
+    setOpenConfig(true);
+  }
+
+  function handleCloseConfig() {
+    setOpenConfig(false);
   }
 
   return (
@@ -79,13 +88,14 @@ function Home() {
               <Divider />
               <List>
               <ListItem disablePadding>
-                <ListItemButton onClick={handleLogout}>
+                <ListItemButton onClick={handleOpenConfig}>
                   <ListItemIcon>
                     <SettingsIcon />
                   </ListItemIcon>
                   <ListItemText primary="Configurações" />
                 </ListItemButton>
               </ListItem>
+              <ConfigDialog open={openConfig} onClose={handleCloseConfig} />
               </List>
             </div>
             <div className="home-drawer-spacer" />
