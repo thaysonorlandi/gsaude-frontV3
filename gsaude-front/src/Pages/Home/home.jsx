@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import AppBar from '@mui/material/AppBar';
@@ -12,40 +12,48 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
-import './home.css'; // Import your CSS file for styling
-
-// utils
+import './home.css';
+import ListComponent from './list';
 import { Outlet } from 'react-router-dom';
-
-const drawerWidth = 240;
 
 function Home() {
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box className="home-vertical-root">
       <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div">
-            Clipped drawer
+      {/* AppBar fixo no topo */}
+      <AppBar position="static" className="home-appbar">
+        <Toolbar className="home-toolbar">
+          <Typography variant="h6" noWrap component="div" className="home-title">
+            Agendamento de Consultas e Exames
           </Typography>
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-        }}
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
+      {/* Conteúdo abaixo do AppBar */}
+      <Box className="home-content-row">
+        <Drawer
+          variant="permanent"
+          className="home-drawer"
+          classes={{ paper: 'home-drawer-paper' }}
+        >
+          <Toolbar />
+          <Box className="home-drawer-content">
+            <ListComponent />
+            <Divider />
+            <List>
+              <ListItem key={1} disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <InboxIcon />
+                  </ListItemIcon>
+                  <ListItemText primary={"Deslogar"} />
+                </ListItemButton>
+              </ListItem>
+            </List>
+          </Box>
+        </Drawer>
+        <Box component="main" className="home-main">
+          <Outlet />
         </Box>
-      </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Toolbar />
-        <Outlet />
       </Box>
     </Box>
   );

@@ -1,25 +1,97 @@
-.container {
-    display: flex;
-    align-items: center;
-    flex-direction: column ;
-    padding-top: 100px;
+/* Para botões da lista */
+.list-button {
+  background: #4da6ff;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 8px;
 }
 
-.h1 {
-    font-size: 32px;
-    color: #f1dfdf;
+/* Efeito ao passar o mouse, igual ao botão de login */
+.list-button:hover {
+  background-color: #4da6ff;
 }
 
-.form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    gap: 20px;
-    padding: 30px;
-    border-radius: 30px;
-    background-color: #f1dfdf;
-    max-width: 50%;
-    width: 400px;
-    margin-bottom: 20px;
+.home-vertical-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #1976d2;
+}
+
+.home-appbar {
+  z-index: 1201; /* valor padrão do MUI para drawer + 1 */
+  display: fixed;
+}
+
+.home-toolbar {
+  background-color: #1976d2;
+}
+
+.home-title {
+  flex-grow: 1;
+  background-color: #1976d2;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.home-content-row {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.home-drawer {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.home-drawer-paper {
+  width: 240px;
+  box-sizing: border-box;
+  background-color: #3399ff;
+  color: #fff;
+}
+
+.home-drawer-paper .MuiListItemButton-root {
+  background-color: #3399ff;
+  color: #fff;
+  border-radius: 8px;
+  margin: 4px 8px;
+  transition: background 0.2s;
+}
+
+/* Cor ao passar o mouse */
+.home-drawer-paper .MuiListItemButton-root:hover {
+  background-color: #1976d2;
+  color: #ffd700;
+}
+
+/* Cor dos ícones laterais */
+.home-drawer-paper .MuiListItemIcon-root {
+  color: #fff; /* branco */
+}
+
+
+/* Se quiser mudar ao passar o mouse no botão */
+.home-drawer-paper .MuiListItemButton-root:hover .MuiListItemIcon-root {
+  color: #ffd700;
+}
+
+.home-drawer-content {
+  overflow: auto;
+  height: 100%;
+  background-color: #3399ff;
+}
+
+.home-main {
+  flex-grow: 1;
+  padding: 24px;
+  background: #fff;
+  min-height: 100%;
 }
