@@ -29,7 +29,7 @@ function Home() {
     navigate('/login');
   }
 
-  function handleMarcacao() {
+  function handleAgendamento() {
     navigate('/home');
   }
 
@@ -69,11 +69,11 @@ function Home() {
             <div>
               <List>
                 <ListItem disablePadding>
-                  <ListItemButton onClick={handleMarcacao}>
+                  <ListItemButton onClick={handleAgendamento}>
                     <ListItemIcon>
                       <AssignmentIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Marcação" />
+                    <ListItemText primary="Agendamento" />
                   </ListItemButton>
                 </ListItem>
                 <ListItem disablePadding>

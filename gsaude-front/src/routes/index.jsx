@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Home from '../pages/home/home';
 import Login from '../pages/login/login';
-import Marcacao from '../pages/marcacao/marcacao';
+import Agendamento from '../pages/agendamento/Agendamento';
 import Cadastros from '../pages/cadastros/cadastros';
 
 const router = createBrowserRouter([
@@ -19,7 +19,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/home',
-        element: <Marcacao />,
+        element: <Agendamento />,
       },
       {
         path: '/home/cadastros',
