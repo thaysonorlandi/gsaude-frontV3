@@ -1,114 +1,125 @@
-/* Para botões da lista */
+/* Estiliza os botões da lista lateral */
 .list-button {
-  background: #34495e;
-  border: none;
-  width: 100%;
-  text-align: left;
-  padding: 12px 16px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  border-radius: 8px;
+  background: #34495e;           /* Cor de fundo azul escuro */
+  border: none;                  /* Remove a borda padrão */
+  width: 100%;                   /* Ocupa toda a largura do container */
+  text-align: left;              /* Alinha o texto à esquerda */
+  padding: 12px 16px;            /* Espaçamento interno (vertical, horizontal) */
+  font-size: 1rem;               /* Tamanho da fonte padrão */
+  cursor: pointer;               /* Cursor de mão ao passar o mouse */
+  transition: background 0.2s;   /* Suaviza a transição da cor de fundo */
+  border-radius: 8px;            /* Bordas arredondadas */
 }
 
-/* Efeito ao passar o mouse, igual ao botão de login */
+/* Efeito ao passar o mouse sobre o botão da lista */
 .list-button:hover {
-  background-color: #34495e;
+  background-color: #34495e;     /* Mantém a mesma cor de fundo ao hover */
 }
 
+/* Container principal da página home, vertical */
 .home-vertical-root {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #34495e;
+  display: flex;                 /* Usa flexbox */
+  flex-direction: column;        /* Direção vertical */
+  height: 100vh;                 /* Altura total da tela */
+  background-color: #34495e;     /* Cor de fundo azul escuro */
 }
 
+/* Barra superior (appbar) da home */
 .home-appbar {
-  z-index: 1201; /* valor padrão do MUI para drawer + 1 */
-  display: fixed;
-  background: #2C3E50 !important;
+  z-index: 1201;                 /* Fica acima do drawer (padrão MUI +1) */
+  position: fixed;                /* (Provavelmente deveria ser position: fixed) */
+  background: #2C3E50 !important;/* Cor de fundo da appbar, sobrescrevendo outros estilos */          /* Espaço para não sobrepor o conteúdo abaixo */
 }
 
+/* Barra de ferramentas dentro da appbar */
 .home-toolbar {
-  background-color: #34495e;
+  background-color: #34495e;     /* Cor de fundo igual ao restante */
 }
 
+/* Título da home */
 .home-title {
-  flex-grow: 1;
-  background-color: #34495e;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 8px;
+  flex-grow: 1;                  /* Ocupa o espaço disponível */
+  background-color: #34495e;     /* Cor de fundo */
+  color: #fff;                   /* Cor do texto branca */
+  padding: 8px 16px;             /* Espaçamento interno */
+  border-radius: 8px;            /* Bordas arredondadas */
 }
 
+/* Linha de conteúdo principal (lado a lado) */
 .home-content-row {
-  display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
+  display: flex;                 /* Flexbox para alinhar drawer e conteúdo */
+  flex: 1 1 auto;                /* Cresce e encolhe conforme necessário */
+  min-height: 0;                 /* Permite encolher até altura zero */
 }
 
+/* Drawer lateral */
 .home-drawer {
   width: 240px;
   flex-shrink: 0;
 }
 
+/* Papel do drawer (área interna) */
 .home-drawer-paper {
-  width: 240px;
-  box-sizing: border-box;
-  background-color: #243447;
-  color: #fff;
+  width: 240px;                  /* Largura igual ao drawer */
+  box-sizing: border-box;        /* Inclui borda e padding no tamanho */
+  background-color: #243447;     /* Cor de fundo mais escura */
+  color: #fff;                   /* Texto branco */
 }
 
+/* Botões da lista dentro do drawer */
 .home-drawer-paper .MuiListItemButton-root {
-  background-color: #34495e;
-  color: #fff;
-  border-radius: 8px;
-  margin: 4px 8px;
-  transition: background 0.2s;
+  background-color: #34495e;     /* Cor de fundo */
+  color: #fff;                   /* Texto branco */
+  border-radius: 8px;            /* Bordas arredondadas */
+  margin: 4px 8px;               /* Espaçamento externo */
+  transition: background 0.2s;   /* Suaviza a transição da cor de fundo */
 }
 
-/* Cor ao passar o mouse */
+/* Efeito ao passar o mouse nos botões do drawer */
 .home-drawer-paper .MuiListItemButton-root:hover {
-  background-color: #1976d2;
-  color: #ffd700;
+  background-color: #1976d2;     /* Cor de fundo azul mais clara */
+  color: #ffd700;                /* Texto amarelo */
 }
 
-/* Cor dos ícones laterais */
+/* Cor dos ícones dos itens do drawer */
 .home-drawer-paper .MuiListItemIcon-root {
-  color: #fff; /* branco */
+  color: #fff;                   /* Ícones brancos */
 }
 
-
-/* Se quiser mudar ao passar o mouse no botão */
+/* Ícone fica amarelo ao passar o mouse no botão */
 .home-drawer-paper .MuiListItemButton-root:hover .MuiListItemIcon-root {
-  color: #ffd700;
+  color: #ffd700;                /* Ícone amarelo */
 }
 
+/* Conteúdo interno do drawer */
 .home-drawer-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: #34495e;
+  display: flex;                 /* Flexbox */
+  flex-direction: column;        /* Direção vertical */
+  height: 100%;                  /* Altura total */
+  background-color: #34495e;     /* Cor de fundo */
 }
 
+/* Espaçador para empurrar itens para baixo */
 .home-drawer-spacer {
-  flex-grow: 1;
+  flex-grow: 1;                  /* Ocupa o espaço restante */
 }
 
+/* Conteúdo principal da página */
 .home-main {
-  flex-grow: 1;
-  background: #fff;
-  min-height: 100%;
-  height: 100%;
+  flex-grow: 1;                  /* Ocupa o espaço disponível */
+  background: #fff;              /* Fundo branco */
+  min-height: 100%;              /* Altura mínima total */
+  height: 100%;                  /* Altura total */
 }
 
-/* Botão de deslogar: ícone e texto vermelhos ao hover */
+/* Botão de logout: ícone e texto vermelhos ao hover */
 .home-drawer-paper .MuiListItemButton-root.logout-btn:hover,
 .home-drawer-paper .MuiListItemButton-root.logout-btn:hover .MuiListItemIcon-root,
 .home-drawer-paper .MuiListItemButton-root.logout-btn:hover .MuiListItemText-root {
-  color: #e53935 !important; /* vermelho */
+  color: #e53935 !important;     /* Vermelho */
 }
 
+/* Fundo do botão de logout ao hover */
 .home-drawer-paper .MuiListItemButton-root.logout-btn:hover {
-  background-color: #fff0f0;
+  background-color: #fff0f0;     /* Fundo vermelho claro */
 }

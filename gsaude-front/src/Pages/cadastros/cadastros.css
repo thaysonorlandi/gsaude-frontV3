@@ -1,0 +1,29 @@
+.cadastro-container {
+  max-width: 700px;
+  margin: 32px auto;
+  padding: 16px;
+}
+
+.cadastro-paper {
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(44, 62, 80, 0.08);
+  background: #fff;
+}
+
+.cadastro-form-control {
+  margin-bottom: 20px;
+}
+
+.cadastro-btn-box {
+  margin-top: 24px;
+  text-align: right;
+}
+
+.cadastro-listas {
+  margin-top: 32px;
+}
+
+.cadastro-lista-titulo {
+  margin-top: 20px;
+}
