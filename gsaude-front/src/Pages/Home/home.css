@@ -110,6 +110,8 @@
   background: #fff;              /* Fundo branco */
   min-height: 100%;              /* Altura mínima total */
   height: 100%;                  /* Altura total */
+  overflow-y: auto;         /* Rolagem vertical se necessário */
+  
 }
 
 /* Botão de logout: ícone e texto vermelhos ao hover */
