@@ -18,6 +18,7 @@ import './home.css';
 import { Outlet, useNavigate } from 'react-router-dom';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ConfigDialog from '../../components/ConfigDialog';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 // const drawerWidth = 240;
 
 function Home() {
@@ -31,6 +32,10 @@ function Home() {
 
   function handleAgendamento() {
     navigate('/home');
+  }
+
+  function handleAgendados() {
+    navigate('/home/agendados');
   }
 
   function handleCadastro() {
@@ -76,7 +81,18 @@ function Home() {
                     <ListItemText primary="Agendamento" />
                   </ListItemButton>
                 </ListItem>
-                <ListItem disablePadding>
+                 <ListItem disablePadding>
+                  <ListItemButton onClick={handleAgendados}>
+                    <ListItemIcon>
+                      <CalendarMonthIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Horários Reservados" />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+              <Divider />
+              <List>
+               <ListItem disablePadding>
                   <ListItemButton onClick={handleCadastro}>
                     <ListItemIcon>
                       <PersonAddIcon />
@@ -84,9 +100,6 @@ function Home() {
                     <ListItemText primary="Cadastro" />
                   </ListItemButton>
                 </ListItem>
-              </List>
-              <Divider />
-              <List>
               <ListItem disablePadding>
                 <ListItemButton onClick={handleOpenConfig}>
                   <ListItemIcon>
