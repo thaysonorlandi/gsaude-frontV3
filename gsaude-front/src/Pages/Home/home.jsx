@@ -15,23 +15,26 @@ import InboxIcon from '@mui/icons-material/MoveToInbox';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import './home.css';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ConfigDialog from '../../components/ConfigDialog';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-// const drawerWidth = 240;
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
 
 function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [openConfig, setOpenConfig] = React.useState(false);
+  const [openConfirm, setOpenConfirm] = React.useState(false);
+  const [pendingNavigation, setPendingNavigation] = React.useState(null);
+  const [emProcessoAgendamento, setEmProcessoAgendamento] = React.useState(false);
 
   function handleLogout() {
-    // Limpar contexto do usuário se necessário
     navigate('/login');
-  }
-
-  function handleAgendamento() {
-    navigate('/home');
   }
 
   function handleAgendados() {
@@ -48,6 +51,29 @@ function Home() {
 
   function handleCloseConfig() {
     setOpenConfig(false);
+  }
+
+  // Handler genérico para qualquer navegação
+  function handleMenuNavigation(path) {
+    if (emProcessoAgendamento && location.pathname !== path) {
+      setOpenConfirm(true);
+      setPendingNavigation(path);
+    } else {
+      navigate(path);
+    }
+  }
+
+  function handleConfirmYes() {
+    setOpenConfirm(false);
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+      setPendingNavigation(null);
+    }
+  }
+
+  function handleConfirmNo() {
+    setOpenConfirm(false);
+    setPendingNavigation(null);
   }
 
   return (
@@ -68,21 +94,20 @@ function Home() {
           className="home-drawer"
           classes={{ paper: 'home-drawer-paper' }}
         >
-        <Toolbar />
-        <Box className="home-drawer-content">
-          {/*<Box className="home-drawer-content" style={{display: 'flex', flexDirection: 'column', height: '100%'}}>*/}
+          <Toolbar />
+          <Box className="home-drawer-content">
             <div>
               <List>
                 <ListItem disablePadding>
-                  <ListItemButton onClick={handleAgendamento}>
+                  <ListItemButton onClick={() => handleMenuNavigation('/home')}>
                     <ListItemIcon>
                       <AssignmentIcon />
                     </ListItemIcon>
                     <ListItemText primary="Agendamento" />
                   </ListItemButton>
                 </ListItem>
-                 <ListItem disablePadding>
-                  <ListItemButton onClick={handleAgendados}>
+                <ListItem disablePadding>
+                  <ListItemButton onClick={() => handleMenuNavigation('/home/agendados')}>
                     <ListItemIcon>
                       <CalendarMonthIcon />
                     </ListItemIcon>
@@ -92,23 +117,23 @@ function Home() {
               </List>
               <Divider />
               <List>
-               <ListItem disablePadding>
-                  <ListItemButton onClick={handleCadastro}>
+                <ListItem disablePadding>
+                  <ListItemButton onClick={() => handleMenuNavigation('/home/cadastros')}>
                     <ListItemIcon>
                       <PersonAddIcon />
                     </ListItemIcon>
                     <ListItemText primary="Cadastro" />
                   </ListItemButton>
                 </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton onClick={handleOpenConfig}>
-                  <ListItemIcon>
-                    <SettingsIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Configurações" />
-                </ListItemButton>
-              </ListItem>
-              <ConfigDialog open={openConfig} onClose={handleCloseConfig} />
+                <ListItem disablePadding>
+                  <ListItemButton onClick={handleOpenConfig}>
+                    <ListItemIcon>
+                      <SettingsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Configurações" />
+                  </ListItemButton>
+                </ListItem>
+                <ConfigDialog open={openConfig} onClose={handleCloseConfig} />
               </List>
             </div>
             <div className="home-drawer-spacer" />
@@ -125,9 +150,26 @@ function Home() {
           </Box>
         </Drawer>
         <Box component="main" className="home-main">
-          <Outlet />
+          <Outlet context={{ setEmProcessoAgendamento }} />
         </Box>
       </Box>
+      {/* Diálogo de confirmação para descartar agendamento */}
+      <Dialog open={openConfirm} onClose={handleConfirmNo}>
+        <DialogTitle>Descartar Agendamento?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Deseja sair e descartar o agendamento que está sendo realizado?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleConfirmNo} color="primary">
+            Não
+          </Button>
+          <Button onClick={handleConfirmYes} color="error" variant="contained">
+            Sim
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
