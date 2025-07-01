@@ -106,9 +106,10 @@
 
 /* Conteúdo principal da página */
 .home-main {
-  flex-grow: 1;                  /* Ocupa o espaço disponível */
+  justify-content: center;
+  flex-grow: 1;              /* Ocupa o espaço disponível */
   background: #fff;              /* Fundo branco */
-  min-height: 100%;              /* Altura mínima total */
+  min-height: 100%;           /* Altura mínima total */
   height: 100%;                  /* Altura total */
   overflow-y: auto;         /* Rolagem vertical se necessário */
   

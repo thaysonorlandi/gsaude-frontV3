@@ -1,0 +1,106 @@
+.agenda-container {
+  max-width: 1000px;
+  margin: 32px auto;
+}
+
+.agenda-paper {
+  padding: 32px;
+}
+
+.agenda-filtros {
+  margin-bottom: 24px;
+}
+
+.agenda-filtros > .MuiGrid-item {
+  margin-bottom: 0;
+}
+
+.agenda-calendario-row {
+  margin-top: 32px;
+}
+
+.agenda-calendar {
+  width: 100%;
+  min-width: 400px;
+  min-height: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.agenda-calendar-list {
+  margin-bottom: 16px;
+}
+
+.agenda-legenda {
+  margin-top: 16px;
+}
+
+.agenda-titulo-dia {
+  margin-bottom: 16px;
+}
+
+.agenda-nenhum {
+  margin-left: 16px;
+  color: #888;
+}
+
+.custom-day-box {
+  position: relative;
+}
+
+.custom-day-eventos {
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+}
+
+.dot-consulta {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #1976d2;
+  border: 1px solid #fff;
+  display: inline-block;
+}
+
+.dot-exame {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #43a047;
+  border: 1px solid #fff;
+  display: inline-block;
+}
+
+.agenda-toggle-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.agenda-toggle-group-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  height: 100%;
+  gap: 16px;
+}
+
+.agenda-toggle-group-right .MuiToggleButtonGroup-root {
+  flex-direction: column;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .agenda-calendar {
+    min-width: 300px;
+  }
+  .agenda-toggle-group-right {
+    align-items: flex-start;
+    margin-top: 16px;
+  }
+}

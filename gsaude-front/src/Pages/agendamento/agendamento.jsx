@@ -57,51 +57,50 @@ const horariosExemplo = [
     diaSemana: "Sáb",
     horarios: ["08:00", "08:20", "08:40"],
   },
+  {
+    data: "21/02/21",
+    diaSemana: "Dom",
+    horarios: ["10:00", "10:20", "10:40"],
+  },
+  {
+    data: "22/02/21",
+    diaSemana: "Seg",
+    horarios: ["11:00", "10:20", "10:40"],
+  },
   // ...outros dias
 ];
+const FORMULARIO_INICIAL = {
+  filial: "Hospital São Roque",
+  paciente: "",
+  tipo: "",
+  especialidade: "",
+  medico: "",
+  data: "",
+  hora: "",
+};
 
 export default function Agendamento() {
   const location = useLocation();
   const { resetAgendamento, setEmProcessoAgendamento } = useOutletContext();
   const [activeStep, setActiveStep] = useState(0);
-  const [form, setForm] = React.useState({
-    paciente: "",
-    tipo: "",
-    especialidade: "",
-    medico: "",
-    data: "",
-    hora: "",
-  });
+  const [form, setForm] = React.useState(FORMULARIO_INICIAL);
   const [horarioSelecionado, setHorarioSelecionado] = useState({});
   const [open, setOpen] = useState(false);
   const [showMsg, setShowMsg] = useState(false);
   const [dadosAgendamento, setDadosAgendamento] = useState(null);
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const navigate = useNavigate();
 
   // Sempre que acessar /home, reseta o formulário e etapa
   useEffect(() => {
     if (location.pathname === "/home") {
-      setForm({
-        paciente: "",
-        tipo: "",
-        especialidade: "",
-        medico: "",
-        data: "",
-        hora: "",
-      });
+      setForm(FORMULARIO_INICIAL);
       setActiveStep(0);
     }
   }, [location.pathname]);
 
   useEffect(() => {
-    setForm({
-      paciente: "",
-      tipo: "",
-      especialidade: "",
-      medico: "",
-      data: "",
-      hora: "",
-    });
+    setForm(FORMULARIO_INICIAL);
     setActiveStep(0);
   }, [resetAgendamento]);
 
@@ -140,8 +139,6 @@ export default function Agendamento() {
     }
   };
 
-  const handleNext = () => setActiveStep((prev) => prev + 1);
-
   const handleFinalizar = (e) => {
     e.preventDefault();
     setDadosAgendamento(form);
@@ -152,14 +149,7 @@ export default function Agendamento() {
     setOpen(false);
     setShowMsg(true);
     // Limpa o formulário e reseta etapas
-    setForm({
-      paciente: "",
-      tipo: "",
-      especialidade: "",
-      medico: "",
-      data: "",
-      hora: "",
-    });
+    setForm(FORMULARIO_INICIAL);
     setActiveStep(0);
     setTimeout(() => {
       setShowMsg(false);
@@ -168,46 +158,42 @@ export default function Agendamento() {
   };
 
   function handleCancelar() {
-    setForm({
-      paciente: "",
-      tipo: "",
-      especialidade: "",
-      medico: "",
-      data: "",
-      hora: "",
-    });
-    setActiveStep(0);
-    // Aqui você pode limpar estados se necessário
-    navigate("/home"); // Redireciona para a página de agendamento
+    setOpenCancelDialog(true);
   }
 
-  // Função para validar campos obrigatórios da etapa atual
-  function isStepValid() {
-    if (activeStep === 0) {
-      // Exemplo: etapa 1 exige médico e tipo
-      return form.medico && form.procedimento;
-    }
-    if (activeStep === 1) {
-      // Exemplo: etapa 2 data e hora
-      return form.data && form.hora;
-    }
-    if (activeStep === 2) {
-      // Exemplo: etapa 3 exige nome e idade do paciente
-      return form.nomePaciente && form.idadePaciente && form.convenioPaciente && form.telefonePaciente;
-    }
-    return false;
+  function handleConfirmCancel() {
+    setOpenCancelDialog(false);
+    setForm(FORMULARIO_INICIAL);
+    navigate("/home");
   }
 
-  // Função para validar se todos os campos obrigatórios estão preenchidos
-  function isFormValid() {
-    return (
-      form.paciente.trim() !== "" &&
-      form.tipo.trim() !== "" &&
-      form.especialidade.trim() !== "" &&
-      form.medico.trim() !== "" &&
-      form.data.trim() !== "" &&
-      form.hora.trim() !== ""
-    );
+  function handleCloseCancelDialog() {
+    setOpenCancelDialog(false);
+  }
+
+  // Defina os campos obrigatórios de cada etapa em um objeto:
+  const CAMPOS_OBRIGATORIOS = {
+    0: ["tipo", "especialidade", "medico"], // exemplo etapa 1
+    1: ["data", "hora"],    // exemplo etapa 2
+    2: ["nomePaciente", "idadePaciente", "convenioPaciente", "telefonePaciente"],               // exemplo etapa 3
+  };
+
+  // Função dinâmica de validação:
+  function isStepValid(step) {
+    const campos = CAMPOS_OBRIGATORIOS[step] || [];
+    return campos.every((campo) => form[campo] && String(form[campo]).trim() !== "");
+  }
+
+  // Supondo que form.medico tem o nome do médico selecionado
+
+  // Atualize o handle para seleção de horário:
+  function handleSelecionarHorario(data, hora) {
+    setHorarioSelecionado({ data, hora });
+    setForm((f) => ({
+      ...f,
+      data,
+      hora,
+    }));
   }
 
   return (
@@ -377,15 +363,12 @@ export default function Agendamento() {
                           }
                           color="primary"
                           className="horario-botao"
-                          onClick={() => setHorarioSelecionado({ data: dia.data, hora })}
+                          onClick={() => handleSelecionarHorario(dia.data, hora)}
                           sx={{ my: 0.5, width: "70px" }}
                         >
                           {hora}
                         </Button>
                       ))}
-                      <Button variant="text" size="small" sx={{ mt: 1 }}>
-                        Mais...
-                      </Button>
                     </Box>
                   </Box>
                 ))}
@@ -467,12 +450,17 @@ export default function Agendamento() {
             >
               Cancelar
             </Button>
-            {activeStep < steps.length - 1 ? (
+            {activeStep > 0 && (
+              <Button variant="outlined" onClick={() => setActiveStep(activeStep - 1)}>
+                Voltar
+              </Button>
+            )}
+            {activeStep < Object.keys(CAMPOS_OBRIGATORIOS).length - 1 ? (
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleNext}
-                disabled={!isStepValid()}
+                onClick={() => setActiveStep(activeStep + 1)}
+                disabled={!isStepValid(activeStep)}
               >
                 Avançar
               </Button>
@@ -481,6 +469,7 @@ export default function Agendamento() {
                 type="submit"
                 variant="contained"
                 color="primary"
+                disabled={!isStepValid(activeStep)}
               >
                 Finalizar Agendamento
               </Button>
@@ -542,6 +531,24 @@ export default function Agendamento() {
           </Alert>
         </Stack>
       )}
+
+      {/* Diálogo de confirmação de cancelamento */}
+      <Dialog open={openCancelDialog} onClose={handleCloseCancelDialog}>
+        <DialogTitle>Cancelar Agendamento?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Deseja cancelar a operação e retornar para a página inicial?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCancelDialog} color="primary">
+            Não
+          </Button>
+          <Button onClick={handleConfirmCancel} color="error" variant="contained">
+            Sim
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
