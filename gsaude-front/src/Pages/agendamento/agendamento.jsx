@@ -173,8 +173,8 @@ export default function Agendamento() {
 
   // Defina os campos obrigatórios de cada etapa em um objeto:
   const CAMPOS_OBRIGATORIOS = {
-    0: ["tipo", "especialidade", "medico"], // exemplo etapa 1
-    1: ["data", "hora"],    // exemplo etapa 2
+    0: ["medico"], // exemplo etapa 1
+    1: ["data"],    // exemplo etapa 2
     2: ["nomePaciente", "idadePaciente", "convenioPaciente", "telefonePaciente"],               // exemplo etapa 3
   };
 

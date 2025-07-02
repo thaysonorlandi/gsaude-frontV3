@@ -1,0 +1,20 @@
+.consultas-container {
+  max-width: 900px;
+  margin: 32px auto;
+  position: relative;
+}
+
+.consultas-paper {
+  padding: 32px;
+  backdrop-filter: blur(2px);
+  position: relative;
+  z-index: 1;
+}
+
+.consulta-list-item {
+  cursor: pointer;
+}
+
+.consulta-form {
+  margin-top: 16px;
+}

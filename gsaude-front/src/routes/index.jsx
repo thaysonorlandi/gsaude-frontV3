@@ -4,6 +4,7 @@ import Login from '../pages/login/login';
 import Agendamento from '../pages/agendamento/agendamento';
 import Agendados from '../pages/agendados/agendados';
 import Cadastros from '../pages/cadastros/cadastros';
+import Financeiro from '../pages/financeiro/financeiro';
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: '/home/cadastros',
         element: <Cadastros />,
+      },
+      {
+        path: '/home/financeiro',
+        element: <Financeiro />,
       },
     ],
   }

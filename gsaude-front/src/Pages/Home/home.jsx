@@ -24,6 +24,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 
 function Home() {
   const navigate = useNavigate();
@@ -35,14 +36,6 @@ function Home() {
 
   function handleLogout() {
     navigate('/login');
-  }
-
-  function handleAgendados() {
-    navigate('/home/agendados');
-  }
-
-  function handleCadastro() {
-    navigate('/home/cadastros');
   }
 
   function handleOpenConfig() {
@@ -112,6 +105,14 @@ function Home() {
                       <CalendarMonthIcon />
                     </ListItemIcon>
                     <ListItemText primary="Horários Reservados" />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton onClick={() => handleMenuNavigation('/home/financeiro')}>
+                    <ListItemIcon>
+                      <CurrencyExchangeIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Financeiro" />
                   </ListItemButton>
                 </ListItem>
               </List>

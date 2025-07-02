@@ -7,32 +7,27 @@
   padding: 32px;
 }
 
-.agenda-filtros {
-  margin-bottom: 24px;
+.agenda-titulo {
+  text-align: center;
+  color: #1976d2;
+  font-weight: bold;
+  padding-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.agenda-titulo > .agenda-icon {
+  margin-right: 8px;
+  font-size: 32px;
 }
 
-.agenda-filtros > .MuiGrid-item {
-  margin-bottom: 0;
-}
-
-.agenda-calendario-row {
-  margin-top: 32px;
-}
-
-.agenda-calendar {
+.agenda-filtros .MuiGrid-item {
   width: 100%;
-  min-width: 400px;
-  min-height: 420px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
-.agenda-calendar-list {
-  margin-bottom: 16px;
-}
-
-.agenda-legenda {
-  margin-top: 16px;
+.agenda-filtros .MuiFormControl-root {
+  width: 100%;
+  min-width: 180px;
 }
 
 .agenda-titulo-dia {
@@ -44,63 +39,49 @@
   color: #888;
 }
 
-.custom-day-box {
-  position: relative;
-}
-
-.custom-day-eventos {
-  display: flex;
-  justify-content: center;
-  position: absolute;
-  bottom: 4px;
-  left: 0;
-  right: 0;
-}
-
 .dot-consulta {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background-color: #1976d2;
-  border: 1px solid #fff;
+  background-color: #43a047;
   display: inline-block;
+  margin-left: 8px;
 }
 
 .dot-exame {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background-color: #43a047;
-  border: 1px solid #fff;
+  background-color: #1976d2;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.status-realizada {
+  color: #388e3c;
+  font-weight: bold;
+  margin-right: 12px;
+  min-width: 90px;
   display: inline-block;
 }
 
-.agenda-toggle-group {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
+.status-aguardando {
+  color: #fbc02d;
+  font-weight: bold;
+  margin-right: 12px;
+  min-width: 90px;
+  display: inline-block;
 }
 
-.agenda-toggle-group-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-start;
-  height: 100%;
-  gap: 16px;
+.status-cancelada {
+  color: #d32f2f;
+  font-weight: bold;
+  margin-right: 12px;
+  min-width: 90px;
+  display: inline-block;
 }
 
-.agenda-toggle-group-right .MuiToggleButtonGroup-root {
-  flex-direction: column;
-  width: 100%;
-}
-
-@media (max-width: 900px) {
-  .agenda-calendar {
-    min-width: 300px;
-  }
-  .agenda-toggle-group-right {
-    align-items: flex-start;
-    margin-top: 16px;
-  }
+.agenda-legenda {
+  margin-top: 16px;
+  font-size: 15px;
 }
