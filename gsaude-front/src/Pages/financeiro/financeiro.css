@@ -18,3 +18,26 @@
 .consulta-form {
   margin-top: 16px;
 }
+
+.consulta-form .MuiTextField-root {
+  margin-bottom: 8px;
+}
+
+.consultas-titulo {
+  text-align: center;
+  color: #1976d2;
+  font-weight: bold;
+  padding-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.consultas-titulo > .consultas-icon {
+  margin-right: 8px;
+  font-size: 32px;
+}
+
+.dialog-custom-width {
+  width: 800px;
+  max-width: 95vw;
+}
