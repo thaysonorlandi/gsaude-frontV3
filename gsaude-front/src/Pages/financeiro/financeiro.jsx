@@ -15,10 +15,14 @@ import {
   Grid,
   Snackbar,
   Alert,
+  MenuItem, // adicione esta linha
 } from "@mui/material";
 import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+dayjs.extend(isSameOrBefore);
 import "./financeiro.css";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
+
 
 // Dados simulados
 const consultas = [
@@ -56,10 +60,6 @@ const consultas = [
   },
 ];
 
-const consultasRealizadas = consultas.filter(
-  (c) => c.status === "Realizada"
-);
-
 function calcularHoraFinal(horaInicio, tempoDuracao) {
   if (!horaInicio || !tempoDuracao) return "";
   const [h, m] = horaInicio.split(":").map(Number);
@@ -85,11 +85,21 @@ function apenasNumeros(valor) {
   return valor.replace(/\D/g, "");
 }
 
+// Função para definir classe/cor do status
+function getStatusClass(status) {
+  if (status === "Realizada") return "status-realizada";
+  if (status === "Pendente") return "status-pendente";
+  return "";
+}
+
 export default function ConsultasFinanceiro() {
   const [open, setOpen] = useState(false);
   const [consultaSelecionada, setConsultaSelecionada] = useState(null);
   const [form, setForm] = useState({});
   const [sucesso, setSucesso] = useState(false);
+
+  // Estado local das consultas
+  const [consultasState, setConsultasState] = useState(consultas);
 
   const handleOpen = (consulta) => {
     setConsultaSelecionada(consulta);
@@ -132,7 +142,19 @@ export default function ConsultasFinanceiro() {
     setForm(novoForm);
   };
 
+  // Filtra procedimentos do dia atual ou anteriores
+  const hoje = dayjs().format("YYYY-MM-DD");
+  const procedimentosFiltrados = consultasState.filter(
+    (c) => dayjs(c.data).isSameOrBefore(hoje)
+  );
+
   const handleEnviar = () => {
+    // Atualiza o status e outros campos no array local
+    setConsultasState((prev) =>
+      prev.map((c) =>
+        c.id === consultaSelecionada.id ? { ...c, ...form } : c
+      )
+    );
     setSucesso(true);
     handleClose();
   };
@@ -149,13 +171,18 @@ export default function ConsultasFinanceiro() {
           Contabilidade
         </Typography>
         <List>
-          {consultasRealizadas.map((consulta) => (
+          {procedimentosFiltrados.map((consulta) => (
             <ListItem
               key={consulta.id}
               divider
               button
               onClick={() => handleOpen(consulta)}
               className="consulta-list-item"
+              secondaryAction={
+                <span className={getStatusClass(consulta.status)}>
+                  {consulta.status}
+                </span>
+              }
             >
               <ListItemText
                 primary={`${consulta.paciente} - ${consulta.especialidade} - ${consulta.medico}`}
@@ -188,7 +215,6 @@ export default function ConsultasFinanceiro() {
                     label="Nome do Paciente"
                     value={consultaSelecionada.paciente}
                     fullWidth
-                    InputProps={{ readOnly: true }}
                     size="small"
                   />
                 </Grid>
@@ -197,7 +223,6 @@ export default function ConsultasFinanceiro() {
                     label="Convênio"
                     value={consultaSelecionada.convenio || ""}
                     fullWidth
-                    InputProps={{ readOnly: true }}
                     size="small"
                   />
                 </Grid>
@@ -213,7 +238,6 @@ export default function ConsultasFinanceiro() {
                     label="Médico"
                     value={consultaSelecionada.medico}
                     fullWidth
-                    InputProps={{ readOnly: true }}
                     size="small"
                   />
                 </Grid>
@@ -222,7 +246,6 @@ export default function ConsultasFinanceiro() {
                     label="Especialidade"
                     value={consultaSelecionada.especialidade}
                     fullWidth
-                    InputProps={{ readOnly: true }}
                     size="small"
                   />
                 </Grid>
@@ -231,7 +254,6 @@ export default function ConsultasFinanceiro() {
                     label="Procedimento"
                     value={consultaSelecionada.procedimento}
                     fullWidth
-                    InputProps={{ readOnly: true }}
                     size="small"
                   />
                 </Grid>
@@ -247,7 +269,6 @@ export default function ConsultasFinanceiro() {
                     label="Data"
                     value={dayjs(consultaSelecionada.data).format("DD/MM/YYYY")}
                     fullWidth
-                    InputProps={{ readOnly: true }}
                     size="small"
                   />
                 </Grid>
@@ -256,17 +277,16 @@ export default function ConsultasFinanceiro() {
                     label="Hora Agendada"
                     value={consultaSelecionada.hora}
                     fullWidth
-                    InputProps={{ readOnly: true }}
                     size="small"
                   />
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <TextField
                     label="Status"
-                    value={consultaSelecionada.status || ""}
+                    value={consultaSelecionada.status}
                     fullWidth
-                    InputProps={{ readOnly: true }}
                     size="small"
+                    className={getStatusClass(consultaSelecionada.status)}
                   />
                 </Grid>
               </Grid>
@@ -278,7 +298,6 @@ export default function ConsultasFinanceiro() {
                     value={form.horaInicio}
                     onChange={handleChange}
                     fullWidth
-                    InputLabelProps={{ shrink: true }}
                     size="small"
                   />
                 </Grid>
@@ -289,6 +308,7 @@ export default function ConsultasFinanceiro() {
                     value={form.tempoDuracao}
                     onChange={handleChange}
                     fullWidth
+                    inputProps={{ min: 0 }}
                     type="number"
                     size="small"
                   />
@@ -368,12 +388,18 @@ export default function ConsultasFinanceiro() {
         open={sucesso}
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        className="financeiro-alert-stack"
+        direction="row"
+        anchorOrigin={{ vertical: "center", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          Enviado com sucesso!
-        </Alert>
-      </Snackbar>
-    </Box>
-  );
+        <Alert
+        severity="success"
+        className="financeiro-alert"
+        onClose={handleCloseSnackbar}
+      >
+        Enviado com sucesso!
+      </Alert>
+    </Snackbar>
+  </Box>
+);
 }

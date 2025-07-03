@@ -41,3 +41,37 @@
   width: 800px;
   max-width: 95vw;
 }
+
+.financeiro-alert-stack {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-height: 100vh;
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.financeiro-alert {
+  font-size: 1.2rem;
+  pointer-events: auto;
+  box-shadow: 0 2px 12px rgba(44, 62, 80, 0.18);
+}
+
+.status-realizada {
+  color: #388e3c;
+  font-weight: bold;
+  margin-right: 12px;
+  min-width: 90px;
+  display: inline-block;
+}
+
+.status-pendente {
+  color: #fbc02d;
+  font-weight: bold;
+  margin-right: 12px;
+  min-width: 90px;
+  display: inline-block;
+}

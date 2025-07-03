@@ -405,6 +405,7 @@ export default function Agendamento() {
                   className="agendamento-input"
                   placeholder="Idade"
                   type="number"
+                  inputProps={{ min: 0 }}
                   fullWidth
                   required
                 />
@@ -521,7 +522,7 @@ export default function Agendamento() {
 
       {/* Mensagem de sucesso centralizada após fechar o pop-up */}
       {showMsg && (
-        <Stack className="agendamento-alert-stack" direction="row" alignItems="center" justifyContent="center">
+        <Stack className="agendamento-alert-stack" direction="row">
           <Alert
             severity="success"
             className="agendamento-alert"

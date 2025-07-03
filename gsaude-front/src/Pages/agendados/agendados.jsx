@@ -12,6 +12,13 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  DialogContentText,
 } from "@mui/material";
 import dayjs from "dayjs";
 import "./agendados.css";
@@ -82,15 +89,87 @@ export default function VerificarAgendamentos() {
   const [medicoFiltro, setMedicoFiltro] = useState("");
   const [statusFiltro, setStatusFiltro] = useState(""); // Novo estado para o filtro de status
 
-  // Filtragem dos agendamentos
-  const agendamentosFiltrados = agendamentos.filter((item) => {
+  // Estado para controle do Dialog e agendamento selecionado
+  const [openDialog, setOpenDialog] = useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
+  const [form, setForm] = useState({});
+
+  // Estado local dos agendamentos (para simulação)
+  const [agendamentosState, setAgendamentosState] = useState(agendamentos);
+
+  // Atualize o filtro para usar o estado local
+  const agendamentosFiltrados = agendamentosState.filter((item) => {
     if (tipoFiltro && item.tipo !== tipoFiltro) return false;
     if (especialidadeFiltro && item.tipo === "Consulta" && item.especialidade !== especialidadeFiltro) return false;
     if (exameFiltro && item.tipo === "Exame" && item.exame !== exameFiltro) return false;
     if (medicoFiltro && item.medico !== medicoFiltro) return false;
-    if (statusFiltro && item.status !== statusFiltro) return false; // Filtra pelo status
+    if (statusFiltro && item.status !== statusFiltro) return false;
     return true;
   });
+
+  // Abrir Dialog
+  const handleOpenDialog = (item) => {
+    setAgendamentoSelecionado(item);
+    setForm({
+      ...item,
+      data: item.data,
+      hora: item.hora,
+    });
+    setOpenDialog(true);
+  };
+
+  // Fechar Dialog
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setAgendamentoSelecionado(null);
+    setForm({});
+  };
+
+  // Alterar campos do formulário
+  const handleChange = (e) => {
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  // Salvar reagendamento
+  const handleSalvar = () => {
+    setAgendamentosState((prev) =>
+      prev.map((item) =>
+        item.id === agendamentoSelecionado.id
+          ? { ...item, data: form.data, hora: form.hora }
+          : item
+      )
+    );
+    handleCloseDialog();
+  };
+
+  // Estado para pop-up de confirmação
+  const [openConfirm, setOpenConfirm] = useState(false);
+
+  // Cancelar agendamento
+  const handleCancelar = () => {
+    setOpenConfirm(true);
+  };
+
+  // Confirma o cancelamento
+  const handleConfirmarCancelamento = () => {
+    setAgendamentosState((prev) =>
+      prev.map((item) =>
+        item.id === agendamentoSelecionado.id
+          ? { ...item, status: "Cancelada" }
+          : item
+      )
+    );
+    setOpenConfirm(false);
+    handleCloseDialog();
+  };
+
+  // Cancela o pop-up de confirmação
+  const handleFecharConfirm = () => {
+    setOpenConfirm(false);
+  };
 
   return (
     <Box className="agenda-container">
@@ -282,12 +361,27 @@ export default function VerificarAgendamentos() {
             </Typography>
           ) : (
             agendamentosFiltrados.map((item) => (
-              <ListItem key={item.id} divider
+              <ListItem
+                key={item.id}
+                divider
+                button
+                // Só permite abrir se não for Realizada ou Cancelada
+                onClick={() => {
+                  if (item.status !== "Realizada" && item.status !== "Cancelada") {
+                    handleOpenDialog(item);
+                  }
+                }}
                 secondaryAction={
                   <span className={getStatusClass(item.status)}>
                     {item.status}
                   </span>
                 }
+                style={{
+                  cursor:
+                    item.status === "Realizada" || item.status === "Cancelada"
+                      ? "not-allowed"
+                      : "pointer",
+                }}
               >
                 <ListItemIcon>
                   <span
@@ -305,14 +399,12 @@ export default function VerificarAgendamentos() {
                       : `Exame: ${item.exame}`
                   }
                   secondary={
-                    <>
-                      <span>
-                        <b>Paciente:</b> {item.paciente} &nbsp;|&nbsp;
-                        <b>Médico:</b> {item.medico} &nbsp;|&nbsp;
-                        <b>Data:</b> {dayjs(item.data).format("DD/MM/YYYY")} &nbsp;|&nbsp;
-                        <b>Hora:</b> {item.hora}
-                      </span>
-                    </>
+                    <span>
+                      <b>Paciente:</b> {item.paciente} &nbsp;|&nbsp;
+                      <b>Médico:</b> {item.medico} &nbsp;|&nbsp;
+                      <b>Data:</b> {dayjs(item.data).format("DD/MM/YYYY")} &nbsp;|&nbsp;
+                      <b>Hora:</b> {item.hora}
+                    </span>
                   }
                 />
               </ListItem>
@@ -324,6 +416,104 @@ export default function VerificarAgendamentos() {
           <span className="dot-exame" /> Exame
         </Box>
       </Paper>
+
+      {/* Dialog para reagendar ou cancelar */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>
+          {agendamentoSelecionado?.tipo === "Consulta"
+            ? "Detalhes da Consulta"
+            : "Detalhes do Exame"}
+        </DialogTitle>
+        <DialogContent>
+          {agendamentoSelecionado && (
+            <Box component="form" sx={{ mt: 1 }}>
+              <TextField
+                label="Paciente"
+                value={agendamentoSelecionado.paciente}
+                fullWidth
+                margin="dense"
+                InputProps={{ readOnly: true }}
+                size="small"
+              />
+              <TextField
+                label="Médico"
+                value={agendamentoSelecionado.medico}
+                fullWidth
+                margin="dense"
+                InputProps={{ readOnly: true }}
+                size="small"
+              />
+              {agendamentoSelecionado.tipo === "Consulta" && (
+                <TextField
+                  label="Especialidade"
+                  value={agendamentoSelecionado.especialidade}
+                  fullWidth
+                  margin="dense"
+                  InputProps={{ readOnly: true }}
+                  size="small"
+                />
+              )}
+              {agendamentoSelecionado.tipo === "Exame" && (
+                <TextField
+                  label="Exame"
+                  value={agendamentoSelecionado.exame}
+                  fullWidth
+                  margin="dense"
+                  InputProps={{ readOnly: true }}
+                  size="small"
+                />
+              )}
+              <TextField
+                label="Data"
+                name="data"
+                type="date"
+                value={form.data}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+                size="small"
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Hora"
+                name="hora"
+                type="time"
+                value={form.hora}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+                size="small"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button color="error" onClick={handleCancelar}>
+            Cancelar Agendamento
+          </Button>
+          <Button onClick={handleCloseDialog}>Fechar</Button>
+          <Button variant="contained" onClick={handleSalvar}>
+            Salvar Alterações
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Pop-up de confirmação */}
+      <Dialog open={openConfirm} onClose={handleFecharConfirm}>
+        <DialogTitle>Cancelar Agendamento</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Tem certeza que deseja cancelar este agendamento?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleFecharConfirm}>Não</Button>
+          <Button color="error" onClick={handleConfirmarCancelamento} autoFocus>
+            Sim, cancelar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
