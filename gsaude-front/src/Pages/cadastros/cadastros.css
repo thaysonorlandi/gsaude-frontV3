@@ -1,8 +1,10 @@
 .cadastro-container {
-  max-width: 700px;
-  margin: 32px auto;
-  padding: 16px;
-  background-color: #fff;
+  padding: 32px;
+  max-width: 900px;
+  margin: 40px auto;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
 }
 
 .cadastro-paper {
@@ -12,13 +14,21 @@
   background: #fff;
 }
 
-.cadastro-form-control {
-  margin-bottom: 20px;
+.cadastro-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
 }
 
-.cadastro-btn-box {
-  margin-top: 24px;
-  text-align: right;
+.cadastro-titulo {
+  color: #1976d2;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.cadastro-abas {
+  margin-bottom: 24px;
 }
 
 .cadastro-listas {
@@ -27,4 +37,50 @@
 
 .cadastro-lista-titulo {
   margin-top: 20px;
+}
+
+.cadastro-lista-vazia {
+  color: #888;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.cadastro-form {
+  margin-top: 24px;
+}
+
+.cadastro-form-subtitulo {
+  font-weight: bold;
+  margin-bottom: 8px;
+  margin-top: 24px;
+}
+
+.cadastro-form-control {
+  margin-bottom: 20px;
+}
+
+.cadastro-form-campos {
+  margin-bottom: 16px;
+}
+
+.cadastro-horarios-bloco {
+  margin-bottom: 16px;
+}
+
+.cadastro-horarios-botoes {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.cadastro-btn-box {
+  margin-top: 24px;
+  text-align: right;
+}
+
+.cadastro-dialog-botoes {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 32px;
+  gap: 16px;
 }
