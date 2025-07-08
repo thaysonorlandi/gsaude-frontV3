@@ -27,7 +27,12 @@ export default defineConfig(({ mode }) => {
       // Configurações para ngrok e desenvolvimento
       hmr: {
         port: 5174
-      }
+      },
+      // Configurações específicas para ngrok
+      disableHostCheck: true,
+      // Configurações de segurança flexíveis para desenvolvimento
+      https: false,
+      open: false
     },
     // Configurações para desenvolvimento
     define: {
