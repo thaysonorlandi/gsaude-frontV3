@@ -19,64 +19,29 @@ import {
   Snackbar,
   Alert,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import "./agendamento.css";
 import { useNavigate, useLocation, useOutletContext } from "react-router-dom";
+import { useAgendamento } from "../../hooks/useAgendamento";
+import { formatarTelefone, removerMascaraTelefone } from "../../utils/formatters";
 
 const steps = ["Dados Iniciais", "Horários", "Dados Adicionais"];
 
-const especialidades = [
-  { value: "cardiologia", label: "Cardiologia" },
-  { value: "dermatologia", label: "Dermatologia" },
-];
-
-const exames = [
-  { value: "ultrassom", label: "Ultrassom" },
-  { value: "raio_x", label: "Raio-X" },
-];
-
-const medicos = [
-  {
-    value: "dr_joao",
-    label: "Dr. João",
-    especialidade: "cardiologia",
-    exames: ["ultrassom"],
-  },
-  {
-    value: "dra_ana",
-    label: "Dra. Ana",
-    especialidade: "dermatologia",
-    exames: ["raio_x", "ultrassom"],
-  },
-];
-
-const horariosExemplo = [
-  {
-    data: "20/02/21",
-    diaSemana: "Sáb",
-    horarios: ["08:00", "08:20", "08:40"],
-  },
-  {
-    data: "21/02/21",
-    diaSemana: "Dom",
-    horarios: ["10:00", "10:20", "10:40"],
-  },
-  {
-    data: "22/02/21",
-    diaSemana: "Seg",
-    horarios: ["11:00", "10:20", "10:40"],
-  },
-  // ...outros dias
-];
 const FORMULARIO_INICIAL = {
-  filial: "Hospital São Roque",
+  filialId: "",
   paciente: "",
   tipo: "",
-  especialidade: "",
-  medico: "",
+  especialidadeId: "",
+  tipoExameId: "",
+  medicoId: "",
   data: "",
   hora: "",
+  nomePaciente: "",
+  idadePaciente: "",
+  convenioId: "",
+  telefonePaciente: "",
 };
 
 export default function Agendamento() {
@@ -90,6 +55,23 @@ export default function Agendamento() {
   const [dadosAgendamento, setDadosAgendamento] = useState(null);
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const navigate = useNavigate();
+
+  // Hook para gerenciar dados do agendamento
+  const {
+    loading,
+    error,
+    filiais,
+    especialidades,
+    tiposExame,
+    medicos,
+    convenios,
+    horariosDisponiveis,
+    carregarMedicosPorEspecialidade,
+    carregarMedicosPorTipoExame,
+    carregarHorarios,
+    criarAgendamento,
+    setError,
+  } = useAgendamento();
 
   // Sempre que acessar /home, reseta o formulário e etapa
   useEffect(() => {
@@ -110,39 +92,98 @@ export default function Agendamento() {
     // Limpa ao desmontar
     return () => setEmProcessoAgendamento(false);
   }, [activeStep, setEmProcessoAgendamento]);
-  // Filtra médicos conforme seleção
-  const medicosExame = form.tipoExame
-    ? medicos.filter((m) => m.exames.includes(form.tipoExame))
-    : [];
 
-  const medicosConsulta = form.especialidade
-    ? medicos.filter((m) => m.especialidade === form.especialidade)
-    : [];
+  // Carrega médicos quando muda a especialidade
+  useEffect(() => {
+    if (form.especialidadeId) {
+      carregarMedicosPorEspecialidade(form.especialidadeId);
+    }
+  }, [form.especialidadeId, carregarMedicosPorEspecialidade]);
 
+  // Carrega médicos quando muda o tipo de exame
+  useEffect(() => {
+    if (form.tipoExameId) {
+      carregarMedicosPorTipoExame(form.tipoExameId);
+    }
+  }, [form.tipoExameId, carregarMedicosPorTipoExame]);
+
+  // Carrega horários quando muda o médico
+  useEffect(() => {
+    if (form.medicoId) {
+      carregarHorarios(form.medicoId);
+    }
+  }, [form.medicoId, carregarHorarios]);
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Tratamento especial para telefone com máscara
+    if (name === 'telefonePaciente') {
+      const telefoneFormatado = formatarTelefone(value);
+      setForm({ ...form, [name]: telefoneFormatado });
+      return;
+    }
+    
+    setForm({ ...form, [name]: value });
+    
     // Limpa campos dependentes ao trocar procedimento
-    if (e.target.name === "procedimento") {
+    if (name === "procedimento") {
       setForm((f) => ({
         ...f,
-        procedimento: e.target.value,
-        tipoExame: "",
-        especialidade: "",
-        medico: "",
+        procedimento: value,
+        tipoExameId: "",
+        especialidadeId: "",
+        medicoId: "",
       }));
     }
-    if (e.target.name === "tipoExame" || e.target.name === "especialidade") {
+    
+    // Limpa médico ao trocar especialidade ou tipo de exame
+    if (name === "tipoExameId" || name === "especialidadeId") {
       setForm((f) => ({
         ...f,
-        medico: "",
+        medicoId: "",
       }));
     }
   };
 
-  const handleFinalizar = (e) => {
+  const handleFinalizar = async (e) => {
     e.preventDefault();
-    setDadosAgendamento(form);
-    setOpen(true);
+    
+    try {
+      // Preparar dados para envio
+      const dadosParaEnvio = {
+        filial_id: form.filialId,
+        medico_id: form.medicoId,
+        tipo_procedimento: form.procedimento,
+        especialidade_id: form.especialidadeId || null,
+        tipo_exame_id: form.tipoExameId || null,
+        data_agendamento: form.data,
+        hora_agendamento: form.hora,
+        nome_paciente: form.nomePaciente,
+        idade_paciente: form.idadePaciente,
+        convenio_id: form.convenioId,
+        telefone_paciente: removerMascaraTelefone(form.telefonePaciente),
+      };
+
+      // Chama o serviço para criar o agendamento
+      const resultado = await criarAgendamento(dadosParaEnvio);
+      
+      // Salva os dados completos para exibir no popup
+      setDadosAgendamento({
+        ...form,
+        id: resultado.id,
+        // Adiciona os nomes dos itens selecionados
+        nomeFilial: filiais.find(f => f.id === form.filialId)?.nome || '',
+        nomeMedico: medicos.find(m => m.id === form.medicoId)?.nome || '',
+        nomeEspecialidade: especialidades.find(e => e.id === form.especialidadeId)?.nome || '',
+        nomeTipoExame: tiposExame.find(t => t.id === form.tipoExameId)?.nome || '',
+        nomeConvenio: convenios.find(c => c.id === form.convenioId)?.nome || '',
+      });
+      
+      setOpen(true);
+    } catch (error) {
+      console.error('Erro ao finalizar agendamento:', error);
+      setError('Erro ao finalizar agendamento. Tente novamente.');
+    }
   };
 
   const handleClose = () => {
@@ -173,9 +214,9 @@ export default function Agendamento() {
 
   // Defina os campos obrigatórios de cada etapa em um objeto:
   const CAMPOS_OBRIGATORIOS = {
-    0: ["medico"], // exemplo etapa 1
-    1: ["data"],    // exemplo etapa 2
-    2: ["nomePaciente", "idadePaciente", "convenioPaciente", "telefonePaciente"],               // exemplo etapa 3
+    0: ["filialId", "medicoId"], // etapa 1: dados iniciais
+    1: ["data", "hora"],         // etapa 2: horários
+    2: ["nomePaciente", "idadePaciente", "convenioId", "telefonePaciente"], // etapa 3: dados adicionais
   };
 
   // Função dinâmica de validação:
@@ -215,24 +256,27 @@ export default function Agendamento() {
         <form onSubmit={handleFinalizar}>
           {activeStep === 0 && (
             <Box className="agendamento-form-section">
-              {/* Campos fixos do exemplo */}
+              {/* Filial */}
               <Box className="agendamento-form-row">
                 <Typography className="agendamento-label">Filial:</Typography>
-                <Typography>{form.filial}</Typography>
+                <FormControl variant="standard" size="small" fullWidth>
+                  <InputLabel>Selecione a Filial</InputLabel>
+                  <Select
+                    name="filialId"
+                    value={form.filialId}
+                    onChange={handleChange}
+                    label="Selecione a Filial"
+                  >
+                    {filiais.map((filial) => (
+                      <MenuItem key={filial.id} value={filial.id}>
+                        {filial.nome}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Box>
-              <Box className="agendamento-form-row">
-                <Typography className="agendamento-label">Unidades:</Typography>
-                <TextField
-                  name="unidade"
-                  value={form.unidade}
-                  onChange={handleChange}
-                  size="small"
-                  variant="standard"
-                  className="agendamento-input"
-                  placeholder="Unidades"
-                  fullWidth
-                />
-              </Box>
+
+              {/* Procedimento */}
               <Box className="agendamento-form-row">
                 <Typography className="agendamento-label">Procedimento:</Typography>
                 <FormControl variant="standard" size="small" fullWidth>
@@ -252,92 +296,77 @@ export default function Agendamento() {
                 </FormControl>
               </Box>
 
-              {/* Se for exame, mostra tipos de exame e médicos */}
+              {/* Se for exame, mostra tipos de exame */}
               {form.procedimento === "exame" && (
-                <>
-                  <Box className="agendamento-form-row">
-                    <Typography className="agendamento-label">Tipo de Exame:</Typography>
-                    <FormControl variant="standard" size="small" fullWidth>
-                      <InputLabel>Tipo de Exame</InputLabel>
-                      <Select
-                        name="tipoExame"
-                        value={form.tipoExame}
-                        onChange={handleChange}
-                        label="Tipo de Exame"
-                      >
-                        {exames.map((e) => (
-                          <MenuItem key={e.value} value={e.value}>
-                            {e.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                  {form.tipoExame && (
-                    <Box className="agendamento-form-row">
-                      <Typography className="agendamento-label">Médico:</Typography>
-                      <FormControl variant="standard" size="small" fullWidth>
-                        <InputLabel>Médico</InputLabel>
-                        <Select
-                          name="medico"
-                          value={form.medico}
-                          onChange={handleChange}
-                          label="Médico"
-                        >
-                          {medicosExame.map((m) => (
-                            <MenuItem key={m.value} value={m.value}>
-                              {m.label}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  )}
-                </>
+                <Box className="agendamento-form-row">
+                  <Typography className="agendamento-label">Tipo de Exame:</Typography>
+                  <FormControl variant="standard" size="small" fullWidth>
+                    <InputLabel>Tipo de Exame</InputLabel>
+                    <Select
+                      name="tipoExameId"
+                      value={form.tipoExameId}
+                      onChange={handleChange}
+                      label="Tipo de Exame"
+                    >
+                      {tiposExame.map((tipo) => (
+                        <MenuItem key={tipo.id} value={tipo.id}>
+                          {tipo.nome}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
               )}
 
-              {/* Se for consulta, mostra especialidade e médicos */}
+              {/* Se for consulta, mostra especialidades */}
               {form.procedimento === "consulta" && (
-                <>
-                  <Box className="agendamento-form-row">
-                    <Typography className="agendamento-label">Especialidade:</Typography>
-                    <FormControl variant="standard" size="small" fullWidth>
-                      <InputLabel>Especialidade</InputLabel>
-                      <Select
-                        name="especialidade"
-                        value={form.especialidade}
-                        onChange={handleChange}
-                        label="Especialidade"
-                      >
-                        {especialidades.map((e) => (
-                          <MenuItem key={e.value} value={e.value}>
-                            {e.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                  {form.especialidade && (
-                    <Box className="agendamento-form-row">
-                      <Typography className="agendamento-label">Médico:</Typography>
-                      <FormControl variant="standard" size="small" fullWidth>
-                        <InputLabel>Médico</InputLabel>
-                        <Select
-                          name="medico"
-                          value={form.medico}
-                          onChange={handleChange}
-                          label="Médico"
-                        >
-                          {medicosConsulta.map((m) => (
-                            <MenuItem key={m.value} value={m.value}>
-                              {m.label}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  )}
-                </>
+                <Box className="agendamento-form-row">
+                  <Typography className="agendamento-label">Especialidade:</Typography>
+                  <FormControl variant="standard" size="small" fullWidth>
+                    <InputLabel>Especialidade</InputLabel>
+                    <Select
+                      name="especialidadeId"
+                      value={form.especialidadeId}
+                      onChange={handleChange}
+                      label="Especialidade"
+                    >
+                      {especialidades.map((especialidade) => (
+                        <MenuItem key={especialidade.id} value={especialidade.id}>
+                          {especialidade.nome}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
+
+              {/* Médico - aparece quando tem especialidade ou tipo de exame */}
+              {(form.especialidadeId || form.tipoExameId) && (
+                <Box className="agendamento-form-row">
+                  <Typography className="agendamento-label">Médico:</Typography>
+                  <FormControl variant="standard" size="small" fullWidth>
+                    <InputLabel>Médico</InputLabel>
+                    <Select
+                      name="medicoId"
+                      value={form.medicoId}
+                      onChange={handleChange}
+                      label="Médico"
+                    >
+                      {medicos.map((medico) => (
+                        <MenuItem key={medico.id} value={medico.id}>
+                          {medico.nome}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
+
+              {/* Indicador de carregamento */}
+              {loading && (
+                <Box display="flex" justifyContent="center" mt={2}>
+                  <CircularProgress size={24} />
+                </Box>
               )}
             </Box>
           )}
@@ -346,33 +375,51 @@ export default function Agendamento() {
               <Typography variant="subtitle1" sx={{ mb: 2 }}>
                 Escolha o horário disponível:
               </Typography>
-              <Box className="horarios-disponiveis">
-                {horariosExemplo.map((dia) => (
-                  <Box key={dia.data} className="horarios-dia">
-                    <Typography className="horarios-dia-titulo">
-                      {dia.diaSemana} <br /> {dia.data}
-                    </Typography>
-                    <Box className="horarios-botoes">
-                      {dia.horarios.map((hora) => (
-                        <Button
-                          key={hora}
-                          variant={
-                            horarioSelecionado.data === dia.data && horarioSelecionado.hora === hora
-                              ? "contained"
-                              : "outlined"
-                          }
-                          color="primary"
-                          className="horario-botao"
-                          onClick={() => handleSelecionarHorario(dia.data, hora)}
-                          sx={{ my: 0.5, width: "70px" }}
-                        >
-                          {hora}
-                        </Button>
-                      ))}
+              
+              {loading ? (
+                <Box display="flex" justifyContent="center" mt={2}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : (
+                <Box className="horarios-disponiveis">
+                  {horariosDisponiveis.map((dia) => (
+                    <Box key={dia.data} className="horarios-dia">
+                      <Typography className="horarios-dia-titulo">
+                        {dia.diaSemana} <br /> {dia.data}
+                      </Typography>
+                      <Box className="horarios-botoes">
+                        {dia.horarios.map((horario) => (
+                          <Button
+                            key={horario.hora}
+                            variant={
+                              horarioSelecionado.data === dia.data && horarioSelecionado.hora === horario.hora
+                                ? "contained"
+                                : "outlined"
+                            }
+                            color="primary"
+                            className="horario-botao"
+                            onClick={() => handleSelecionarHorario(dia.data, horario.hora)}
+                            disabled={!horario.disponivel}
+                            sx={{ 
+                              my: 0.5, 
+                              width: "70px",
+                              opacity: horario.disponivel ? 1 : 0.5
+                            }}
+                          >
+                            {horario.hora}
+                          </Button>
+                        ))}
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
-              </Box>
+                  ))}
+                </Box>
+              )}
+              
+              {horariosDisponiveis.length === 0 && !loading && (
+                <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
+                  Nenhum horário disponível encontrado.
+                </Typography>
+              )}
             </Box>
           )}
           {activeStep === 2 && (
@@ -385,7 +432,7 @@ export default function Agendamento() {
                 <TextField
                   name="nomePaciente"
                   value={form.nomePaciente || ""}
-                  onChange={(e) => setForm({ ...form, nomePaciente: e.target.value })}
+                  onChange={handleChange}
                   size="small"
                   variant="standard"
                   className="agendamento-input"
@@ -399,7 +446,7 @@ export default function Agendamento() {
                 <TextField
                   name="idadePaciente"
                   value={form.idadePaciente || ""}
-                  onChange={(e) => setForm({ ...form, idadePaciente: e.target.value })}
+                  onChange={handleChange}
                   size="small"
                   variant="standard"
                   className="agendamento-input"
@@ -412,24 +459,29 @@ export default function Agendamento() {
               </Box>
               <Box className="agendamento-form-row">
                 <Typography className="agendamento-label">Convênio:</Typography>
-                <TextField
-                  name="convenioPaciente"
-                  value={form.convenioPaciente || ""}
-                  onChange={(e) => setForm({ ...form, convenioPaciente: e.target.value })}
-                  size="small"
-                  variant="standard"
-                  className="agendamento-input"
-                  placeholder="Convênio"
-                  fullWidth
-                  required
-                />
+                <FormControl variant="standard" size="small" fullWidth>
+                  <InputLabel>Selecione o Convênio</InputLabel>
+                  <Select
+                    name="convenioId"
+                    value={form.convenioId || ""}
+                    onChange={handleChange}
+                    label="Selecione o Convênio"
+                    required
+                  >
+                    {convenios.map((convenio) => (
+                      <MenuItem key={convenio.id} value={convenio.id}>
+                        {convenio.nome}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Box>
               <Box className="agendamento-form-row">
                 <Typography className="agendamento-label">Telefone:</Typography>
                 <TextField
                   name="telefonePaciente"
                   value={form.telefonePaciente || ""}
-                  onChange={(e) => setForm({ ...form, telefonePaciente: e.target.value })}
+                  onChange={handleChange}
                   size="small"
                   variant="standard"
                   className="agendamento-input"
@@ -481,44 +533,90 @@ export default function Agendamento() {
 
       {/* Pop-up com os dados do agendamento */}
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Dados do Agendamento</DialogTitle>
+        <DialogTitle>Agendamento Confirmado</DialogTitle>
         <DialogContent>
           {dadosAgendamento && (
-            <>
-              <Typography>
-                <b>Paciente:</b> {dadosAgendamento.paciente}
+            <Box>
+              <Typography variant="h6" sx={{ mb: 2, color: 'success.main' }}>
+                ✓ Agendamento realizado com sucesso!
               </Typography>
-              <Typography>
-                <b>Tipo:</b> {dadosAgendamento.tipo}
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Filial:</strong> {dadosAgendamento.nomeFilial}
               </Typography>
-              {dadosAgendamento.tipo === "Consulta" && (
-                <Typography>
-                  <b>Especialidade:</b> {dadosAgendamento.especialidade}
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Paciente:</strong> {dadosAgendamento.nomePaciente}
+              </Typography>
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Idade:</strong> {dadosAgendamento.idadePaciente} anos
+              </Typography>
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Telefone:</strong> {dadosAgendamento.telefonePaciente}
+              </Typography>
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Convênio:</strong> {dadosAgendamento.nomeConvenio}
+              </Typography>
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Tipo:</strong> {dadosAgendamento.procedimento === 'consulta' ? 'Consulta' : 'Exame'}
+              </Typography>
+              
+              {dadosAgendamento.procedimento === "consulta" && (
+                <Typography sx={{ mb: 1 }}>
+                  <strong>Especialidade:</strong> {dadosAgendamento.nomeEspecialidade}
                 </Typography>
               )}
-              {dadosAgendamento.tipo === "Exame" && (
-                <Typography>
-                  <b>Tipo de Exame:</b> {dadosAgendamento.especialidade}
+              
+              {dadosAgendamento.procedimento === "exame" && (
+                <Typography sx={{ mb: 1 }}>
+                  <strong>Tipo de Exame:</strong> {dadosAgendamento.nomeTipoExame}
                 </Typography>
               )}
-              <Typography>
-                <b>Médico:</b> {dadosAgendamento.medico}
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Médico:</strong> {dadosAgendamento.nomeMedico}
               </Typography>
-              <Typography>
-                <b>Data:</b> {dadosAgendamento.data}
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Data:</strong> {dadosAgendamento.data}
               </Typography>
-              <Typography>
-                <b>Hora:</b> {dadosAgendamento.hora}
+              
+              <Typography sx={{ mb: 1 }}>
+                <strong>Horário:</strong> {dadosAgendamento.hora}
               </Typography>
-            </>
+              
+              {dadosAgendamento.id && (
+                <Typography sx={{ mt: 2, fontSize: '0.9em', color: 'text.secondary' }}>
+                  <strong>ID do Agendamento:</strong> #{dadosAgendamento.id}
+                </Typography>
+              )}
+            </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} variant="outlined">
+          <Button onClick={handleClose} variant="contained" color="primary">
             Fechar
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Mensagem de erro */}
+      {error && (
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={() => setError(null)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        >
+          <Alert severity="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        </Snackbar>
+      )}
 
       {/* Mensagem de sucesso centralizada após fechar o pop-up */}
       {showMsg && (

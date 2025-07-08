@@ -25,16 +25,28 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
+import { usePermissions } from '../../hooks/usePermissions';
+import { useUser } from '../../contexts/contexts';
 
 function Home() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission, isPaciente } = usePermissions();
+  const { logout } = useUser();
   const [openConfig, setOpenConfig] = React.useState(false);
   const [openConfirm, setOpenConfirm] = React.useState(false);
   const [pendingNavigation, setPendingNavigation] = React.useState(null);
   const [emProcessoAgendamento, setEmProcessoAgendamento] = React.useState(false);
 
+  // Redireciona pacientes para a página de agendados se tentarem acessar a home
+  React.useEffect(() => {
+    if (isPaciente() && location.pathname === '/home') {
+      navigate('/home/agendados', { replace: true });
+    }
+  }, [isPaciente, location.pathname, navigate]);
+
   function handleLogout() {
+    logout();
     navigate('/login');
   }
 
@@ -91,49 +103,59 @@ function Home() {
           <Box className="home-drawer-content">
             <div>
               <List>
-                <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleMenuNavigation('/home')}>
-                    <ListItemIcon>
-                      <AssignmentIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Agendamento" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleMenuNavigation('/home/agendados')}>
-                    <ListItemIcon>
-                      <CalendarMonthIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Horários Reservados" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleMenuNavigation('/home/financeiro')}>
-                    <ListItemIcon>
-                      <CurrencyExchangeIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Financeiro" />
-                  </ListItemButton>
-                </ListItem>
+                {hasPermission('agendamento') && (
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={() => handleMenuNavigation('/home')}>
+                      <ListItemIcon>
+                        <AssignmentIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Agendamento" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
+                {hasPermission('agendados') && (
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={() => handleMenuNavigation('/home/agendados')}>
+                      <ListItemIcon>
+                        <CalendarMonthIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Horários Reservados" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
+                {hasPermission('financeiro') && (
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={() => handleMenuNavigation('/home/financeiro')}>
+                      <ListItemIcon>
+                        <CurrencyExchangeIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Financeiro" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
               </List>
-              <Divider />
+              {(hasPermission('cadastros') || hasPermission('configuracoes')) && <Divider />}
               <List>
-                <ListItem disablePadding>
-                  <ListItemButton onClick={() => handleMenuNavigation('/home/cadastros')}>
-                    <ListItemIcon>
-                      <PersonAddIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Cadastro" />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding>
-                  <ListItemButton onClick={handleOpenConfig}>
-                    <ListItemIcon>
-                      <SettingsIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Configurações" />
-                  </ListItemButton>
-                </ListItem>
+                {hasPermission('cadastros') && (
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={() => handleMenuNavigation('/home/cadastros')}>
+                      <ListItemIcon>
+                        <PersonAddIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Cadastro" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
+                {hasPermission('configuracoes') && (
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={handleOpenConfig}>
+                      <ListItemIcon>
+                        <SettingsIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Configurações" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
                 <ConfigDialog open={openConfig} onClose={handleCloseConfig} />
               </List>
             </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../../contexts/contexts';
 import Logo from '../../assets/logoGSaude.png';
 import PersonIcon from '@mui/icons-material/Person';
 import LoginIcon from '@mui/icons-material/Login';
@@ -9,6 +10,7 @@ import './login.css';
 function Login() {
   const [form, setForm] = useState({ usuario: '', senha: '' });
   const navigate = useNavigate();
+  const { login } = useUser();
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -16,8 +18,32 @@ function Login() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    // ...lógica de autenticação...
-    navigate('/home'); // Redireciona para a página home
+    
+    // Simulação de autenticação - aqui você faria a chamada real para sua API
+    let userType = 'admin'; // padrão
+    
+    // Lógica simplificada para determinar o tipo de usuário baseado no nome de usuário
+    if (form.usuario.toLowerCase().includes('admin')) {
+      userType = 'admin';
+    } else if (form.usuario.toLowerCase().includes('recepcao')) {
+      userType = 'recepcao';
+    } else if (form.usuario.toLowerCase().includes('paciente')) {
+      userType = 'paciente';
+    }
+    
+    // Salva os dados do usuário no contexto
+    login({
+      nome: form.usuario,
+      tipo: userType,
+      // outros dados do usuário...
+    });
+    
+    // Redireciona baseado no tipo de usuário
+    if (userType === 'paciente') {
+      navigate('/home/agendados');
+    } else {
+      navigate('/home');
+    }
   };
 
   return (
