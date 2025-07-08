@@ -36,13 +36,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import AssignmentIcon from '@mui/icons-material/Assignment';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PersonIcon from '@mui/icons-material/Person';
 import BiotechIcon from '@mui/icons-material/Biotech';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import api from '../../services/api';
 import './cadastros.css';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 export default function Cadastros() {
   // Estado para controle das abas
@@ -83,13 +82,25 @@ export default function Cadastros() {
     medico_id: ''
   });
   
+  // Estado para horários do exame
+  const [horariosExame, setHorariosExame] = useState([]);
+  const [horarioExameForm, setHorarioExameForm] = useState({
+    dia_semana: 1,
+    hora_inicio: '08:00',
+    hora_fim: '18:00',
+    intervalo_minutos: 30,
+    exame_id: ''
+  });
+  
   // Estados para diálogos
   const [openMedicoDialog, setOpenMedicoDialog] = useState(false);
   const [openExameDialog, setOpenExameDialog] = useState(false);
   const [openHorarioDialog, setOpenHorarioDialog] = useState(false);
+  const [openHorarioExameDialog, setOpenHorarioExameDialog] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [selectedMedicoId, setSelectedMedicoId] = useState(null);
+  const [selectedExameId, setSelectedExameId] = useState(null);
   
   // Estado para notificações
   const [snackbar, setSnackbar] = useState({
@@ -144,6 +155,23 @@ export default function Cadastros() {
   // Mudança de aba
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  // Formatação de valor monetário
+  const formatarValor = (valor) => {
+    if (!valor) return '';
+    
+    // Remove caracteres não numéricos
+    const apenasNumeros = valor.replace(/\D/g, '');
+    
+    // Converte para número e divide por 100 para obter reais e centavos
+    const numero = Number(apenasNumeros) / 100;
+    
+    // Formata como moeda brasileira
+    return numero.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   };
 
   // Funções para Médicos
@@ -243,51 +271,22 @@ export default function Cadastros() {
     }
   };
 
-  const excluirMedico = async (id) => {
-    try {
-      // Verificar se há exames vinculados
-      const examesVinculados = exames.some(e => e.medico_id === id);
-      if (examesVinculados) {
-        setSnackbar({
-          open: true,
-          message: 'Este médico possui exames vinculados e não pode ser excluído',
-          severity: 'error'
-        });
-        return;
-      }
-
-      // Tenta excluir na API
-      try {
-        await api.delete(`/medicos/${id}`);
-      } catch (error) {
-        console.error("Erro ao excluir médico na API:", error);
-      }
-
-      // Remove do estado local
-      setMedicos(prev => prev.filter(item => item.id !== id));
-      
-      setSnackbar({
-        open: true,
-        message: 'Médico excluído com sucesso',
-        severity: 'success'
-      });
-    } catch (error) {
-      console.error("Erro ao excluir médico:", error);
-      setSnackbar({
-        open: true,
-        message: 'Erro ao excluir médico',
-        severity: 'error'
-      });
-    }
-  };
-
   // Funções para Exames
   const handleExameChange = (e) => {
     const { name, value, checked, type } = e.target;
-    setExameForm({
-      ...exameForm,
-      [name]: type === 'checkbox' ? checked : value
-    });
+    
+    if (name === 'valor') {
+      // Aplica a formatação de valor monetário
+      setExameForm({
+        ...exameForm,
+        valor: formatarValor(value)
+      });
+    } else {
+      setExameForm({
+        ...exameForm,
+        [name]: type === 'checkbox' ? checked : value
+      });
+    }
   };
 
   const abrirExameDialog = (exame = null) => {
@@ -295,7 +294,7 @@ export default function Cadastros() {
       setExameForm({
         nome: exame.nome,
         descricao: exame.descricao,
-        valor: exame.valor,
+        valor: formatarValor(exame.valor),
         tempo_estimado: exame.tempo_estimado,
         medico_id: exame.medico_id,
         ativo: exame.ativo
@@ -329,6 +328,9 @@ export default function Cadastros() {
         return;
       }
 
+      // Preparar o valor para salvar (remover formatação)
+      const valorParaSalvar = exameForm.valor.replace(/\D/g, '') / 100;
+
       // Busca o nome do médico
       const medicoSelecionado = medicos.find(m => m.id === parseInt(exameForm.medico_id));
       const medico_nome = medicoSelecionado ? medicoSelecionado.nome : '';
@@ -336,14 +338,23 @@ export default function Cadastros() {
       if (isEditing) {
         // Tenta atualizar na API
         try {
-          await api.put(`/tipos-exame/${selectedId}`, exameForm);
+          await api.put(`/tipos-exame/${selectedId}`, {
+            ...exameForm,
+            valor: valorParaSalvar.toFixed(2)
+          });
         } catch (error) {
           console.error("Erro ao atualizar exame na API:", error);
         }
 
         // Atualiza no estado local
         setExames(prev => prev.map(item => 
-          item.id === selectedId ? { ...item, ...exameForm, id: selectedId, medico_nome } : item
+          item.id === selectedId ? { 
+            ...item, 
+            ...exameForm, 
+            valor: valorParaSalvar.toFixed(2),
+            id: selectedId, 
+            medico_nome 
+          } : item
         ));
         
         setSnackbar({
@@ -355,7 +366,10 @@ export default function Cadastros() {
         // Tenta criar na API
         let novoId;
         try {
-          const res = await api.post('/tipos-exame', exameForm);
+          const res = await api.post('/tipos-exame', {
+            ...exameForm,
+            valor: valorParaSalvar.toFixed(2)
+          });
           novoId = res.data.id;
         } catch (error) {
           console.error("Erro ao criar exame na API:", error);
@@ -363,7 +377,12 @@ export default function Cadastros() {
         }
 
         // Adiciona no estado local
-        setExames(prev => [...prev, { ...exameForm, id: novoId, medico_nome }]);
+        setExames(prev => [...prev, { 
+          ...exameForm, 
+          valor: valorParaSalvar.toFixed(2),
+          id: novoId, 
+          medico_nome 
+        }]);
         
         setSnackbar({
           open: true,
@@ -377,33 +396,6 @@ export default function Cadastros() {
       setSnackbar({
         open: true,
         message: 'Erro ao salvar exame',
-        severity: 'error'
-      });
-    }
-  };
-
-  const excluirExame = async (id) => {
-    try {
-      // Tenta excluir na API
-      try {
-        await api.delete(`/tipos-exame/${id}`);
-      } catch (error) {
-        console.error("Erro ao excluir exame na API:", error);
-      }
-
-      // Remove do estado local
-      setExames(prev => prev.filter(item => item.id !== id));
-      
-      setSnackbar({
-        open: true,
-        message: 'Exame excluído com sucesso',
-        severity: 'success'
-      });
-    } catch (error) {
-      console.error("Erro ao excluir exame:", error);
-      setSnackbar({
-        open: true,
-        message: 'Erro ao excluir exame',
         severity: 'error'
       });
     }
@@ -449,10 +441,56 @@ export default function Cadastros() {
     }
   };
 
+  // Funções para Horários do Exame
+  const carregarHorariosExame = async (exameId) => {
+    try {
+      // Tenta carregar horários da API
+      try {
+        const res = await api.get(`/tipos-exame/${exameId}/horarios`);
+        setHorariosExame(res.data);
+      } catch (error) {
+        console.error("Erro ao carregar horários do exame na API:", error);
+        
+        // Dados de demonstração em caso de erro
+        setHorariosExame([
+          { id: 1, dia_semana: 2, hora_inicio: '08:00', hora_fim: '12:00', intervalo_minutos: 30, exame_id: exameId },
+          { id: 2, dia_semana: 4, hora_inicio: '14:00', hora_fim: '18:00', intervalo_minutos: 45, exame_id: exameId },
+        ]);
+      }
+
+      const exame = exames.find(e => e.id === exameId);
+      setSelectedExameId(exameId);
+      setHorarioExameForm({
+        dia_semana: 1,
+        hora_inicio: '08:00',
+        hora_fim: '18:00',
+        intervalo_minutos: 30,
+        exame_id: exameId
+      });
+      
+      setOpenHorarioExameDialog(true);
+    } catch (error) {
+      console.error("Erro ao carregar horários do exame:", error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao carregar horários do exame',
+        severity: 'error'
+      });
+    }
+  };
+
   const handleHorarioChange = (e) => {
     const { name, value } = e.target;
     setHorarioForm({
       ...horarioForm,
+      [name]: value
+    });
+  };
+
+  const handleHorarioExameChange = (e) => {
+    const { name, value } = e.target;
+    setHorarioExameForm({
+      ...horarioExameForm,
       [name]: value
     });
   };
@@ -516,6 +554,65 @@ export default function Cadastros() {
     }
   };
 
+  const adicionarHorarioExame = async () => {
+    try {
+      // Validação básica
+      if (!horarioExameForm.dia_semana || !horarioExameForm.hora_inicio || !horarioExameForm.hora_fim) {
+        setSnackbar({
+          open: true,
+          message: 'Preencha todos os campos obrigatórios',
+          severity: 'error'
+        });
+        return;
+      }
+
+      // Validação do horário
+      if (horarioExameForm.hora_inicio >= horarioExameForm.hora_fim) {
+        setSnackbar({
+          open: true,
+          message: 'Horário de início deve ser anterior ao horário de fim',
+          severity: 'error'
+        });
+        return;
+      }
+
+      // Tenta criar na API
+      let novoId;
+      try {
+        const res = await api.post(`/tipos-exame/${selectedExameId}/horarios`, horarioExameForm);
+        novoId = res.data.id;
+      } catch (error) {
+        console.error("Erro ao criar horário do exame na API:", error);
+        novoId = horariosExame.length > 0 ? Math.max(...horariosExame.map(h => h.id)) + 1 : 1;
+      }
+
+      // Adiciona no estado local
+      setHorariosExame(prev => [...prev, { ...horarioExameForm, id: novoId }]);
+      
+      // Reseta o formulário para adicionar outro horário
+      setHorarioExameForm({
+        ...horarioExameForm,
+        dia_semana: 1,
+        hora_inicio: '08:00',
+        hora_fim: '18:00',
+        intervalo_minutos: 30
+      });
+      
+      setSnackbar({
+        open: true,
+        message: 'Horário do exame adicionado com sucesso',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error("Erro ao adicionar horário do exame:", error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao adicionar horário do exame',
+        severity: 'error'
+      });
+    }
+  };
+
   const excluirHorario = async (id) => {
     try {
       // Tenta excluir na API
@@ -543,6 +640,33 @@ export default function Cadastros() {
     }
   };
 
+  const excluirHorarioExame = async (id) => {
+    try {
+      // Tenta excluir na API
+      try {
+        await api.delete(`/horarios-exame/${id}`);
+      } catch (error) {
+        console.error("Erro ao excluir horário do exame na API:", error);
+      }
+
+      // Remove do estado local
+      setHorariosExame(prev => prev.filter(item => item.id !== id));
+      
+      setSnackbar({
+        open: true,
+        message: 'Horário do exame excluído com sucesso',
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error("Erro ao excluir horário do exame:", error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao excluir horário do exame',
+        severity: 'error'
+      });
+    }
+  };
+
   // Função para obter o nome do dia da semana
   const getDiaSemana = (dia) => {
     const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -553,7 +677,7 @@ export default function Cadastros() {
     <Box className="cadastros-container">
       <Paper className="cadastros-paper">
         <Typography variant="h5" className="cadastros-titulo">
-          <PersonAddIcon className="cadastros-icon" />
+          <EventAvailableIcon className="cadastros-icon" />
           Cadastros
         </Typography>
 
@@ -709,6 +833,13 @@ export default function Cadastros() {
                           <EditIcon fontSize="small" />
                         </IconButton>
                         <IconButton 
+                          color="secondary" 
+                          size="small"
+                          onClick={() => carregarHorariosExame(exame.id)}
+                        >
+                          <ScheduleIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton 
                           color="error" 
                           size="small"
                           onClick={() => excluirExame(exame.id)}
@@ -743,24 +874,17 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth margin="dense">
-                <InputLabel id="especialidade-label">Especialidade</InputLabel>
-                <Select
-                  labelId="especialidade-label"
-                  name="especialidade"
-                  value={medicoForm.especialidade}
-                  label="Especialidade"
-                  onChange={handleMedicoChange}
-                  required
-                >
-                  {especialidades.map((especialidade, index) => (
-                    <MenuItem key={index} value={typeof especialidade === 'string' ? especialidade : especialidade.nome}>
-                      {typeof especialidade === 'string' ? especialidade : especialidade.nome}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            <Grid item xs={12}>
+              <TextField
+                name="especialidade"
+                label="Especialidade"
+                value={medicoForm.especialidade}
+                onChange={handleMedicoChange}
+                fullWidth
+                required
+                margin="dense"
+                placeholder="Digite a especialidade do médico"
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -853,6 +977,7 @@ export default function Cadastros() {
                 onChange={handleExameChange}
                 fullWidth
                 margin="dense"
+                placeholder="0,00"
                 InputProps={{
                   startAdornment: <InputAdornment position="start">R$</InputAdornment>,
                 }}
@@ -881,6 +1006,7 @@ export default function Cadastros() {
                   value={exameForm.medico_id}
                   label="Médico Responsável"
                   onChange={handleExameChange}
+                  sx={{ minWidth: 200 }}
                 >
                   {medicos.filter(m => m.ativo).map((medico) => (
                     <MenuItem key={medico.id} value={medico.id}>
@@ -1058,6 +1184,156 @@ export default function Cadastros() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenHorarioDialog(false)}>Fechar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo para Horários do Exame */}
+      <Dialog open={openHorarioExameDialog} onClose={() => setOpenHorarioExameDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <ScheduleIcon sx={{ mr: 1 }} />
+            Horários Disponíveis para o Exame
+            {selectedExameId && (
+              <Typography variant="subtitle1" sx={{ ml: 1, color: 'text.secondary' }}>
+                - {exames.find(e => e.id === selectedExameId)?.nome || ''}
+              </Typography>
+            )}
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={3}>
+            {/* Formulário para adicionar horário */}
+            <Grid item xs={12}>
+              <Paper variant="outlined" sx={{ p: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  <AccessTimeIcon sx={{ verticalAlign: 'middle', mr: 1, fontSize: '1rem' }} />
+                  Adicionar Novo Horário para o Exame
+                </Typography>
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel id="dia-semana-exame-label">Dia da Semana</InputLabel>
+                      <Select
+                        labelId="dia-semana-exame-label"
+                        name="dia_semana"
+                        value={horarioExameForm.dia_semana}
+                        label="Dia da Semana"
+                        onChange={handleHorarioExameChange}
+                      >
+                        <MenuItem value={1}>Segunda-feira</MenuItem>
+                        <MenuItem value={2}>Terça-feira</MenuItem>
+                        <MenuItem value={3}>Quarta-feira</MenuItem>
+                        <MenuItem value={4}>Quinta-feira</MenuItem>
+                        <MenuItem value={5}>Sexta-feira</MenuItem>
+                        <MenuItem value={6}>Sábado</MenuItem>
+                        <MenuItem value={7}>Domingo</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      name="hora_inicio"
+                      label="Hora Início"
+                      type="time"
+                      value={horarioExameForm.hora_inicio}
+                      onChange={handleHorarioExameChange}
+                      fullWidth
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      name="hora_fim"
+                      label="Hora Fim"
+                      type="time"
+                      value={horarioExameForm.hora_fim}
+                      onChange={handleHorarioExameChange}
+                      fullWidth
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel id="intervalo-exame-label">Intervalo</InputLabel>
+                      <Select
+                        labelId="intervalo-exame-label"
+                        name="intervalo_minutos"
+                        value={horarioExameForm.intervalo_minutos}
+                        label="Intervalo"
+                        onChange={handleHorarioExameChange}
+                      >
+                        <MenuItem value={15}>15 minutos</MenuItem>
+                        <MenuItem value={30}>30 minutos</MenuItem>
+                        <MenuItem value={45}>45 minutos</MenuItem>
+                        <MenuItem value={60}>60 minutos</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                  <Button 
+                    variant="contained" 
+                    size="small"
+                    onClick={adicionarHorarioExame}
+                  >
+                    Adicionar Horário
+                  </Button>
+                </Box>
+              </Paper>
+            </Grid>
+
+            {/* Lista de horários cadastrados */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" gutterBottom>
+                Horários Cadastrados para o Exame
+              </Typography>
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Dia da Semana</TableCell>
+                      <TableCell>Horário</TableCell>
+                      <TableCell>Duração do Exame</TableCell>
+                      <TableCell align="center">Ações</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {horariosExame.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} align="center">
+                          <Typography color="text.secondary">
+                            Nenhum horário cadastrado para este exame.
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      horariosExame.map((horario) => (
+                        <TableRow key={horario.id}>
+                          <TableCell>{getDiaSemana(horario.dia_semana)}</TableCell>
+                          <TableCell>{`${horario.hora_inicio} às ${horario.hora_fim}`}</TableCell>
+                          <TableCell>{`${horario.intervalo_minutos} minutos`}</TableCell>
+                          <TableCell align="center">
+                            <IconButton 
+                              color="error" 
+                              size="small"
+                              onClick={() => excluirHorarioExame(horario.id)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenHorarioExameDialog(false)}>Fechar</Button>
         </DialogActions>
       </Dialog>
 
