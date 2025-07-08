@@ -1,629 +1,267 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
-  Paper,
   Box,
   Typography,
-  Grid,
-  TextField,
-  Button,
-  MenuItem,
-  IconButton,
   Tabs,
   Tab,
+  Paper,
+  Button,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  Divider,
-} from "@mui/material";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+  TextField
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import './cadastros.css';
 
-export default function CadastroDinamico() {
-  // Estado das abas
-  const [tab, setTab] = useState(0);
+// Componente para cada tabela de cadastro
+function CadastroTabela({ tipo, dados, onEdit, onDelete, onAdd }) {
+  return (
+    <Box sx={{ p: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Typography variant="h5">Lista de {tipo}</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => onAdd(tipo)}
+        >
+          Novo {tipo}
+        </Button>
+      </Box>
+      
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Nome</TableCell>
+              <TableCell>Descrição</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="center">Ações</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {dados.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.nome}</TableCell>
+                <TableCell>{item.descricao}</TableCell>
+                <TableCell>{item.status ? 'Ativo' : 'Inativo'}</TableCell>
+                <TableCell align="center">
+                  <IconButton onClick={() => onEdit(item)} color="primary">
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton onClick={() => onDelete(item)} color="error">
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+}
 
-  // Estado dos médicos e exames cadastrados
-  const [medicos, setMedicos] = useState([]);
-  const [exames, setExames] = useState([]);
-
-  // Estado do Dialog de cadastro/edição
+// Componente principal para gerenciar os cadastros
+function Cadastros() {
+  const [tabAtiva, setTabAtiva] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
-  const [tipoCadastro, setTipoCadastro] = useState(""); // "medico" ou "exame"
-  const [editIndex, setEditIndex] = useState(null);
+  const [itemEmEdicao, setItemEmEdicao] = useState(null);
+  const [tipoAtual, setTipoAtual] = useState('');
 
-  // Formulários
-  const [form, setForm] = useState({});
-  const [diasHoras, setDiasHoras] = useState([{ dia: "", hora: "" }]);
-  const [exameMedicos, setExameMedicos] = useState([{ medico: "" }]);
-  const [exameDiasHoras, setExameDiasHoras] = useState([{ dia: "", hora: "" }]);
+  // Dados simulados para demonstração
+  const [medicos, setMedicos] = useState([
+    { id: 1, nome: 'Dr. João Silva', descricao: 'Cardiologista', status: true },
+    { id: 2, nome: 'Dra. Ana Santos', descricao: 'Dermatologista', status: true },
+    { id: 3, nome: 'Dr. Pedro Almeida', descricao: 'Ortopedista', status: true },
+  ]);
 
-  // Abas
-  const handleTabChange = (e, newValue) => setTab(newValue);
+  const [especialidades, setEspecialidades] = useState([
+    { id: 1, nome: 'Cardiologia', descricao: 'Doenças do coração', status: true },
+    { id: 2, nome: 'Dermatologia', descricao: 'Doenças da pele', status: true },
+    { id: 3, nome: 'Ortopedia', descricao: 'Sistema ósseo e muscular', status: true },
+  ]);
 
-  // Abrir Dialog para adicionar/editar
-  const handleOpenDialog = (tipo, index = null) => {
-    setTipoCadastro(tipo);
-    setEditIndex(index);
+  const [convenios, setConvenios] = useState([
+    { id: 1, nome: 'Unimed', descricao: 'Plano Empresarial', status: true },
+    { id: 2, nome: 'Bradesco', descricao: 'Plano Nacional', status: true },
+    { id: 3, nome: 'Amil', descricao: 'Plano Completo', status: true },
+  ]);
 
-    if (tipo === "medico" && index !== null) {
-      // Editar médico
-      const medico = medicos[index];
-      setForm({
-        nome: medico.nome,
-        especialidade: medico.especialidade,
-        crm: medico.crm,
-        telefone: medico.telefone,
-      });
-      setDiasHoras(medico.diasHoras || [{ dia: "", hora: "" }]);
-    } else if (tipo === "exame" && index !== null) {
-      // Editar exame
-      const exame = exames[index];
-      setForm({
-        nomeExame: exame.nomeExame,
-        codigo: exame.codigo,
-        descricao: exame.descricao,
-      });
-      setExameDiasHoras(exame.diasHoras || [{ dia: "", hora: "" }]);
-      setExameMedicos(exame.medicos || [{ medico: "" }]);
-    } else {
-      // Novo cadastro
-      setForm({});
-      setDiasHoras([{ dia: "", hora: "" }]);
-      setExameDiasHoras([{ dia: "", hora: "" }]);
-      setExameMedicos([{ medico: "" }]);
-    }
+  const handleTabChange = (event, newValue) => {
+    setTabAtiva(newValue);
+  };
+
+  const handleOpenDialog = (tipo, item = null) => {
+    setTipoAtual(tipo);
+    setItemEmEdicao(item || { nome: '', descricao: '', status: true });
     setOpenDialog(true);
   };
 
-  // Fechar Dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setForm({});
-    setDiasHoras([{ dia: "", hora: "" }]);
-    setExameDiasHoras([{ dia: "", hora: "" }]);
-    setExameMedicos([{ medico: "" }]);
-    setEditIndex(null);
+    setItemEmEdicao(null);
   };
 
-  // Manipulação dos campos do formulário
-  const handleChange = (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  const handleSave = () => {
+    if (!itemEmEdicao) return;
 
-  // Manipulação de dias e horas para médico
-  const handleDiasHorasChange = (idx, field, value) => {
-    const updated = diasHoras.map((item, i) =>
-      i === idx ? { ...item, [field]: value } : item
-    );
-    setDiasHoras(updated);
-  };
-  const addDiasHoras = () => setDiasHoras([...diasHoras, { dia: "", hora: "" }]);
-  const removeDiasHoras = (idx) => setDiasHoras(diasHoras.filter((_, i) => i !== idx));
+    let dadosAtualizados = [];
+    let setDados;
 
-  // Manipulação de dias e horas para exame
-  const handleExameDiasHorasChange = (idx, field, value) => {
-    const updated = exameDiasHoras.map((item, i) =>
-      i === idx ? { ...item, [field]: value } : item
-    );
-    setExameDiasHoras(updated);
-  };
-  const addExameDiasHoras = () => setExameDiasHoras([...exameDiasHoras, { dia: "", hora: "" }]);
-  const removeExameDiasHoras = (idx) => setExameDiasHoras(exameDiasHoras.filter((_, i) => i !== idx));
-
-  // Manipulação de médicos para exame
-  const handleExameMedicoChange = (idx, value) => {
-    const updated = exameMedicos.map((item, i) =>
-      i === idx ? { medico: value } : item
-    );
-    setExameMedicos(updated);
-  };
-  const addExameMedico = () => setExameMedicos([...exameMedicos, { medico: "" }]);
-  const removeExameMedico = (idx) => setExameMedicos(exameMedicos.filter((_, i) => i !== idx));
-
-  // Salvar cadastro/edição
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (tipoCadastro === "medico") {
-      const novoMedico = {
-        nome: form.nome,
-        especialidade: form.especialidade,
-        crm: form.crm,
-        telefone: form.telefone,
-        diasHoras: diasHoras,
-      };
-      if (editIndex !== null) {
-        setMedicos((prev) =>
-          prev.map((m, i) => (i === editIndex ? novoMedico : m))
-        );
-      } else {
-        setMedicos((prev) => [...prev, novoMedico]);
-      }
-    } else if (tipoCadastro === "exame") {
-      const novoExame = {
-        nomeExame: form.nomeExame,
-        codigo: form.codigo,
-        descricao: form.descricao,
-        diasHoras: exameDiasHoras,
-        medicos: exameMedicos,
-      };
-      if (editIndex !== null) {
-        setExames((prev) =>
-          prev.map((e, i) => (i === editIndex ? novoExame : e))
-        );
-      } else {
-        setExames((prev) => [...prev, novoExame]);
-      }
+    switch (tipoAtual) {
+      case 'Médicos':
+        dadosAtualizados = itemEmEdicao.id
+          ? medicos.map(m => (m.id === itemEmEdicao.id ? itemEmEdicao : m))
+          : [...medicos, { ...itemEmEdicao, id: medicos.length + 1 }];
+        setDados = setMedicos;
+        break;
+      case 'Especialidades':
+        dadosAtualizados = itemEmEdicao.id
+          ? especialidades.map(e => (e.id === itemEmEdicao.id ? itemEmEdicao : e))
+          : [...especialidades, { ...itemEmEdicao, id: especialidades.length + 1 }];
+        setDados = setEspecialidades;
+        break;
+      case 'Convênios':
+        dadosAtualizados = itemEmEdicao.id
+          ? convenios.map(c => (c.id === itemEmEdicao.id ? itemEmEdicao : c))
+          : [...convenios, { ...itemEmEdicao, id: convenios.length + 1 }];
+        setDados = setConvenios;
+        break;
+      default:
+        break;
     }
+
+    setDados(dadosAtualizados);
     handleCloseDialog();
   };
 
-  // Excluir médico/exame
-  const handleDelete = (tipo, idx) => {
-    if (tipo === "medico") setMedicos((prev) => prev.filter((_, i) => i !== idx));
-    else setExames((prev) => prev.filter((_, i) => i !== idx));
+  const handleDelete = (item) => {
+    let dadosAtualizados = [];
+    let setDados;
+
+    switch (tabAtiva) {
+      case 0:
+        dadosAtualizados = medicos.filter(m => m.id !== item.id);
+        setDados = setMedicos;
+        break;
+      case 1:
+        dadosAtualizados = especialidades.filter(e => e.id !== item.id);
+        setDados = setEspecialidades;
+        break;
+      case 2:
+        dadosAtualizados = convenios.filter(c => c.id !== item.id);
+        setDados = setConvenios;
+        break;
+      default:
+        break;
+    }
+
+    setDados(dadosAtualizados);
   };
 
-  const diasSemana = [
-    "Segunda-feira",
-    "Terça-feira",
-    "Quarta-feira",
-    "Quinta-feira",
-    "Sexta-feira",
-    "Sábado",
-    "Domingo",
-  ];
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setItemEmEdicao({ ...itemEmEdicao, [name]: value });
+  };
 
   return (
-    <Paper className="cadastro-container">
-      <Box className="cadastro-header">
-        <PersonAddIcon sx={{ color: "#1976d2", fontSize: 36, mr: 1 }} />
-        <Typography
-          variant="h5"
-          component="h2"
-          className="cadastro-titulo"
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Gerenciamento de Cadastros
+      </Typography>
+      
+      <Paper sx={{ width: '100%', mb: 2 }}>
+        <Tabs
+          value={tabAtiva}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
         >
-          Cadastros
-        </Typography>
-      </Box>
-      <Tabs value={tab} onChange={handleTabChange} centered className="cadastro-abas">
-        <Tab label="Médicos" />
-        <Tab label="Exames" />
-      </Tabs>
+          <Tab label="Médicos" />
+          <Tab label="Especialidades" />
+          <Tab label="Convênios" />
+        </Tabs>
+      </Paper>
 
-      {/* Aba de Médicos */}
-      {tab === 0 && (
-        <Box>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={() => handleOpenDialog("medico")}
-            >
-              Adicionar Médico
-            </Button>
-          </Box>
-          <List>
-            {medicos.length === 0 && (
-              <Typography color="text.secondary" sx={{ textAlign: "center", mt: 2 }}>
-                Nenhum médico cadastrado.
-              </Typography>
-            )}
-            {medicos.map((medico, idx) => (
-              <React.Fragment key={idx}>
-                <ListItem>
-                  <ListItemText
-                    primary={
-                      <span>
-                        <b>{medico.nome}</b> — {medico.especialidade}
-                      </span>
-                    }
-                    secondary={
-                      <>
-                        <span>CRM: {medico.crm} | Tel: {medico.telefone}</span>
-                        <br />
-                        <span>
-                          <b>Horários:</b>{" "}
-                          {medico.diasHoras
-                            .map((dh) => `${dh.dia} ${dh.hora}`)
-                            .join(", ")}
-                        </span>
-                      </>
-                    }
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      edge="end"
-                      color="primary"
-                      onClick={() => handleOpenDialog("medico", idx)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      edge="end"
-                      color="error"
-                      onClick={() => handleDelete("medico", idx)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <Divider />
-              </React.Fragment>
-            ))}
-          </List>
-        </Box>
+      {tabAtiva === 0 && (
+        <CadastroTabela
+          tipo="Médicos"
+          dados={medicos}
+          onEdit={(item) => handleOpenDialog('Médicos', item)}
+          onDelete={handleDelete}
+          onAdd={handleOpenDialog}
+        />
+      )}
+      
+      {tabAtiva === 1 && (
+        <CadastroTabela
+          tipo="Especialidades"
+          dados={especialidades}
+          onEdit={(item) => handleOpenDialog('Especialidades', item)}
+          onDelete={handleDelete}
+          onAdd={handleOpenDialog}
+        />
+      )}
+      
+      {tabAtiva === 2 && (
+        <CadastroTabela
+          tipo="Convênios"
+          dados={convenios}
+          onEdit={(item) => handleOpenDialog('Convênios', item)}
+          onDelete={handleDelete}
+          onAdd={handleOpenDialog}
+        />
       )}
 
-      {/* Aba de Exames */}
-      {tab === 1 && (
-        <Box>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={() => handleOpenDialog("exame")}
-            >
-              Adicionar Exame
-            </Button>
-          </Box>
-          <List>
-            {exames.length === 0 && (
-              <Typography color="text.secondary" sx={{ textAlign: "center", mt: 2 }}>
-                Nenhum exame cadastrado.
-              </Typography>
-            )}
-            {exames.map((exame, idx) => (
-              <React.Fragment key={idx}>
-                <ListItem>
-                  <ListItemText
-                    primary={
-                      <span>
-                        <b>{exame.nomeExame}</b> {exame.codigo && `— Código: ${exame.codigo}`}
-                      </span>
-                    }
-                    secondary={
-                      <>
-                        <span>{exame.descricao}</span>
-                        <br />
-                        <span>
-                          <b>Horários:</b>{" "}
-                          {exame.diasHoras
-                            .map((dh) => `${dh.dia} ${dh.hora}`)
-                            .join(", ")}
-                        </span>
-                        <br />
-                        <span>
-                          <b>Médicos:</b>{" "}
-                          {exame.medicos.map((m) => m.medico).join(", ")}
-                        </span>
-                      </>
-                    }
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      edge="end"
-                      color="primary"
-                      onClick={() => handleOpenDialog("exame", idx)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      edge="end"
-                      color="error"
-                      onClick={() => handleDelete("exame", idx)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <Divider />
-              </React.Fragment>
-            ))}
-          </List>
-        </Box>
-      )}
-
-      {/* Dialog de Cadastro/Edição */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editIndex !== null
-            ? tipoCadastro === "medico"
-              ? "Editar Médico"
-              : "Editar Exame"
-            : tipoCadastro === "medico"
-            ? "Cadastrar Médico"
-            : "Cadastrar Exame"}
-        </DialogTitle>
+      {/* Diálogo para adição/edição */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{itemEmEdicao?.id ? `Editar ${tipoAtual}` : `Novo ${tipoAtual}`}</DialogTitle>
         <DialogContent>
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-            <Grid container spacing={3}>
-              {/* Formulário de Médico */}
-              {tipoCadastro === "medico" && (
-                <>
-                  <Grid item>
-                    <Typography variant="subtitle1" className="cadastro-form-subtitulo">
-                      Dados do Médico
-                    </Typography>
-                  </Grid>
-                  <Grid item className="cadastro-form-campos">
-                    <Grid container spacing={2}>
-                      <Grid item>
-                        <TextField
-                          label="Nome do Médico"
-                          name="nome"
-                          value={form.nome || ""}
-                          onChange={handleChange}
-                          fullWidth
-                          required
-                        />
-                      </Grid>
-                      <Grid item >
-                        <TextField
-                          label="Especialidade"
-                          name="especialidade"
-                          value={form.especialidade || ""}
-                          onChange={handleChange}
-                          fullWidth
-                          required
-                        />
-                      </Grid>
-                      <Grid item>
-                        <TextField
-                          label="Telefone"
-                          name="telefone"
-                          value={form.telefone || ""}
-                          onChange={handleChange}
-                          fullWidth
-                        />
-                      </Grid>
-                      <Grid item>
-                        <TextField
-                          label="CRM"
-                          name="crm"
-                          value={form.crm || ""}
-                          onChange={handleChange}
-                          fullWidth
-                          required
-                        />
-                      </Grid>
-                    </Grid>
-                  </Grid>
-                  <Grid item xs={12} sx={{ mt: 3 }}>
-                    <Typography variant="subtitle1" className="cadastro-form-subtitulo">
-                      Horários Disponíveis para Consultas
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    {diasHoras.map((item, idx) => (
-                      <div className="cadastro-horarios-bloco" key={idx}>
-                        <Grid container spacing={2} direction="column">
-                          <Grid item xs={12}>
-                            <TextField
-                              select
-                              label="Dia"
-                              value={item.dia}
-                              onChange={(e) =>
-                                handleDiasHorasChange(idx, "dia", e.target.value)
-                              }
-                              fullWidth
-                              required
-                            >
-                              {diasSemana.map((dia) => (
-                                <MenuItem key={dia} value={dia}>
-                                  {dia}
-                                </MenuItem>
-                              ))}
-                            </TextField>
-                          </Grid>
-                          <Grid item xs={12}>
-                            <TextField
-                              label="Hora"
-                              type="time"
-                              value={item.hora}
-                              onChange={(e) =>
-                                handleDiasHorasChange(idx, "hora", e.target.value)
-                              }
-                              fullWidth
-                              required
-                              InputLabelProps={{ shrink: true }}
-                              inputProps={{ step: 300 }}
-                            />
-                          </Grid>
-                        </Grid>
-                        <div className="cadastro-horarios-botoes">
-                          <IconButton color="primary" onClick={addDiasHoras}>
-                            <AddCircleOutlineIcon />
-                          </IconButton>
-                          {diasHoras.length > 1 && (
-                            <IconButton
-                              color="error"
-                              onClick={() => removeDiasHoras(idx)}
-                            >
-                              <RemoveCircleOutlineIcon />
-                            </IconButton>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </Grid>
-                </>
-              )}
-
-              {/* Formulário de Exame */}
-              {tipoCadastro === "exame" && (
-                <>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle1" className="cadastro-form-subtitulo">
-                      Dados do Exame
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} className="cadastro-form-campos">
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={8}>
-                        <TextField
-                          label="Nome do Exame"
-                          name="nomeExame"
-                          value={form.nomeExame || ""}
-                          onChange={handleChange}
-                          fullWidth
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <TextField
-                          label="Código"
-                          name="codigo"
-                          value={form.codigo || ""}
-                          onChange={handleChange}
-                          fullWidth
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          label="Descrição"
-                          name="descricao"
-                          value={form.descricao || ""}
-                          onChange={handleChange}
-                          fullWidth
-                          multiline
-                          rows={3}
-                        />
-                      </Grid>
-                    </Grid>
-                  </Grid>
-                  <Grid item xs={12} sx={{ mt: 3 }}>
-                    <Typography variant="subtitle1" className="cadastro-form-subtitulo">
-                      Horários Disponíveis para o Exame
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    {exameDiasHoras.map((item, idx) => (
-                      <div className="cadastro-horarios-bloco" key={idx}>
-                        <Grid container spacing={2} direction="column">
-                          <Grid item xs={12}>
-                            <TextField
-                              select
-                              label="Dia"
-                              value={item.dia}
-                              onChange={(e) =>
-                                handleExameDiasHorasChange(idx, "dia", e.target.value)
-                              }
-                              fullWidth
-                              required
-                            >
-                              {diasSemana.map((dia) => (
-                                <MenuItem key={dia} value={dia}>
-                                  {dia}
-                                </MenuItem>
-                              ))}
-                            </TextField>
-                          </Grid>
-                          <Grid item xs={12}>
-                            <TextField
-                              label="Hora"
-                              type="time"
-                              value={item.hora}
-                              onChange={(e) =>
-                                handleExameDiasHorasChange(idx, "hora", e.target.value)
-                              }
-                              fullWidth
-                              required
-                              InputLabelProps={{ shrink: true }}
-                              inputProps={{ step: 300 }}
-                            />
-                          </Grid>
-                        </Grid>
-                        <div className="cadastro-horarios-botoes">
-                          <IconButton
-                            color="primary"
-                            onClick={addExameDiasHoras}
-                            size="large"
-                            sx={{ mr: 1 }}
-                          >
-                            <AddCircleOutlineIcon />
-                          </IconButton>
-                          {exameDiasHoras.length > 1 && (
-                            <IconButton
-                              color="error"
-                              onClick={() => removeExameDiasHoras(idx)}
-                              size="large"
-                            >
-                              <RemoveCircleOutlineIcon />
-                            </IconButton>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </Grid>
-                  <Grid item xs={12} sx={{ mt: 3 }}>
-                    <Typography variant="subtitle1" className="cadastro-form-subtitulo">
-                      Médicos que realizam este exame
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    {exameMedicos.map((medico, idx) => (
-                      <Grid container spacing={2} key={idx} alignItems="center" sx={{ mb: 1 }}>
-                        <Grid item xs={10} sm={6}>
-                          <TextField
-                            label="Nome do Médico"
-                            value={medico.medico}
-                            onChange={(e) =>
-                              handleExameMedicoChange(idx, e.target.value)
-                            }
-                            fullWidth
-                            required
-                          />
-                        </Grid>
-                        <Grid item xs={2} sm={2}>
-                          <IconButton
-                            color="primary"
-                            onClick={addExameMedico}
-                            size="large"
-                            sx={{ mr: 1 }}
-                          >
-                            <AddCircleOutlineIcon />
-                          </IconButton>
-                          {exameMedicos.length > 1 && (
-                            <IconButton
-                              color="error"
-                              onClick={() => removeExameMedico(idx)}
-                              size="large"
-                            >
-                              <RemoveCircleOutlineIcon />
-                            </IconButton>
-                          )}
-                        </Grid>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </>
-              )}
-            </Grid>
-            {/* Botão de salvar alinhado à direita */}
-            <div className="cadastro-dialog-botoes">
-              <Button onClick={handleCloseDialog}>
-                Cancelar
-              </Button>
-              <Button variant="contained" type="submit">
-                Salvar
-              </Button>
-            </div>
+          <Box sx={{ p: 1 }}>
+            <TextField
+              margin="dense"
+              name="nome"
+              label="Nome"
+              fullWidth
+              variant="outlined"
+              value={itemEmEdicao?.nome || ''}
+              onChange={handleInputChange}
+            />
+            <TextField
+              margin="dense"
+              name="descricao"
+              label="Descrição"
+              fullWidth
+              variant="outlined"
+              value={itemEmEdicao?.descricao || ''}
+              onChange={handleInputChange}
+            />
           </Box>
         </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} color="primary" variant="contained">
+            Salvar
+          </Button>
+        </DialogActions>
       </Dialog>
-    </Paper>
+    </Box>
   );
 }
+
+export default Cadastros;

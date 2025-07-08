@@ -3,6 +3,8 @@ import Home from '../pages/home/home.jsx';
 import Login from '../pages/login/login.jsx';
 import Agendamento from '../pages/agendamento/agendamento.jsx';
 import Agendados from '../pages/agendados/agendados.jsx';
+import Financeiro from '../pages/financeiro/financeiro.jsx';
+import Cadastros from '../pages/cadastros/cadastros.jsx';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
 
 const router = createBrowserRouter([
@@ -38,7 +40,7 @@ const router = createBrowserRouter([
         path: 'financeiro',
         element: (
           <ProtectedRoute requiredPage="financeiro">
-            <h1>Financeiro</h1>
+            <Financeiro />
           </ProtectedRoute>
         ),
       },
@@ -46,7 +48,7 @@ const router = createBrowserRouter([
         path: 'cadastros',
         element: (
           <ProtectedRoute requiredPage="cadastros">
-            <h1>Cadastros</h1>
+            <Cadastros />
           </ProtectedRoute>
         ),
       },

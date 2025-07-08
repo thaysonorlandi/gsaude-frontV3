@@ -1,77 +1,20 @@
-.consultas-container {
-  max-width: 900px;
-  margin: 32px auto;
-  position: relative;
+.card-financeiro {
+  height: 100%;
+  transition: transform 0.3s;
 }
 
-.consultas-paper {
-  padding: 32px;
-  backdrop-filter: blur(2px);
-  position: relative;
-  z-index: 1;
+.card-financeiro:hover {
+  transform: translateY(-5px);
 }
 
-.consulta-list-item {
-  cursor: pointer;
+.card-financeiro.receita {
+  background-color: #e8f5e9;
 }
 
-.consulta-form {
-  margin-top: 16px;
+.card-financeiro.despesa {
+  background-color: #ffebee;
 }
 
-.consulta-form .MuiTextField-root {
-  margin-bottom: 8px;
-}
-
-.consultas-titulo {
-  text-align: center;
-  color: #1976d2;
-  font-weight: bold;
-  padding-bottom: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.consultas-titulo > .consultas-icon {
-  margin-right: 8px;
-  font-size: 32px;
-}
-
-.dialog-custom-width {
-  width: 800px;
-  max-width: 95vw;
-}
-
-.financeiro-alert-stack {
-  width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  min-height: 100vh;
-  z-index: 2000;
-  justify-content: center;
-  align-items: center;
-  pointer-events: none;
-}
-
-.financeiro-alert {
-  font-size: 1.2rem;
-  pointer-events: auto;
-  box-shadow: 0 2px 12px rgba(44, 62, 80, 0.18);
-}
-
-.status-realizada {
-  color: #388e3c;
-  font-weight: bold;
-  margin-right: 12px;
-  min-width: 90px;
-  display: inline-block;
-}
-
-.status-pendente {
-  color: #fbc02d;
-  font-weight: bold;
-  margin-right: 12px;
-  min-width: 90px;
-  display: inline-block;
+.card-financeiro.lucro {
+  background-color: #e3f2fd;
 }
