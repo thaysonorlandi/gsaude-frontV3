@@ -3,10 +3,63 @@
 }
 
 .MuiTableHead-root .MuiTableCell-root {
-  font-weight: bold;
+  font-weight: 600;
   background-color: #f5f5f5;
 }
 
 .MuiTableRow-root:hover {
   background-color: rgba(0, 0, 0, 0.04);
+}
+
+.cadastros-container {
+  padding: 20px;
+  width: 100%;
+}
+
+.cadastros-paper {
+  padding: 20px;
+  height: 100%;
+}
+
+.cadastros-titulo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.cadastros-icon {
+  margin-right: 10px;
+  font-size: 28px !important;
+  color: #1976d2;
+}
+
+/* Estilos para os chips de status */
+.MuiChip-root.MuiChip-colorSuccess {
+  background-color: #1976d2;
+}
+
+/* Estilos para formulários */
+.MuiFormControl-root {
+  margin-bottom: 8px;
+}
+
+/* Melhorias para diálogos */
+.MuiDialog-paper .MuiDialogTitle-root {
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.MuiDialog-paper .MuiDialogActions-root {
+  background-color: #f8f8f8;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Estilo para horários */
+.horarios-container {
+  margin-top: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
 }
