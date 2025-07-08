@@ -8,6 +8,7 @@ import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
@@ -16,116 +17,405 @@ import Divider from '@mui/material/Divider';
 import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
+import { getUsers, createUser, updateUser, deleteUser } from '../services/userService';
 
 const permissoes = [
-  { value: "usuario", label: "Usuário", telas: ["Agendamento", "Financeiro", "Agendados"] },
-  { value: "adm", label: "Administrador", telas: ["Todas as telas"] },
-  { value: "visualizacao", label: "Visualização", telas: ["Agendados"] },
+  { value: "admin", label: "Administrador", telas: ["Todas as telas"] },
+  { value: "recepcao", label: "Recepção", telas: ["Agendamento", "Agendados", "Financeiro"] },
+  { value: "paciente", label: "Paciente", telas: ["Agendados"] },
 ];
 
 export default function ConfigDialog({ open, onClose }) {
   const [usuarios, setUsuarios] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
   const [nome, setNome] = React.useState('');
   const [email, setEmail] = React.useState('');
-  const [permissao, setPermissao] = React.useState('usuario');
+  const [senha, setSenha] = React.useState('');
+  const [confirmarSenha, setConfirmarSenha] = React.useState('');
+  const [permissao, setPermissao] = React.useState('recepcao');
+  const [editingUser, setEditingUser] = React.useState(null);
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (!nome || !email) return;
-    setUsuarios(prev => [
-      ...prev,
-      { nome, email, permissao }
-    ]);
+  // Carregar usuários ao abrir o diálogo
+  React.useEffect(() => {
+    const carregarUsuarios = async () => {
+      try {
+        setLoading(true);
+        const response = await getUsers();
+        if (response.success) {
+          setUsuarios(response.data);
+        } else {
+          showSnackbar('Erro ao carregar usuários: ' + (response.message || 'Erro desconhecido'), 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+        if (error.response?.status === 403) {
+          showSnackbar('Apenas administradores podem gerenciar usuários.', 'error');
+        } else if (error.response?.status === 401) {
+          showSnackbar('Sessão expirada. Faça login novamente.', 'error');
+        } else {
+          showSnackbar('Erro ao carregar usuários. Verifique sua conexão.', 'error');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (open) {
+      carregarUsuarios();
+    }
+  }, [open]);
+
+  const recarregarUsuarios = async () => {
+    try {
+      setLoading(true);
+      const response = await getUsers();
+      if (response.success) {
+        setUsuarios(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+      showSnackbar('Erro ao carregar usuários', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
+  };
+
+  const resetForm = () => {
     setNome('');
     setEmail('');
-    setPermissao('usuario');
-  }
+    setSenha('');
+    setConfirmarSenha('');
+    setPermissao('recepcao');
+    setEditingUser(null);
+  };
 
-  function handleDelete(idx) {
-    setUsuarios(prev => prev.filter((_, i) => i !== idx));
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!nome || !email) {
+      showSnackbar('Nome e email são obrigatórios', 'error');
+      return;
+    }
+
+    if (!editingUser && (!senha || !confirmarSenha)) {
+      showSnackbar('Senha e confirmação são obrigatórias para novos usuários', 'error');
+      return;
+    }
+
+    if (senha && senha !== confirmarSenha) {
+      showSnackbar('Senhas não coincidem', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const userData = {
+        name: nome,
+        email,
+        permissions: [permissao],
+        is_active: true
+      };
+
+      if (senha) {
+        userData.password = senha;
+        userData.c_password = confirmarSenha;
+      }
+
+      let response;
+      if (editingUser) {
+        response = await updateUser(editingUser.id, userData);
+        showSnackbar('Usuário atualizado com sucesso');
+      } else {
+        response = await createUser(userData);
+        showSnackbar('Usuário criado com sucesso');
+      }
+
+      if (response.success) {
+        await recarregarUsuarios();
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
+      showSnackbar(
+        error.response?.data?.message || 'Erro ao salvar usuário',
+        'error'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (usuario) => {
+    setEditingUser(usuario);
+    setNome(usuario.name);
+    setEmail(usuario.email);
+    setSenha('');
+    setConfirmarSenha('');
+    // Define a permissão com base no array permissions
+    if (usuario.permissions && usuario.permissions.length > 0) {
+      setPermissao(usuario.permissions[0]);
+    } else {
+      setPermissao('recepcao');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir este usuário?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await deleteUser(id);
+      if (response.success) {
+        showSnackbar('Usuário excluído com sucesso');
+        await recarregarUsuarios();
+      }
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      showSnackbar('Erro ao excluir usuário', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getUserPermissionLabel = (userPermissions) => {
+    if (!userPermissions || userPermissions.length === 0) return 'Sem permissão';
+    const permission = userPermissions[0];
+    const permissaoObj = permissoes.find(p => p.value === permission);
+    return permissaoObj ? permissaoObj.label : permission;
+  };
+
+  const getUserPermissionScreens = (userPermissions) => {
+    if (!userPermissions || userPermissions.length === 0) return '';
+    const permission = userPermissions[0];
+    const permissaoObj = permissoes.find(p => p.value === permission);
+    return permissaoObj ? permissaoObj.telas.join(', ') : '';
+  };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Gerenciar Usuários</DialogTitle>
-      <form onSubmit={handleSubmit}>
-        <DialogContent>
-          <List>
-            {usuarios.length === 0 && (
-              <ListItem>
-                <ListItemText primary="Nenhum usuário cadastrado." />
-              </ListItem>
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>
+          Gerenciar Usuários
+          {editingUser && (
+            <Typography variant="subtitle2" color="primary">
+              Editando: {editingUser.name}
+            </Typography>
+          )}
+        </DialogTitle>
+        <form onSubmit={handleSubmit}>
+          <DialogContent>
+            {loading ? (
+              <Box display="flex" justifyContent="center" p={3}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <>
+                {/* Lista de usuários */}
+                <Box mb={3}>
+                  <Typography variant="h6" gutterBottom>
+                    Usuários Cadastrados
+                  </Typography>
+                  <List sx={{ maxHeight: 300, overflow: 'auto' }}>
+                    {usuarios.length === 0 ? (
+                      <ListItem>
+                        <ListItemText primary="Nenhum usuário encontrado." />
+                      </ListItem>
+                    ) : (
+                      usuarios.map((usuario) => (
+                        <React.Fragment key={usuario.id}>
+                          <ListItem>
+                            <ListItemText
+                              primary={
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <Typography variant="body1">
+                                    {usuario.name} — {usuario.email}
+                                  </Typography>
+                                  <Chip 
+                                    label={getUserPermissionLabel(usuario.permissions)}
+                                    size="small"
+                                    color={usuario.permissions?.[0] === 'admin' ? 'error' : 
+                                           usuario.permissions?.[0] === 'recepcao' ? 'primary' : 'default'}
+                                  />
+                                  {!usuario.is_active && (
+                                    <Chip label="Inativo" size="small" color="warning" />
+                                  )}
+                                </Box>
+                              }
+                              secondary={
+                                <>
+                                  <Typography variant="body2" color="textSecondary">
+                                    Telas: {getUserPermissionScreens(usuario.permissions)}
+                                  </Typography>
+                                  {usuario.phone && (
+                                    <Typography variant="body2" color="textSecondary">
+                                      Telefone: {usuario.phone}
+                                    </Typography>
+                                  )}
+                                </>
+                              }
+                            />
+                            <ListItemSecondaryAction>
+                              <IconButton 
+                                edge="end" 
+                                color="primary" 
+                                onClick={() => handleEdit(usuario)}
+                                sx={{ mr: 1 }}
+                              >
+                                <EditIcon />
+                              </IconButton>
+                              <IconButton 
+                                edge="end" 
+                                color="error" 
+                                onClick={() => handleDelete(usuario.id)}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </ListItemSecondaryAction>
+                          </ListItem>
+                          <Divider />
+                        </React.Fragment>
+                      ))
+                    )}
+                  </List>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                {/* Formulário para adicionar/editar usuário */}
+                <Typography variant="h6" gutterBottom>
+                  {editingUser ? 'Editar Usuário' : 'Adicionar Novo Usuário'}
+                </Typography>
+                
+                <TextField
+                  margin="dense"
+                  label="Nome"
+                  type="text"
+                  fullWidth
+                  variant="standard"
+                  value={nome}
+                  onChange={e => setNome(e.target.value)}
+                  required
+                />
+                
+                <TextField
+                  margin="dense"
+                  label="E-mail"
+                  type="email"
+                  fullWidth
+                  variant="standard"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                />
+
+                <TextField
+                  margin="dense"
+                  label={editingUser ? "Nova Senha (deixe em branco para manter)" : "Senha"}
+                  type="password"
+                  fullWidth
+                  variant="standard"
+                  value={senha}
+                  onChange={e => setSenha(e.target.value)}
+                  required={!editingUser}
+                />
+
+                <TextField
+                  margin="dense"
+                  label="Confirmar Senha"
+                  type="password"
+                  fullWidth
+                  variant="standard"
+                  value={confirmarSenha}
+                  onChange={e => setConfirmarSenha(e.target.value)}
+                  required={!editingUser || senha}
+                />
+                
+                <FormControl fullWidth margin="dense" variant="standard" required>
+                  <InputLabel id="permissao-label">Permissão</InputLabel>
+                  <Select
+                    labelId="permissao-label"
+                    value={permissao}
+                    onChange={e => setPermissao(e.target.value)}
+                    label="Permissão"
+                  >
+                    {permissoes.map(p => (
+                      <MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <TextField
+                  margin="dense"
+                  label="Telas Permitidas"
+                  value={permissoes.find(p => p.value === permissao)?.telas.join(", ") || ""}
+                  fullWidth
+                  variant="standard"
+                  InputProps={{ readOnly: true }}
+                />
+              </>
             )}
-            {usuarios.map((usuario, idx) => (
-              <React.Fragment key={idx}>
-                <ListItem>
-                  <ListItemText
-                    primary={`${usuario.nome} — ${usuario.email}`}
-                    secondary={
-                      <>
-                        Permissão: <b>{permissoes.find(p => p.value === usuario.permissao)?.label}</b>
-                        <br />
-                        Telas: {permissoes.find(p => p.value === usuario.permissao)?.telas.join(", ")}
-                      </>
-                    }
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton edge="end" color="error" onClick={() => handleDelete(idx)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-                <Divider />
-              </React.Fragment>
-            ))}
-          </List>
-          <TextField
-            margin="dense"
-            label="Nome"
-            type="text"
-            fullWidth
-            variant="standard"
-            value={nome}
-            onChange={e => setNome(e.target.value)}
-            required
-          />
-          <TextField
-            margin="dense"
-            label="E-mail"
-            type="email"
-            fullWidth
-            variant="standard"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-          />
-          <FormControl fullWidth margin="dense" variant="standard" required>
-            <InputLabel id="permissao-label">Permissão</InputLabel>
-            <Select
-              labelId="permissao-label"
-              value={permissao}
-              onChange={e => setPermissao(e.target.value)}
-              label="Permissão"
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={onClose} disabled={loading}>
+              Fechar
+            </Button>
+            {editingUser && (
+              <Button 
+                onClick={resetForm} 
+                disabled={loading}
+                color="warning"
+              >
+                Cancelar Edição
+              </Button>
+            )}
+            <Button 
+              type="submit" 
+              variant="contained" 
+              disabled={loading}
             >
-              {permissoes.map(p => (
-                <MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField
-            margin="dense"
-            label="Telas Permitidas"
-            value={permissoes.find(p => p.value === permissao)?.telas.join(", ") || ""}
-            fullWidth
-            variant="standard"
-            InputProps={{ readOnly: true }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Fechar</Button>
-          <Button type="submit" variant="contained">Adicionar Usuário</Button>
-        </DialogActions>
-      </form>
-    </Dialog>
+              {loading ? 'Salvando...' : editingUser ? 'Atualizar Usuário' : 'Adicionar Usuário'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Snackbar para notificações */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }

@@ -30,14 +30,43 @@ function Login() {
       
       try {
         // Tenta fazer o login pela API real
+        console.log('Tentando autenticação na API...');
+        
+        // Determina as credenciais baseadas no input do usuário
+        let email, password;
+        
+        if (form.usuario.toLowerCase() === 'admin') {
+          email = 'admin@gsaude.com';
+          password = form.senha || '123456'; // usa a senha digitada ou padrão
+        } else if (form.usuario.toLowerCase() === 'recepcao') {
+          email = 'secretaria@gsaude.com';
+          password = form.senha || 'secret123';
+        } else if (form.usuario.toLowerCase() === 'paciente') {
+          email = 'paciente@gsaude.com';
+          password = form.senha || 'paciente123';
+        } else {
+          // Se não é um dos padrões, assume que é um email real
+          email = form.usuario;
+          password = form.senha;
+        }
+
+        console.log('Credenciais mapeadas:', { email, password: '***' });
+
         const response = await fetch('http://localhost:8000/api/v1/auth/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: form.usuario, password: form.senha })
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ email: email, password: password })
         });
+        
+        console.log('Status da resposta:', response.status);
+        console.log('Headers da resposta:', response.headers);
         
         if (response.ok) {
           const data = await response.json();
+          console.log('Dados recebidos da API:', data);
           userData = {
             nome: data.user.nome,
             tipo: data.user.tipo,
@@ -45,33 +74,17 @@ function Login() {
             id: data.user.id
           };
           userType = data.user.tipo;
+          console.log('Login na API bem-sucedido:', { ...userData, token: '***' });
+        } else {
+          const errorData = await response.json();
+          console.error('Erro na API - Status:', response.status, 'Data:', errorData);
+          throw new Error('Credenciais inválidas');
         }
       } catch (apiError) {
-        console.warn('Erro ao tentar autenticar na API, usando modo de desenvolvimento:', apiError);
-      }
-      
-      // Fallback para o modo de desenvolvimento se a API falhar
-      if (!userData) {
-        // Simulação de autenticação para desenvolvimento
-        userType = 'admin'; // padrão
-        
-        // Lógica simplificada para determinar o tipo de usuário baseado no nome de usuário
-        if (form.usuario.toLowerCase().includes('admin')) {
-          userType = 'admin';
-        } else if (form.usuario.toLowerCase().includes('recepcao')) {
-          userType = 'recepcao';
-        } else if (form.usuario.toLowerCase().includes('paciente')) {
-          userType = 'paciente';
-        }
-        
-        // Simulação de token de acesso
-        const token = 'fake-jwt-token-' + Math.random().toString(36).substring(2);
-        
-        userData = {
-          nome: form.usuario,
-          tipo: userType,
-          token: token,
-        };
+        console.error('Erro completo ao tentar autenticar na API:', apiError);
+        setError('Erro ao fazer login. Verifique suas credenciais.');
+        setLoading(false);
+        return;
       }
       
       // Salva os dados do usuário no contexto
@@ -123,14 +136,6 @@ function Login() {
           </div>
           <Button color="primary" type="submit" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
-          </Button>
-          <Button 
-            type="button" 
-            className="btn-cadastro" 
-            onClick={() => alert('Cadastro ainda não implementado')}
-            disabled={loading}
-          >
-            Cadastre-se
           </Button>
         </form>
       </div>
