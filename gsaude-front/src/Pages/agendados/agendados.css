@@ -1,87 +1,147 @@
 .agenda-container {
-  max-width: 1000px;
-  margin: 32px auto;
+  padding: 20px;
+  width: 100%;
 }
 
 .agenda-paper {
-  padding: 32px;
+  padding: 20px;
+  height: 100%;
 }
 
 .agenda-titulo {
-  text-align: center;
-  color: #1976d2;
-  font-weight: bold;
-  padding-bottom: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  margin-bottom: 20px;
+  font-weight: 500;
+  color: #333;
 }
-.agenda-titulo > .agenda-icon {
-  margin-right: 8px;
-  font-size: 32px;
+
+.agenda-icon {
+  margin-right: 10px;
+  font-size: 28px !important;
+  color: #1976d2;
+}
+
+/* Estilo para os filtros */
+.agenda-filtros {
+  margin-top: 5px;
+  margin-bottom: 24px;
+  padding: 10px 20px;
+  border-radius: 8px;
 }
 
 .agenda-filtros .MuiGrid-item {
-  width: 100%;
+  padding: 8px 10px;
+  min-width: 200px; /* Largura mínima para cada item do filtro */
 }
 
+/* Define uma largura maior para os seletores */
 .agenda-filtros .MuiFormControl-root {
   width: 100%;
+  max-width: none;
+}
+
+.agenda-filtros .MuiSelect-select {
   min-width: 180px;
+  font-size: 1rem;
+}
+
+/* Aumenta o espaçamento entre os filtros para melhor organização */
+.agenda-filtros .MuiGrid-container {
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+/* Remove a classe que não está sendo útil */
+.agenda-filtros .MuiInputBase-root {
+  min-height: auto;
 }
 
 .agenda-titulo-dia {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #555;
 }
 
 .agenda-nenhum {
-  margin-left: 16px;
-  color: #888;
-}
-
-.dot-consulta {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #43a047;
-  display: inline-block;
-  margin-left: 8px;
-}
-
-.dot-exame {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #1976d2;
-  display: inline-block;
-  margin-left: 8px;
-}
-
-.status-realizada {
-  color: #388e3c;
-  font-weight: bold;
-  margin-right: 12px;
-  min-width: 90px;
-  display: inline-block;
-}
-
-.status-aguardando {
-  color: #fbc02d;
-  font-weight: bold;
-  margin-right: 12px;
-  min-width: 90px;
-  display: inline-block;
-}
-
-.status-cancelada {
-  color: #d32f2f;
-  font-weight: bold;
-  margin-right: 12px;
-  min-width: 90px;
-  display: inline-block;
+  padding: 20px;
+  text-align: center;
 }
 
 .agenda-legenda {
-  margin-top: 16px;
-  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  color: #666;
+}
+
+.dot-consulta,
+.dot-exame {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot-consulta {
+  background-color: #1976d2;
+}
+
+.dot-exame {
+  background-color: #ff9800;
+}
+
+.status-aguardando {
+  color: #ff9800;
+  font-weight: 500;
+}
+
+.status-realizada {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.status-cancelada {
+  color: #f44336;
+  font-weight: 500;
+}
+
+/* Estilos para os tabs dentro do diálogo */
+.MuiTabs-root {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Estilos para os campos financeiros */
+.MuiInputAdornment-root {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.MuiGrid-container .MuiTextField-root.currency-field .MuiInputBase-input {
+  font-family: monospace;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.financial-fields-container {
+  border: 1px solid #e0e0e0;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* Estilos para hover nos itens da lista */
+.MuiListItem-root:hover {
+  background-color: rgba(25, 118, 210, 0.04);
+}
+
+/* Status de agendamento badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
 }
