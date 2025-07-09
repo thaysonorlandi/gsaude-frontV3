@@ -6,10 +6,11 @@ export function useAgendamento() {
   const [error, setError] = useState(null);
   const [filiais, setFiliais] = useState([]);
   const [especialidades, setEspecialidades] = useState([]);
-  const [tiposExame, setTiposExame] = useState([]);
+  const [procedimentos, setProcedimentos] = useState([]);
   const [medicos, setMedicos] = useState([]);
   const [convenios, setConvenios] = useState([]);
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
+  const [agendamentos, setAgendamentos] = useState([]);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -21,25 +22,31 @@ export function useAgendamento() {
     setError(null);
 
     try {
-      const [filiaisData, conveniosData, especialidadesData, tiposExameData] = await Promise.all([
-        agendamentoService.getFiliais(),
-        agendamentoService.getConvenios(),
-        agendamentoService.getEspecialidades(),
-        agendamentoService.getTiposExame(),
-      ]);
-
-      setFiliais(filiaisData);
-      setConvenios(conveniosData);
-      setEspecialidades(especialidadesData);
-      setTiposExame(tiposExameData);
+      console.log('Carregando dados iniciais...');
+      const dados = await agendamentoService.getDadosIniciais();
+      
+      console.log('Dados iniciais carregados:', dados);
+      
+      setFiliais(dados.filiais || []);
+      setEspecialidades(dados.especialidades || []);
+      setProcedimentos(dados.procedimentos || []);
+      setConvenios(dados.convenios || []);
+      
     } catch (err) {
-      setError('Erro ao carregar dados iniciais');
       console.error('Erro ao carregar dados iniciais:', err);
+      setError('Erro ao carregar dados iniciais');
+      
+      // Dados de fallback em caso de erro
+      setFiliais([]);
+      setEspecialidades([]);
+      setProcedimentos([]);
+      setConvenios([]);
     } finally {
       setLoading(false);
     }
   }
 
+  // Carregar médicos por especialidade (para consultas)
   async function carregarMedicosPorEspecialidade(especialidadeId) {
     if (!especialidadeId) {
       setMedicos([]);
@@ -50,18 +57,22 @@ export function useAgendamento() {
     setError(null);
 
     try {
+      console.log('Carregando médicos por especialidade:', especialidadeId);
       const medicosData = await agendamentoService.getMedicosPorEspecialidade(especialidadeId);
-      setMedicos(medicosData);
+      console.log('Médicos carregados:', medicosData);
+      setMedicos(medicosData || []);
     } catch (err) {
+      console.error('Erro ao carregar médicos por especialidade:', err);
       setError('Erro ao carregar médicos');
-      console.error('Erro ao carregar médicos:', err);
+      setMedicos([]);
     } finally {
       setLoading(false);
     }
   }
 
-  async function carregarMedicosPorTipoExame(tipoExameId) {
-    if (!tipoExameId) {
+  // Carregar médicos por procedimento (para exames)
+  async function carregarMedicosPorProcedimento(procedimentoId) {
+    if (!procedimentoId) {
       setMedicos([]);
       return;
     }
@@ -70,17 +81,21 @@ export function useAgendamento() {
     setError(null);
 
     try {
-      const medicosData = await agendamentoService.getMedicosPorTipoExame(tipoExameId);
-      setMedicos(medicosData);
+      console.log('Carregando médicos por procedimento:', procedimentoId);
+      const medicosData = await agendamentoService.getMedicosPorProcedimento(procedimentoId);
+      console.log('Médicos carregados:', medicosData);
+      setMedicos(medicosData || []);
     } catch (err) {
+      console.error('Erro ao carregar médicos por procedimento:', err);
       setError('Erro ao carregar médicos');
-      console.error('Erro ao carregar médicos:', err);
+      setMedicos([]);
     } finally {
       setLoading(false);
     }
   }
 
-  async function carregarHorarios(medicoId, dataInicial = null) {
+  // Carregar horários disponíveis
+  async function carregarHorarios(medicoId, data = null) {
     if (!medicoId) {
       setHorariosDisponiveis([]);
       return;
@@ -90,39 +105,51 @@ export function useAgendamento() {
     setError(null);
 
     try {
-      const horariosData = await agendamentoService.getHorariosDisponiveis(medicoId, dataInicial);
-      setHorariosDisponiveis(horariosData);
+      console.log('Carregando horários para médico:', medicoId, 'data:', data);
+      const horariosData = await agendamentoService.getHorariosDisponiveis(medicoId, data);
+      console.log('Horários carregados:', horariosData);
+      setHorariosDisponiveis(horariosData || []);
     } catch (err) {
-      setError('Erro ao carregar horários');
       console.error('Erro ao carregar horários:', err);
+      setError('Erro ao carregar horários');
+      setHorariosDisponiveis([]);
     } finally {
       setLoading(false);
     }
   }
 
+  // Criar agendamento
   async function criarAgendamento(dadosAgendamento) {
     setLoading(true);
     setError(null);
 
     try {
       const resultado = await agendamentoService.criarAgendamento(dadosAgendamento);
+      await carregarAgendamentos();
       return resultado;
     } catch (err) {
-      setError('Erro ao criar agendamento');
       console.error('Erro ao criar agendamento:', err);
+      setError('Erro ao criar agendamento');
       throw err;
     } finally {
       setLoading(false);
     }
   }
 
-  async function verificarDisponibilidade(medicoId, data, hora) {
+  // Carregar lista de agendamentos
+  async function carregarAgendamentos(filtros = {}) {
+    setLoading(true);
+    setError(null);
+
     try {
-      const resultado = await agendamentoService.verificarDisponibilidade(medicoId, data, hora);
-      return resultado.disponivel;
+      const agendamentosData = await agendamentoService.getAgendamentos(filtros);
+      setAgendamentos(agendamentosData || []);
     } catch (err) {
-      console.error('Erro ao verificar disponibilidade:', err);
-      return false;
+      console.error('Erro ao carregar agendamentos:', err);
+      setError('Erro ao carregar agendamentos');
+      setAgendamentos([]);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -131,15 +158,17 @@ export function useAgendamento() {
     error,
     filiais,
     especialidades,
-    tiposExame,
+    procedimentos, // Único array para procedimentos/exames
     medicos,
     convenios,
     horariosDisponiveis,
+    agendamentos,
+    carregarDadosIniciais,
     carregarMedicosPorEspecialidade,
-    carregarMedicosPorTipoExame,
+    carregarMedicosPorProcedimento,
     carregarHorarios,
     criarAgendamento,
-    verificarDisponibilidade,
+    carregarAgendamentos,
     setError,
   };
 }

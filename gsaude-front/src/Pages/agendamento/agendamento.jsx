@@ -34,7 +34,7 @@ const FORMULARIO_INICIAL = {
   paciente: "",
   tipo: "",
   especialidadeId: "",
-  tipoExameId: "",
+  procedimentoId: "", // Mudou de tipoExameId para procedimentoId
   medicoId: "",
   data: "",
   hora: "",
@@ -62,12 +62,12 @@ export default function Agendamento() {
     error,
     filiais,
     especialidades,
-    tiposExame,
+    procedimentos, // Mudou de tiposExame para procedimentos
     medicos,
     convenios,
     horariosDisponiveis,
     carregarMedicosPorEspecialidade,
-    carregarMedicosPorTipoExame,
+    carregarMedicosPorProcedimento, // Mudou de carregarMedicosPorTipoExame
     carregarHorarios,
     criarAgendamento,
     setError,
@@ -100,12 +100,12 @@ export default function Agendamento() {
     }
   }, [form.especialidadeId, carregarMedicosPorEspecialidade]);
 
-  // Carrega médicos quando muda o tipo de exame
+  // Carrega médicos quando muda o procedimento (antes era tipoExameId)
   useEffect(() => {
-    if (form.tipoExameId) {
-      carregarMedicosPorTipoExame(form.tipoExameId);
+    if (form.procedimentoId) {
+      carregarMedicosPorProcedimento(form.procedimentoId);
     }
-  }, [form.tipoExameId, carregarMedicosPorTipoExame]);
+  }, [form.procedimentoId, carregarMedicosPorProcedimento]);
 
   // Carrega horários quando muda o médico
   useEffect(() => {
@@ -130,14 +130,14 @@ export default function Agendamento() {
       setForm((f) => ({
         ...f,
         procedimento: value,
-        tipoExameId: "",
+        procedimentoId: "", // Mudou de tipoExameId para procedimentoId
         especialidadeId: "",
         medicoId: "",
       }));
     }
     
-    // Limpa médico ao trocar especialidade ou tipo de exame
-    if (name === "tipoExameId" || name === "especialidadeId") {
+    // Limpa médico ao trocar especialidade ou procedimento
+    if (name === "procedimentoId" || name === "especialidadeId") {
       setForm((f) => ({
         ...f,
         medicoId: "",
@@ -155,7 +155,7 @@ export default function Agendamento() {
         medico_id: form.medicoId,
         tipo_procedimento: form.procedimento,
         especialidade_id: form.especialidadeId || null,
-        tipo_exame_id: form.tipoExameId || null,
+        procedimento_id: form.procedimentoId || null, // Mudou de tipo_exame_id
         data_agendamento: form.data,
         hora_agendamento: form.hora,
         nome_paciente: form.nomePaciente,
@@ -175,7 +175,7 @@ export default function Agendamento() {
         nomeFilial: filiais.find(f => f.id === form.filialId)?.nome || '',
         nomeMedico: medicos.find(m => m.id === form.medicoId)?.nome || '',
         nomeEspecialidade: especialidades.find(e => e.id === form.especialidadeId)?.nome || '',
-        nomeTipoExame: tiposExame.find(t => t.id === form.tipoExameId)?.nome || '',
+        nomeProcedimento: procedimentos.find(p => p.id === form.procedimentoId)?.nome || '', // Mudou de nomeTipoExame
         nomeConvenio: convenios.find(c => c.id === form.convenioId)?.nome || '',
       });
       
@@ -296,21 +296,21 @@ export default function Agendamento() {
                 </FormControl>
               </Box>
 
-              {/* Se for exame, mostra tipos de exame */}
+              {/* Se for exame, mostra procedimentos */}
               {form.procedimento === "exame" && (
                 <Box className="agendamento-form-row">
                   <Typography className="agendamento-label">Tipo de Exame:</Typography>
                   <FormControl variant="standard" size="small" fullWidth>
                     <InputLabel>Tipo de Exame</InputLabel>
                     <Select
-                      name="tipoExameId"
-                      value={form.tipoExameId}
+                      name="procedimentoId" // Mudou de tipoExameId para procedimentoId
+                      value={form.procedimentoId}
                       onChange={handleChange}
                       label="Tipo de Exame"
                     >
-                      {tiposExame.map((tipo) => (
-                        <MenuItem key={tipo.id} value={tipo.id}>
-                          {tipo.nome}
+                      {procedimentos.map((procedimento) => (
+                        <MenuItem key={procedimento.id} value={procedimento.id}>
+                          {procedimento.nome}
                         </MenuItem>
                       ))}
                     </Select>
@@ -340,8 +340,8 @@ export default function Agendamento() {
                 </Box>
               )}
 
-              {/* Médico - aparece quando tem especialidade ou tipo de exame */}
-              {(form.especialidadeId || form.tipoExameId) && (
+              {/* Médico - aparece quando tem especialidade ou procedimento */}
+              {(form.especialidadeId || form.procedimentoId) && (
                 <Box className="agendamento-form-row">
                   <Typography className="agendamento-label">Médico:</Typography>
                   <FormControl variant="standard" size="small" fullWidth>
@@ -573,7 +573,7 @@ export default function Agendamento() {
               
               {dadosAgendamento.procedimento === "exame" && (
                 <Typography sx={{ mb: 1 }}>
-                  <strong>Tipo de Exame:</strong> {dadosAgendamento.nomeTipoExame}
+                  <strong>Tipo de Exame:</strong> {dadosAgendamento.nomeProcedimento}
                 </Typography>
               )}
               
