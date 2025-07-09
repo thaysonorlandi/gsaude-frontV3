@@ -45,6 +45,10 @@ export default function ConfigDialog({ open, onClose }) {
     message: '',
     severity: 'success'
   });
+  const [deleteConfirm, setDeleteConfirm] = React.useState({
+    open: false,
+    user: null
+  });
 
   // Carregar usuários ao abrir o diálogo
   React.useEffect(() => {
@@ -73,8 +77,22 @@ export default function ConfigDialog({ open, onClose }) {
 
     if (open) {
       carregarUsuarios();
+    } else {
+      // Quando fechar o diálogo, reseta tudo
+      resetForm();
     }
   }, [open]);
+
+  // Efeito para garantir que os campos sejam limpos quando entrar em modo de edição
+  React.useEffect(() => {
+    if (editingUser) {
+      // Força a limpeza dos campos quando entrar em modo de edição
+      setNome('');
+      setEmail('');
+      setSenha('');
+      setConfirmarSenha('');
+    }
+  }, [editingUser]);
 
   const recarregarUsuarios = async () => {
     try {
@@ -166,12 +184,11 @@ export default function ConfigDialog({ open, onClose }) {
   };
 
   const handleEdit = (usuario) => {
+    // Primeiro reseta o form completamente
+    resetForm();
+    // Depois define como modo de edição
     setEditingUser(usuario);
-    setNome(usuario.name);
-    setEmail(usuario.email);
-    setSenha('');
-    setConfirmarSenha('');
-    // Define a permissão com base no array permissions
+    // Mantém apenas a permissão pré-preenchida
     if (usuario.permissions && usuario.permissions.length > 0) {
       setPermissao(usuario.permissions[0]);
     } else {
@@ -179,14 +196,19 @@ export default function ConfigDialog({ open, onClose }) {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este usuário?')) {
-      return;
-    }
+  const handleDelete = (user) => {
+    setDeleteConfirm({
+      open: true,
+      user
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm.user) return;
 
     try {
       setLoading(true);
-      const response = await deleteUser(id);
+      const response = await deleteUser(deleteConfirm.user.id);
       if (response.success) {
         showSnackbar('Usuário excluído com sucesso');
         await recarregarUsuarios();
@@ -196,7 +218,12 @@ export default function ConfigDialog({ open, onClose }) {
       showSnackbar('Erro ao excluir usuário', 'error');
     } finally {
       setLoading(false);
+      setDeleteConfirm({ open: false, user: null });
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ open: false, user: null });
   };
 
   const getUserPermissionLabel = (userPermissions) => {
@@ -224,7 +251,7 @@ export default function ConfigDialog({ open, onClose }) {
             </Typography>
           )}
         </DialogTitle>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} key={editingUser ? `edit-${editingUser.id}` : 'new'}>
           <DialogContent>
             {loading ? (
               <Box display="flex" justifyContent="center" p={3}>
@@ -288,7 +315,7 @@ export default function ConfigDialog({ open, onClose }) {
                               <IconButton 
                                 edge="end" 
                                 color="error" 
-                                onClick={() => handleDelete(usuario.id)}
+                                onClick={() => handleDelete(usuario)}
                               >
                                 <DeleteIcon />
                               </IconButton>
@@ -316,6 +343,7 @@ export default function ConfigDialog({ open, onClose }) {
                   variant="standard"
                   value={nome}
                   onChange={e => setNome(e.target.value)}
+                  placeholder={editingUser ? `Digite o novo nome (atual: ${editingUser.name})` : ''}
                   required
                 />
                 
@@ -327,6 +355,7 @@ export default function ConfigDialog({ open, onClose }) {
                   variant="standard"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
+                  placeholder={editingUser ? `Digite o novo email (atual: ${editingUser.email})` : ''}
                   required
                 />
 
@@ -416,6 +445,39 @@ export default function ConfigDialog({ open, onClose }) {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Diálogo de confirmação para exclusão */}
+      <Dialog
+        open={deleteConfirm.open}
+        onClose={cancelDelete}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title" sx={{ color: 'error.main' }}>
+          ⚠️ Confirmar Exclusão
+        </DialogTitle>
+        <DialogContent>
+          <Typography id="delete-dialog-description">
+            Tem certeza que deseja excluir o usuário <strong>{deleteConfirm.user?.name}</strong>?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Esta ação não pode ser desfeita. O usuário será desativado do sistema.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelDelete} color="primary">
+            Cancelar
+          </Button>
+          <Button 
+            onClick={confirmDelete} 
+            color="error" 
+            variant="contained"
+            disabled={loading}
+          >
+            {loading ? 'Excluindo...' : 'Excluir'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

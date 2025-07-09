@@ -75,7 +75,7 @@ export default function Cadastros() {
   // Estado para horários do médico
   const [horarios, setHorarios] = useState([]);
   const [horarioForm, setHorarioForm] = useState({
-    dia_semana: 1,
+    dia_semana: 1, // segunda-feira
     hora_inicio: '08:00',
     hora_fim: '18:00',
     intervalo_minutos: 30,
@@ -670,7 +670,7 @@ export default function Cadastros() {
   // Função para obter o nome do dia da semana
   const getDiaSemana = (dia) => {
     const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    return dias[dia - 1] || '';
+    return dias[dia] || '';
   };
 
   return (
@@ -1070,13 +1070,13 @@ export default function Cadastros() {
                         label="Dia da Semana"
                         onChange={handleHorarioChange}
                       >
+                        <MenuItem value={0}>Domingo</MenuItem>
                         <MenuItem value={1}>Segunda-feira</MenuItem>
                         <MenuItem value={2}>Terça-feira</MenuItem>
                         <MenuItem value={3}>Quarta-feira</MenuItem>
                         <MenuItem value={4}>Quinta-feira</MenuItem>
                         <MenuItem value={5}>Sexta-feira</MenuItem>
                         <MenuItem value={6}>Sábado</MenuItem>
-                        <MenuItem value={7}>Domingo</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
@@ -1220,13 +1220,13 @@ export default function Cadastros() {
                         label="Dia da Semana"
                         onChange={handleHorarioExameChange}
                       >
+                        <MenuItem value={0}>Domingo</MenuItem>
                         <MenuItem value={1}>Segunda-feira</MenuItem>
                         <MenuItem value={2}>Terça-feira</MenuItem>
                         <MenuItem value={3}>Quarta-feira</MenuItem>
                         <MenuItem value={4}>Quinta-feira</MenuItem>
                         <MenuItem value={5}>Sexta-feira</MenuItem>
                         <MenuItem value={6}>Sábado</MenuItem>
-                        <MenuItem value={7}>Domingo</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
