@@ -32,7 +32,11 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Divider
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -44,6 +48,8 @@ import BiotechIcon from '@mui/icons-material/Biotech';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import LinkIcon from '@mui/icons-material/Link';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import api from '../../services/api';
 import './cadastros.css';
 
@@ -71,7 +77,7 @@ export default function Cadastros() {
     dia_semana: '',
     hora_inicio: '',
     hora_fim: '',
-    intervalo_minutos: 5,
+    intervalo_minutos: 30,
     ativo: true
   });
 
@@ -96,6 +102,13 @@ export default function Cadastros() {
   });
   const [editingProcedimento, setEditingProcedimento] = useState(null);
   const [showProcedimentoDialog, setShowProcedimentoDialog] = useState(false);
+
+  // Estados para vinculação de médicos a procedimentos
+  const [selectedProcedimentoForVinculo, setSelectedProcedimentoForVinculo] = useState(null);
+  const [showVinculoDialog, setShowVinculoDialog] = useState(false);
+  const [vinculoForm, setVinculoForm] = useState({
+    medico_id: ''
+  });
 
   // Estado para notificações
   const [snackbar, setSnackbar] = useState({
@@ -234,13 +247,6 @@ export default function Cadastros() {
   // CRUD Horários
   const handleOpenHorarioDialog = (medico) => {
     setSelectedMedicoForHorario(medico);
-    setHorarioForm({
-      dia_semana: '',
-      hora_inicio: '',
-      hora_fim: '',
-      intervalo_minutos: 5,
-      ativo: true
-    });
     setShowHorarioDialog(true);
   };
 
@@ -254,6 +260,7 @@ export default function Cadastros() {
         severity: "success"
       });
       setShowHorarioDialog(false);
+      resetHorarioForm();
       loadMedicos();
     } catch (error) {
       setSnackbar({
@@ -270,27 +277,36 @@ export default function Cadastros() {
         await api.delete(`/medicos/${medicoId}/horarios/${horarioId}`);
         setSnackbar({
           open: true,
-          message: "Horário excluído com sucesso!",
+          message: "Horário removido com sucesso!",
           severity: "success"
         });
         loadMedicos();
       } catch (error) {
         setSnackbar({
           open: true,
-          message: error.response?.data?.message || "Erro ao excluir horário",
+          message: error.response?.data?.message || "Erro ao remover horário",
           severity: "error"
         });
       }
     }
   };
 
-  // Helper functions
-  const getDiaSemanaTexto = (dia) => {
-    const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    return dias[dia] || '';
+  const resetHorarioForm = () => {
+    setHorarioForm({
+      dia_semana: '',
+      hora_inicio: '',
+      hora_fim: '',
+      intervalo_minutos: 30,
+      ativo: true
+    });
   };
 
-  // CRUD Especialidades (mantido igual)
+  const getDiaSemanaTexto = (dia) => {
+    const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    return dias[dia] || 'N/A';
+  };
+
+  // CRUD Especialidades
   const handleEspecialidadeSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -361,25 +377,19 @@ export default function Cadastros() {
     setEditingEspecialidade(null);
   };
 
-  // CRUD Procedimentos (mantido igual)
+  // CRUD Procedimentos
   const handleProcedimentoSubmit = async (e) => {
     e.preventDefault();
     try {
-      const formData = {
-        ...procedimentoForm,
-        valor: procedimentoForm.valor ? parseFloat(procedimentoForm.valor) : null,
-        tempo_estimado: procedimentoForm.tempo_estimado ? parseInt(procedimentoForm.tempo_estimado) : null
-      };
-
       if (editingProcedimento) {
-        await api.put(`/procedimentos/${editingProcedimento.id}`, formData);
+        await api.put(`/procedimentos/${editingProcedimento.id}`, procedimentoForm);
         setSnackbar({
           open: true,
           message: "Procedimento atualizado com sucesso!",
           severity: "success"
         });
       } else {
-        await api.post('/procedimentos', formData);
+        await api.post('/procedimentos', procedimentoForm);
         setSnackbar({
           open: true,
           message: "Procedimento cadastrado com sucesso!",
@@ -440,6 +450,54 @@ export default function Cadastros() {
       ativo: true
     });
     setEditingProcedimento(null);
+  };
+
+  // Vinculação de médicos a procedimentos
+  const handleOpenVinculoDialog = (procedimento) => {
+    setSelectedProcedimentoForVinculo(procedimento);
+    setShowVinculoDialog(true);
+    setVinculoForm({ medico_id: '' });
+  };
+
+  const handleVinculoSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/procedimentos/${selectedProcedimentoForVinculo.id}/medicos`, vinculoForm);
+      setSnackbar({
+        open: true,
+        message: "Médico vinculado com sucesso!",
+        severity: "success"
+      });
+      setShowVinculoDialog(false);
+      setVinculoForm({ medico_id: '' });
+      loadProcedimentos();
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || "Erro ao vincular médico",
+        severity: "error"
+      });
+    }
+  };
+
+  const handleDesvincularMedico = async (procedimentoId, medicoId) => {
+    if (window.confirm('Tem certeza que deseja desvincular este médico do procedimento?')) {
+      try {
+        await api.delete(`/procedimentos/${procedimentoId}/medicos/${medicoId}`);
+        setSnackbar({
+          open: true,
+          message: "Médico desvinculado com sucesso!",
+          severity: "success"
+        });
+        loadProcedimentos();
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: error.response?.data?.message || "Erro ao desvincular médico",
+          severity: "error"
+        });
+      }
+    }
   };
 
   // Mudança de aba
@@ -588,7 +646,7 @@ export default function Cadastros() {
           </Box>
         )}
 
-        {/* Tab Procedimentos (mantido igual) */}
+        {/* Tab Procedimentos */}
         {tabValue === 1 && (
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -627,40 +685,86 @@ export default function Cadastros() {
                 </TableHead>
                 <TableBody>
                   {procedimentos.map((procedimento) => (
-                    <TableRow key={procedimento.id}>
-                      <TableCell>{procedimento.nome}</TableCell>
-                      <TableCell>{procedimento.descricao || '-'}</TableCell>
-                      <TableCell>
-                        {procedimento.valor ? Number(procedimento.valor).toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL'
-                        }) : '-'}
-                      </TableCell>
-                      <TableCell>{procedimento.tempo_estimado || '-'}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={procedimento.ativo ? "Ativo" : "Inativo"} 
-                          color={procedimento.ativo ? "success" : "default"}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        <IconButton 
-                          color="primary" 
-                          size="small"
-                          onClick={() => handleEditProcedimento(procedimento)}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton 
-                          color="error" 
-                          size="small"
-                          onClick={() => handleDeleteProcedimento(procedimento.id)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
+                    <React.Fragment key={procedimento.id}>
+                      <TableRow>
+                        <TableCell>{procedimento.nome}</TableCell>
+                        <TableCell>{procedimento.descricao || '-'}</TableCell>
+                        <TableCell>
+                          {procedimento.valor ? Number(procedimento.valor).toLocaleString('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }) : '-'}
+                        </TableCell>
+                        <TableCell>{procedimento.tempo_estimado || '-'}</TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={procedimento.ativo ? "Ativo" : "Inativo"} 
+                            color={procedimento.ativo ? "success" : "default"}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton 
+                            color="primary" 
+                            size="small"
+                            onClick={() => handleEditProcedimento(procedimento)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton 
+                            color="secondary" 
+                            size="small"
+                            onClick={() => handleOpenVinculoDialog(procedimento)}
+                            title="Vincular Médicos"
+                          >
+                            <LinkIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton 
+                            color="error" 
+                            size="small"
+                            onClick={() => handleDeleteProcedimento(procedimento.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                      {procedimento.medicos && procedimento.medicos.length > 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6}>
+                            <Accordion>
+                              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Typography variant="body2">
+                                  Médicos Vinculados ({procedimento.medicos.length})
+                                </Typography>
+                              </AccordionSummary>
+                              <AccordionDetails>
+                                <List dense>
+                                  {procedimento.medicos.map((medico) => (
+                                    <ListItem key={medico.id} divider>
+                                      <ListItemText
+                                        primary={medico.nome}
+                                        secondary={`CRM: ${medico.crm}`}
+                                      />
+                                      <ListItemSecondaryAction>
+                                        <IconButton 
+                                          edge="end" 
+                                          color="error" 
+                                          size="small"
+                                          onClick={() => handleDesvincularMedico(procedimento.id, medico.id)}
+                                          title="Desvincular médico"
+                                        >
+                                          <RemoveCircleOutlineIcon fontSize="small" />
+                                        </IconButton>
+                                      </ListItemSecondaryAction>
+                                    </ListItem>
+                                  ))}
+                                </List>
+                              </AccordionDetails>
+                            </Accordion>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
@@ -668,7 +772,7 @@ export default function Cadastros() {
           </Box>
         )}
 
-        {/* Tab Especialidades (mantido igual) */}
+        {/* Tab Especialidades */}
         {tabValue === 2 && (
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -738,10 +842,11 @@ export default function Cadastros() {
             </TableContainer>
           </Box>
         )}
+
       </Paper>
 
-      {/* Diálogo para Cadastro/Edição de Médico (mantido igual) */}
-      <Dialog open={showMedicoDialog} onClose={() => setShowMedicoDialog(false)} maxWidth="sm" fullWidth>
+      {/* Diálogo para Adicionar/Editar Médico */}
+      <Dialog open={showMedicoDialog} onClose={() => setShowMedicoDialog(false)} maxWidth="md" fullWidth>
         <DialogTitle>
           {editingMedico ? 'Editar Médico' : 'Novo Médico'}
         </DialogTitle>
@@ -750,7 +855,7 @@ export default function Cadastros() {
             <Grid item xs={12} sm={6}>
               <TextField
                 name="nome"
-                label="Nome do Médico"
+                label="Nome"
                 value={medicoForm.nome}
                 onChange={(e) => setMedicoForm({...medicoForm, nome: e.target.value})}
                 fullWidth
@@ -782,7 +887,7 @@ export default function Cadastros() {
             <Grid item xs={12} sm={6}>
               <TextField
                 name="email"
-                label="E-mail"
+                label="Email"
                 type="email"
                 value={medicoForm.email}
                 onChange={(e) => setMedicoForm({...medicoForm, email: e.target.value})}
@@ -798,6 +903,7 @@ export default function Cadastros() {
                   value={medicoForm.especialidade_id}
                   label="Especialidade"
                   onChange={(e) => setMedicoForm({...medicoForm, especialidade_id: e.target.value})}
+                  sx={{ minWidth: 200 }}
                 >
                   {especialidades.map((especialidade) => (
                     <MenuItem key={especialidade.id} value={especialidade.id}>
@@ -890,9 +996,10 @@ export default function Cadastros() {
                   onChange={(e) => setHorarioForm({...horarioForm, intervalo_minutos: e.target.value})}
                   sx={{ minWidth: 120 }}
                 >
-                  <MenuItem value={5}>5 minutos</MenuItem>
-                  <MenuItem value={10}>10 minutos</MenuItem>
                   <MenuItem value={15}>15 minutos</MenuItem>
+                  <MenuItem value={30}>30 minutos</MenuItem>
+                  <MenuItem value={45}>45 minutos</MenuItem>
+                  <MenuItem value={60}>60 minutos</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -916,7 +1023,172 @@ export default function Cadastros() {
         </DialogActions>
       </Dialog>
 
-      {/* Diálogos para Procedimentos e Especialidades - mantidos iguais aos anteriores */}
+      {/* Diálogo para Adicionar/Editar Procedimento */}
+      <Dialog open={showProcedimentoDialog} onClose={() => setShowProcedimentoDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {editingProcedimento ? 'Editar Procedimento' : 'Novo Procedimento'}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                name="nome"
+                label="Nome do Procedimento"
+                value={procedimentoForm.nome}
+                onChange={(e) => setProcedimentoForm({...procedimentoForm, nome: e.target.value})}
+                fullWidth
+                required
+                margin="dense"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="descricao"
+                label="Descrição"
+                value={procedimentoForm.descricao}
+                onChange={(e) => setProcedimentoForm({...procedimentoForm, descricao: e.target.value})}
+                fullWidth
+                multiline
+                rows={3}
+                margin="dense"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="valor"
+                label="Valor (R$)"
+                type="number"
+                value={procedimentoForm.valor}
+                onChange={(e) => setProcedimentoForm({...procedimentoForm, valor: e.target.value})}
+                fullWidth
+                margin="dense"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="tempo_estimado"
+                label="Tempo Estimado (minutos)"
+                type="number"
+                value={procedimentoForm.tempo_estimado}
+                onChange={(e) => setProcedimentoForm({...procedimentoForm, tempo_estimado: e.target.value})}
+                fullWidth
+                margin="dense"
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">min</InputAdornment>,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={procedimentoForm.ativo}
+                    onChange={(e) => setProcedimentoForm({...procedimentoForm, ativo: e.target.checked})}
+                    color="primary"
+                  />
+                }
+                label="Procedimento ativo"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowProcedimentoDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleProcedimentoSubmit}>Salvar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo para Adicionar/Editar Especialidade */}
+      <Dialog open={showEspecialidadeDialog} onClose={() => setShowEspecialidadeDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {editingEspecialidade ? 'Editar Especialidade' : 'Nova Especialidade'}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                name="nome"
+                label="Nome da Especialidade"
+                value={especialidadeForm.nome}
+                onChange={(e) => setEspecialidadeForm({...especialidadeForm, nome: e.target.value})}
+                fullWidth
+                required
+                margin="dense"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="descricao"
+                label="Descrição"
+                value={especialidadeForm.descricao}
+                onChange={(e) => setEspecialidadeForm({...especialidadeForm, descricao: e.target.value})}
+                fullWidth
+                multiline
+                rows={3}
+                margin="dense"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={especialidadeForm.ativo}
+                    onChange={(e) => setEspecialidadeForm({...especialidadeForm, ativo: e.target.checked})}
+                    color="primary"
+                  />
+                }
+                label="Especialidade ativa"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowEspecialidadeDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleEspecialidadeSubmit}>Salvar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo para Vincular Médico ao Procedimento */}
+      <Dialog open={showVinculoDialog} onClose={() => setShowVinculoDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Vincular Médico - {selectedProcedimentoForVinculo?.nome}
+        </DialogTitle>
+        <DialogContent dividers>
+          <FormControl fullWidth margin="dense" required>
+            <InputLabel>Selecionar Médico</InputLabel>
+            <Select
+              name="medico_id"
+              value={vinculoForm.medico_id}
+              label="Selecionar Médico"
+              onChange={(e) => setVinculoForm({...vinculoForm, medico_id: e.target.value})}
+            >
+              {medicos
+                .filter(medico => 
+                  !selectedProcedimentoForVinculo?.medicos?.some(m => m.id === medico.id)
+                )
+                .map((medico) => (
+                  <MenuItem key={medico.id} value={medico.id}>
+                    {medico.nome} - CRM: {medico.crm}
+                  </MenuItem>
+                ))
+              }
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowVinculoDialog(false)}>Cancelar</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleVinculoSubmit}
+            disabled={!vinculoForm.medico_id}
+          >
+            Vincular
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar para notificações */}
       <Snackbar
