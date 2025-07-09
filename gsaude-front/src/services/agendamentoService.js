@@ -130,9 +130,14 @@ export const agendamentoService = {
   async getMedicosPorProcedimento(procedimentoId) {
     try {
       const response = await apiRequest(`/medicos/procedimento/${procedimentoId}`);
+      // Verificar se a resposta tem a estrutura esperada
+      if (response.success && response.data) {
+        return response.data;
+      }
       return response.data || response;
     } catch (error) {
-      console.warn('Erro ao carregar médicos por procedimento:', error);
+      console.error('Erro ao carregar médicos por procedimento:', error);
+      // Retornar array vazio em caso de erro
       return [];
     }
   },
@@ -143,21 +148,36 @@ export const agendamentoService = {
       const endpoint = data 
         ? `/medicos/${medicoId}/horarios-disponiveis?data=${data}`
         : `/medicos/${medicoId}/horarios-disponiveis`;
+      console.log('Buscando horários do endpoint:', endpoint);
+      
       const response = await apiRequest(endpoint);
+      console.log('Resposta de horários:', response);
+      
+      // Verificar se a resposta tem a estrutura esperada
+      if (response.success && response.data) {
+        return response.data;
+      }
       return response.data || response;
     } catch (error) {
-      console.warn('Erro ao carregar horários:', error);
+      console.error('Erro ao carregar horários:', error);
       return [];
     }
   },
 
   // Criar agendamento
   async criarAgendamento(dadosAgendamento) {
-    const response = await apiRequest('/agendamentos', {
-      method: 'POST',
-      body: JSON.stringify(dadosAgendamento),
-    });
-    return response.data || response;
+    try {
+      console.log('Dados do agendamento a serem enviados:', dadosAgendamento);
+      const response = await apiRequest('/agendamentos', {
+        method: 'POST',
+        body: JSON.stringify(dadosAgendamento),
+      });
+      console.log('Resposta do agendamento:', response);
+      return response.data || response;
+    } catch (error) {
+      console.error('Erro ao criar agendamento:', error);
+      throw error;
+    }
   },
 
   // Buscar agendamentos

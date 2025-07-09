@@ -71,22 +71,15 @@ export function useAgendamento() {
   }
 
   // Carregar médicos por procedimento (para exames)
-  async function carregarMedicosPorProcedimento(procedimentoId) {
-    if (!procedimentoId) {
-      setMedicos([]);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
+  const carregarMedicosPorProcedimento = async (procedimentoId) => {
     try {
-      console.log('Carregando médicos por procedimento:', procedimentoId);
+      setLoading(true);
+      console.log('Carregando médicos para procedimento:', procedimentoId);
       const medicosData = await agendamentoService.getMedicosPorProcedimento(procedimentoId);
-      console.log('Médicos carregados:', medicosData);
-      setMedicos(medicosData || []);
-    } catch (err) {
-      console.error('Erro ao carregar médicos por procedimento:', err);
+      console.log('Médicos recebidos:', medicosData);
+      setMedicos(medicosData);
+    } catch (error) {
+      console.error('Erro ao carregar médicos por procedimento:', error);
       setError('Erro ao carregar médicos');
       setMedicos([]);
     } finally {
