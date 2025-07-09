@@ -32,7 +32,7 @@ const steps = ["Dados Iniciais", "Horários", "Dados Adicionais"];
 const FORMULARIO_INICIAL = {
   filialId: "",
   paciente: "",
-  tipo: "",
+  procedimento: "",
   especialidadeId: "",
   procedimentoId: "", // Mudou de tipoExameId para procedimentoId
   medicoId: "",
@@ -95,24 +95,27 @@ export default function Agendamento() {
 
   // Carrega médicos quando muda a especialidade
   useEffect(() => {
-    if (form.especialidadeId) {
+    if (form.especialidadeId && form.procedimento === "consulta") {
+      console.log('Carregando médicos por especialidade:', form.especialidadeId);
       carregarMedicosPorEspecialidade(form.especialidadeId);
     }
-  }, [form.especialidadeId, carregarMedicosPorEspecialidade]);
+  }, [form.especialidadeId]);
 
   // Carrega médicos quando muda o procedimento (antes era tipoExameId)
   useEffect(() => {
-    if (form.procedimentoId) {
+    if (form.procedimentoId && form.procedimento === "exame") {
+      console.log('Carregando médicos por procedimento:', form.procedimentoId);
       carregarMedicosPorProcedimento(form.procedimentoId);
     }
-  }, [form.procedimentoId, carregarMedicosPorProcedimento]);
+  }, [form.procedimentoId]);
 
   // Carrega horários quando muda o médico
   useEffect(() => {
     if (form.medicoId) {
+      console.log('Carregando horários para médico:', form.medicoId);
       carregarHorarios(form.medicoId);
     }
-  }, [form.medicoId, carregarHorarios]);
+  }, [form.medicoId]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -214,7 +217,7 @@ export default function Agendamento() {
 
   // Defina os campos obrigatórios de cada etapa em um objeto:
   const CAMPOS_OBRIGATORIOS = {
-    0: ["filialId", "medicoId"], // etapa 1: dados iniciais
+    0: ["filialId", "procedimento", "medicoId"], // etapa 1: dados iniciais
     1: ["data", "hora"],         // etapa 2: horários
     2: ["nomePaciente", "idadePaciente", "convenioId", "telefonePaciente"], // etapa 3: dados adicionais
   };
@@ -263,9 +266,10 @@ export default function Agendamento() {
                   <InputLabel>Selecione a Filial</InputLabel>
                   <Select
                     name="filialId"
-                    value={form.filialId}
+                    value={form.filialId || ""}
                     onChange={handleChange}
                     label="Selecione a Filial"
+                    displayEmpty
                   >
                     {filiais.map((filial) => (
                       <MenuItem key={filial.id} value={filial.id}>
@@ -283,13 +287,11 @@ export default function Agendamento() {
                   <InputLabel>Exame ou Consulta</InputLabel>
                   <Select
                     name="procedimento"
-                    value={form.procedimento}
+                    value={form.procedimento || ""}
                     onChange={handleChange}
                     label="Exame ou Consulta"
+                    displayEmpty
                   >
-                    <MenuItem value="">
-                      <em>Selecione</em>
-                    </MenuItem>
                     <MenuItem value="exame">Exame</MenuItem>
                     <MenuItem value="consulta">Consulta</MenuItem>
                   </Select>
@@ -304,9 +306,10 @@ export default function Agendamento() {
                     <InputLabel>Tipo de Exame</InputLabel>
                     <Select
                       name="procedimentoId" // Mudou de tipoExameId para procedimentoId
-                      value={form.procedimentoId}
+                      value={form.procedimentoId || ""}
                       onChange={handleChange}
                       label="Tipo de Exame"
+                      displayEmpty
                     >
                       {procedimentos.map((procedimento) => (
                         <MenuItem key={procedimento.id} value={procedimento.id}>
@@ -326,9 +329,10 @@ export default function Agendamento() {
                     <InputLabel>Especialidade</InputLabel>
                     <Select
                       name="especialidadeId"
-                      value={form.especialidadeId}
+                      value={form.especialidadeId || ""}
                       onChange={handleChange}
                       label="Especialidade"
+                      displayEmpty
                     >
                       {especialidades.map((especialidade) => (
                         <MenuItem key={especialidade.id} value={especialidade.id}>
@@ -348,9 +352,10 @@ export default function Agendamento() {
                     <InputLabel>Médico</InputLabel>
                     <Select
                       name="medicoId"
-                      value={form.medicoId}
+                      value={form.medicoId || ""}
                       onChange={handleChange}
                       label="Médico"
+                      displayEmpty
                     >
                       {medicos.map((medico) => (
                         <MenuItem key={medico.id} value={medico.id}>
@@ -466,6 +471,7 @@ export default function Agendamento() {
                     value={form.convenioId || ""}
                     onChange={handleChange}
                     label="Selecione o Convênio"
+                    displayEmpty
                     required
                   >
                     {convenios.map((convenio) => (
