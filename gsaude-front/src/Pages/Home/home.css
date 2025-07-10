@@ -36,6 +36,25 @@
   background-color: #34495e;     /* Cor de fundo igual ao restante */
 }
 
+/* Container do conteúdo da appbar */
+.home-appbar-content {
+  display: flex;                 /* Layout flexível */
+  align-items: center;           /* Centraliza verticalmente */
+  gap: 10px;                     /* Espaçamento entre logo e título */
+  width: 100%;                   /* Ocupa toda a largura */
+}
+
+/* Estilo do logo */
+.home-logo {
+  height: 50px;                  /* Altura fixa do logo */
+  width: auto;                   /* Largura proporcional */
+  max-width: 150px;              /* Largura máxima */
+  object-fit: contain;           /* Mantém proporção */
+  background-color: white;       /* Fundo branco para o logo */
+  padding: 4px;                  /* Pequeno padding interno */
+  border-radius: 4px;            /* Bordas ligeiramente arredondadas */
+}
+
 /* Título da home */
 .home-title {
   flex-grow: 1;                  /* Ocupa o espaço disponível */

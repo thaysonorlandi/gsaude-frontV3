@@ -27,6 +27,7 @@ import Button from '@mui/material/Button';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useUser } from '../../contexts/contexts';
+import { getSystemConfig } from '../../services/systemConfigService';
 
 function Home() {
   const navigate = useNavigate();
@@ -37,6 +38,23 @@ function Home() {
   const [openConfirm, setOpenConfirm] = React.useState(false);
   const [pendingNavigation, setPendingNavigation] = React.useState(null);
   const [emProcessoAgendamento, setEmProcessoAgendamento] = React.useState(false);
+  const [logoUrl, setLogoUrl] = React.useState(null);
+
+  // Buscar logo do sistema
+  React.useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const response = await getSystemConfig('site_logo');
+        if (response.success && response.data.value) {
+          setLogoUrl(response.data.value);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar logo do sistema:', error);
+      }
+    };
+
+    fetchLogo();
+  }, []);
 
   // Redireciona pacientes para a página de agendados se tentarem acessar a home
   React.useEffect(() => {
@@ -87,9 +105,18 @@ function Home() {
       {/* AppBar fixo no topo */}
       <AppBar position="static" className="home-appbar">
         <Toolbar className="home-toolbar">
-          <Typography variant="h6" noWrap component="div" className="home-title">
-            Agendamento de Consultas e Exames
-          </Typography>
+          <Box className="home-appbar-content">
+            {logoUrl && (
+              <img 
+                src={logoUrl} 
+                alt="Logo" 
+                className="home-logo"
+              />
+            )}
+            <Typography variant="h6" noWrap component="div" className="home-title">
+              Agendamento de Consultas e Exames
+            </Typography>
+          </Box>
         </Toolbar>
       </AppBar>
       {/* Conteúdo abaixo do AppBar */}
