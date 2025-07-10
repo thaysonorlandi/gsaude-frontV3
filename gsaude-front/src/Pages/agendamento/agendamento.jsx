@@ -152,20 +152,116 @@ export default function Agendamento() {
     e.preventDefault();
     
     try {
-      // Preparar dados para envio
+      // Função para garantir formato de data YYYY-MM-DD
+      const garantirFormatoData = (data) => {
+        if (!data) return null;
+        
+        // Se já está no formato correto, retorna
+        if (typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data)) {
+          return data;
+        }
+        
+        // Se é um objeto Date
+        if (data instanceof Date) {
+          const year = data.getFullYear();
+          const month = String(data.getMonth() + 1).padStart(2, '0');
+          const day = String(data.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+        
+        // Se é string em formato DD/MM/YYYY
+        if (typeof data === 'string' && data.includes('/')) {
+          const partes = data.split('/');
+          if (partes.length === 3) {
+            return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+          }
+        }
+        
+        // Tenta converter qualquer outro formato
+        try {
+          const dateObj = new Date(data);
+          if (!isNaN(dateObj.getTime())) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          }
+        } catch (e) {
+          console.error('Erro ao converter data:', e);
+        }
+        
+        return data;
+      };
+
+      // Função para garantir formato de hora HH:MM
+      const garantirFormatoHora = (hora) => {
+        if (!hora) return null;
+        
+        // Se já está no formato correto HH:MM
+        if (typeof hora === 'string' && /^\d{2}:\d{2}$/.test(hora)) {
+          return hora;
+        }
+        
+        // Se é string mas sem zero à esquerda
+        if (typeof hora === 'string' && hora.includes(':')) {
+          const partes = hora.split(':');
+          if (partes.length === 2) {
+            return `${partes[0].padStart(2, '0')}:${partes[1].padStart(2, '0')}`;
+          }
+        }
+        
+        // Se é um objeto Date, extrai a hora
+        if (hora instanceof Date) {
+          const hours = String(hora.getHours()).padStart(2, '0');
+          const minutes = String(hora.getMinutes()).padStart(2, '0');
+          return `${hours}:${minutes}`;
+        }
+        
+        return hora;
+      };
+
+      // Preparar dados com formatação rigorosa
+      const dataFormatada = garantirFormatoData(form.data);
+      const horaFormatada = garantirFormatoHora(form.hora);
+      
+      console.log('=== DADOS ANTES DO ENVIO ===');
+      console.log('Data original:', form.data);
+      console.log('Data formatada:', dataFormatada);
+      console.log('Hora original:', form.hora);
+      console.log('Hora formatada:', horaFormatada);
+      
+      // Validação prévia
+      if (!dataFormatada || !horaFormatada) {
+        setError('Data e hora são obrigatórias e devem ser válidas');
+        return;
+      }
+      
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dataFormatada)) {
+        setError('Data deve estar no formato correto (YYYY-MM-DD)');
+        return;
+      }
+      
+      if (!/^\d{2}:\d{2}$/.test(horaFormatada)) {
+        setError('Hora deve estar no formato correto (HH:MM)');
+        return;
+      }
+
       const dadosParaEnvio = {
-        filial_id: form.filialId,
-        medico_id: form.medicoId,
+        filial_id: parseInt(form.filialId),
+        medico_id: parseInt(form.medicoId),
         tipo_procedimento: form.procedimento,
-        especialidade_id: form.especialidadeId || null,
-        procedimento_id: form.procedimentoId || null, // Mudou de tipo_exame_id
-        data_agendamento: form.data,
-        hora_agendamento: form.hora,
-        nome_paciente: form.nomePaciente,
-        idade_paciente: form.idadePaciente,
-        convenio_id: form.convenioId,
+        especialidade_id: form.especialidadeId ? parseInt(form.especialidadeId) : null,
+        procedimento_id: form.procedimentoId ? parseInt(form.procedimentoId) : null,
+        data_agendamento: dataFormatada,
+        hora_agendamento: horaFormatada,
+        nome_paciente: form.nomePaciente.trim(),
+        idade_paciente: parseInt(form.idadePaciente),
+        convenio_id: parseInt(form.convenioId),
         telefone_paciente: removerMascaraTelefone(form.telefonePaciente),
       };
+
+      console.log('=== DADOS FINAIS PARA ENVIO ===');
+      console.log(JSON.stringify(dadosParaEnvio, null, 2));
 
       // Chama o serviço para criar o agendamento
       const resultado = await criarAgendamento(dadosParaEnvio);
@@ -174,18 +270,20 @@ export default function Agendamento() {
       setDadosAgendamento({
         ...form,
         id: resultado.id,
+        data: dataFormatada,
+        hora: horaFormatada,
         // Adiciona os nomes dos itens selecionados
-        nomeFilial: filiais.find(f => f.id === form.filialId)?.nome || '',
-        nomeMedico: medicos.find(m => m.id === form.medicoId)?.nome || '',
-        nomeEspecialidade: especialidades.find(e => e.id === form.especialidadeId)?.nome || '',
-        nomeProcedimento: procedimentos.find(p => p.id === form.procedimentoId)?.nome || '', // Mudou de nomeTipoExame
-        nomeConvenio: convenios.find(c => c.id === form.convenioId)?.nome || '',
+        nomeFilial: filiais.find(f => f.id == form.filialId)?.nome || '',
+        nomeMedico: medicos.find(m => m.id == form.medicoId)?.nome || '',
+        nomeEspecialidade: especialidades.find(e => e.id == form.especialidadeId)?.nome || '',
+        nomeProcedimento: procedimentos.find(p => p.id == form.procedimentoId)?.nome || '',
+        nomeConvenio: convenios.find(c => c.id == form.convenioId)?.nome || '',
       });
       
       setOpen(true);
     } catch (error) {
       console.error('Erro ao finalizar agendamento:', error);
-      setError('Erro ao finalizar agendamento. Tente novamente.');
+      setError('Erro ao finalizar agendamento. Verifique os dados e tente novamente.');
     }
   };
 
@@ -232,13 +330,87 @@ export default function Agendamento() {
 
   // Atualize o handle para seleção de horário:
   function handleSelecionarHorario(data, hora) {
-    setHorarioSelecionado({ data, hora });
+    console.log('Horário selecionado - Data:', data, 'Hora:', hora);
+    
+    // Garantir que a data esteja no formato YYYY-MM-DD
+    let dataFormatada = data;
+    if (data && typeof data === 'string') {
+      // Se a data vier no formato DD/MM/YYYY, converter para YYYY-MM-DD
+      if (data.includes('/')) {
+        const partes = data.split('/');
+        if (partes.length === 3) {
+          dataFormatada = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+        }
+      }
+      // Se a data vier no formato DD-MM-YYYY, converter para YYYY-MM-DD
+      else if (data.includes('-') && data.length === 10 && !data.startsWith('20')) {
+        const partes = data.split('-');
+        if (partes.length === 3) {
+          dataFormatada = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+        }
+      }
+    }
+    
+    // Garantir que a hora esteja no formato HH:MM
+    let horaFormatada = hora;
+    if (hora && typeof hora === 'string') {
+      // Se a hora não tem dois dígitos, adicionar zero à esquerda
+      if (hora.length === 4 && hora.includes(':')) {
+        const partes = hora.split(':');
+        horaFormatada = `${partes[0].padStart(2, '0')}:${partes[1].padStart(2, '0')}`;
+      } else if (hora.length === 5) {
+        horaFormatada = hora; // Já está no formato correto
+      }
+    }
+    
+    console.log('Data formatada:', dataFormatada, 'Hora formatada:', horaFormatada);
+    
+    setHorarioSelecionado({ data: dataFormatada, hora: horaFormatada });
     setForm((f) => ({
       ...f,
-      data,
-      hora,
+      data: dataFormatada,
+      hora: horaFormatada,
     }));
   }
+
+  // Função para voltar para a etapa anterior
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+
+  // Função para avançar para a próxima etapa
+  const handleNext = () => {
+    // Validação antes de avançar
+    if (activeStep === 0) {
+      // Etapa 1: Validar dados iniciais
+      if (!form.filialId || !form.procedimento || !form.medicoId) {
+        setError('Preencha todos os campos obrigatórios');
+        return;
+      }
+      
+      if (form.procedimento === 'consulta' && !form.especialidadeId) {
+        setError('Selecione uma especialidade para consulta');
+        return;
+      }
+      
+      if (form.procedimento === 'exame' && !form.procedimentoId) {
+        setError('Selecione um tipo de exame');
+        return;
+      }
+    }
+    
+    if (activeStep === 1) {
+      // Etapa 2: Validar horário selecionado
+      if (!form.data || !form.hora) {
+        setError('Selecione um horário disponível');
+        return;
+      }
+    }
+    
+    // Se passou nas validações, avança para a próxima etapa
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    setError(null); // Limpa qualquer erro anterior
+  };
 
   return (
     <Box className="agendamento-bg">
@@ -381,21 +553,49 @@ export default function Agendamento() {
                 Escolha o horário disponível:
               </Typography>
               
+              {/* Exibir informações do médico selecionado */}
+              {form.medicoId && (
+                <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" color="primary">
+                    Médico selecionado: {medicos.find(m => m.id == form.medicoId)?.nome || 'N/A'}
+                  </Typography>
+                  {form.especialidadeId && (
+                    <Typography variant="body2" color="text.secondary">
+                      Especialidade: {especialidades.find(e => e.id == form.especialidadeId)?.nome || 'N/A'}
+                    </Typography>
+                  )}
+                  {form.procedimentoId && (
+                    <Typography variant="body2" color="text.secondary">
+                      Procedimento: {procedimentos.find(p => p.id == form.procedimentoId)?.nome || 'N/A'}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+              
+              {/* Horário selecionado */}
+              {horarioSelecionado.data && horarioSelecionado.hora && (
+                <Box sx={{ mb: 2, p: 2, bgcolor: '#e3f2fd', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" color="primary">
+                    Horário selecionado: {horarioSelecionado.data} às {horarioSelecionado.hora}
+                  </Typography>
+                </Box>
+              )}
+              
               {loading ? (
                 <Box display="flex" justifyContent="center" mt={2}>
                   <CircularProgress size={24} />
                 </Box>
               ) : (
                 <Box className="horarios-disponiveis">
-                  {horariosDisponiveis.map((dia) => (
+                  {horariosDisponiveis.length > 0 ? horariosDisponiveis.map((dia) => (
                     <Box key={dia.data} className="horarios-dia">
                       <Typography className="horarios-dia-titulo">
                         {dia.diaSemana} <br /> {dia.data}
                       </Typography>
                       <Box className="horarios-botoes">
-                        {dia.horarios.map((horario) => (
+                        {dia.horarios && dia.horarios.length > 0 ? dia.horarios.map((horario) => (
                           <Button
-                            key={horario.hora}
+                            key={`${dia.data}-${horario.hora}`}
                             variant={
                               horarioSelecionado.data === dia.data && horarioSelecionado.hora === horario.hora
                                 ? "contained"
@@ -413,17 +613,19 @@ export default function Agendamento() {
                           >
                             {horario.hora}
                           </Button>
-                        ))}
+                        )) : (
+                          <Typography variant="body2" color="text.secondary">
+                            Sem horários
+                          </Typography>
+                        )}
                       </Box>
                     </Box>
-                  ))}
+                  )) : (
+                    <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
+                      {form.medicoId ? 'Nenhum horário disponível encontrado para este médico.' : 'Selecione um médico para ver os horários disponíveis.'}
+                    </Typography>
+                  )}
                 </Box>
-              )}
-              
-              {horariosDisponiveis.length === 0 && !loading && (
-                <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-                  Nenhum horário disponível encontrado.
-                </Typography>
               )}
             </Box>
           )}
@@ -502,37 +704,47 @@ export default function Agendamento() {
           {/* Botões sempre visíveis e alinhados */}
           <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 2 }}>
             <Button
-              variant="outlined"
-              color="error"
-              onClick={handleCancelar}
-              className="agendamento-btn-cancelar"
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              sx={{ mr: 1 }}
             >
-              Cancelar
+              Voltar
             </Button>
-            {activeStep > 0 && (
-              <Button variant="outlined" onClick={() => setActiveStep(activeStep - 1)}>
-                Voltar
-              </Button>
-            )}
-            {activeStep < Object.keys(CAMPOS_OBRIGATORIOS).length - 1 ? (
+            {activeStep < steps.length - 1 ? (
               <Button
                 variant="contained"
-                color="primary"
-                onClick={() => setActiveStep(activeStep + 1)}
-                disabled={!isStepValid(activeStep)}
+                onClick={handleNext}
+                disabled={
+                  (activeStep === 0 && (!form.filialId || !form.procedimento || (!form.especialidadeId && !form.procedimentoId) || !form.medicoId)) ||
+                  (activeStep === 1 && (!form.data || !form.hora)) ||
+                  loading
+                }
               >
-                Avançar
+                Próximo
               </Button>
             ) : (
               <Button
-                type="submit"
                 variant="contained"
-                color="primary"
-                disabled={!isStepValid(activeStep)}
+                onClick={handleFinalizar}
+                disabled={
+                  !form.nomePaciente || 
+                  !form.idadePaciente || 
+                  !form.convenioId || 
+                  !form.telefonePaciente ||
+                  !form.data ||
+                  !form.hora ||
+                  loading
+                }
               >
-                Finalizar Agendamento
+                {loading ? <CircularProgress size={20} /> : 'Finalizar'}
               </Button>
             )}
+            <Button
+              sx={{ ml: 1 }}
+              onClick={() => setOpenCancelDialog(true)}
+            >
+              Cancelar
+            </Button>
           </Stack>
         </form>
       </Paper>
