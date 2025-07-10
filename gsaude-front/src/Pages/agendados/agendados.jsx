@@ -674,8 +674,7 @@ export default function VerificarAgendamentos() {
                 agendamentosFiltrados.map((item) => (
                   <ListItem
                     key={item.id}
-                    divider
-                    button
+                    component="button"
                     onClick={() => handleOpenDialog(item)}
                     secondaryAction={
                       <span className={getStatusClass(item.status)}>
