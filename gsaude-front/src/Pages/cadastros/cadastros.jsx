@@ -117,6 +117,30 @@ export default function Cadastros() {
     severity: 'success'
   });
 
+  // Estados para confirmação de exclusão
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    type: ''
+  });
+
+  // Função para máscara de telefone
+  const formatPhoneNumber = (value) => {
+    // Remove todos os caracteres não numéricos
+    const numbers = value.replace(/\D/g, '');
+    
+    // Aplica a máscara (xx) xxxxx-xxxx
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 7) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    } else {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+  };
+
   // Carregar dados iniciais
   useEffect(() => {
     loadMedicos();
@@ -203,7 +227,7 @@ export default function Cadastros() {
     setMedicoForm({
       nome: medico.nome,
       crm: medico.crm,
-      telefone: medico.telefone || '',
+      telefone: medico.telefone ? formatPhoneNumber(medico.telefone) : '',
       email: medico.email || '',
       especialidade_id: medico.especialidades?.[0]?.id || '',
       ativo: medico.ativo
@@ -213,23 +237,31 @@ export default function Cadastros() {
   };
 
   const handleDeleteMedico = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este médico?')) {
-      try {
-        await api.delete(`/medicos/${id}`);
-        setSnackbar({
-          open: true,
-          message: "Médico excluído com sucesso!",
-          severity: "success"
-        });
-        loadMedicos();
-      } catch (error) {
-        setSnackbar({
-          open: true,
-          message: error.response?.data?.message || "Erro ao excluir médico",
-          severity: "error"
-        });
-      }
-    }
+    const medico = medicos.find(m => m.id === id);
+    setConfirmDialog({
+      open: true,
+      title: '🗑️ Excluir Médico',
+      message: `Tem certeza que deseja excluir o médico "${medico?.nome}"? Esta ação não pode ser desfeita.`,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/medicos/${id}`);
+          setSnackbar({
+            open: true,
+            message: "Médico excluído com sucesso!",
+            severity: "success"
+          });
+          loadMedicos();
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: error.response?.data?.message || "Erro ao excluir médico",
+            severity: "error"
+          });
+        }
+        setConfirmDialog({ ...confirmDialog, open: false });
+      },
+      type: 'error'
+    });
   };
 
   const resetMedicoForm = () => {
@@ -272,23 +304,30 @@ export default function Cadastros() {
   };
 
   const handleDeleteHorario = async (medicoId, horarioId) => {
-    if (window.confirm('Tem certeza que deseja excluir este horário?')) {
-      try {
-        await api.delete(`/medicos/${medicoId}/horarios/${horarioId}`);
-        setSnackbar({
-          open: true,
-          message: "Horário removido com sucesso!",
-          severity: "success"
-        });
-        loadMedicos();
-      } catch (error) {
-        setSnackbar({
-          open: true,
-          message: error.response?.data?.message || "Erro ao remover horário",
-          severity: "error"
-        });
-      }
-    }
+    setConfirmDialog({
+      open: true,
+      title: '🕒 Excluir Horário',
+      message: 'Tem certeza que deseja excluir este horário? Esta ação não pode ser desfeita.',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/medicos/${medicoId}/horarios/${horarioId}`);
+          setSnackbar({
+            open: true,
+            message: "Horário removido com sucesso!",
+            severity: "success"
+          });
+          loadMedicos();
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: error.response?.data?.message || "Erro ao remover horário",
+            severity: "error"
+          });
+        }
+        setConfirmDialog({ ...confirmDialog, open: false });
+      },
+      type: 'error'
+    });
   };
 
   const resetHorarioForm = () => {
@@ -349,23 +388,31 @@ export default function Cadastros() {
   };
 
   const handleDeleteEspecialidade = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta especialidade?')) {
-      try {
-        await api.delete(`/especialidades/${id}`);
-        setSnackbar({
-          open: true,
-          message: "Especialidade excluída com sucesso!",
-          severity: "success"
-        });
-        loadEspecialidades();
-      } catch (error) {
-        setSnackbar({
-          open: true,
-          message: error.response?.data?.message || "Erro ao excluir especialidade",
-          severity: "error"
-        });
-      }
-    }
+    const especialidade = especialidades.find(e => e.id === id);
+    setConfirmDialog({
+      open: true,
+      title: '🗑️ Excluir Especialidade',
+      message: `Tem certeza que deseja excluir a especialidade "${especialidade?.nome}"? Esta ação não pode ser desfeita.`,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/especialidades/${id}`);
+          setSnackbar({
+            open: true,
+            message: "Especialidade excluída com sucesso!",
+            severity: "success"
+          });
+          loadEspecialidades();
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: error.response?.data?.message || "Erro ao excluir especialidade",
+            severity: "error"
+          });
+        }
+        setConfirmDialog({ ...confirmDialog, open: false });
+      },
+      type: 'error'
+    });
   };
 
   const resetEspecialidadeForm = () => {
@@ -422,23 +469,31 @@ export default function Cadastros() {
   };
 
   const handleDeleteProcedimento = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este procedimento?')) {
-      try {
-        await api.delete(`/procedimentos/${id}`);
-        setSnackbar({
-          open: true,
-          message: "Procedimento excluído com sucesso!",
-          severity: "success"
-        });
-        loadProcedimentos();
-      } catch (error) {
-        setSnackbar({
-          open: true,
-          message: error.response?.data?.message || "Erro ao excluir procedimento",
-          severity: "error"
-        });
-      }
-    }
+    const procedimento = procedimentos.find(p => p.id === id);
+    setConfirmDialog({
+      open: true,
+      title: '🗑️ Excluir Procedimento',
+      message: `Tem certeza que deseja excluir o procedimento "${procedimento?.nome}"? Esta ação não pode ser desfeita.`,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/procedimentos/${id}`);
+          setSnackbar({
+            open: true,
+            message: "Procedimento excluído com sucesso!",
+            severity: "success"
+          });
+          loadProcedimentos();
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: error.response?.data?.message || "Erro ao excluir procedimento",
+            severity: "error"
+          });
+        }
+        setConfirmDialog({ ...confirmDialog, open: false });
+      },
+      type: 'error'
+    });
   };
 
   const resetProcedimentoForm = () => {
@@ -481,23 +536,32 @@ export default function Cadastros() {
   };
 
   const handleDesvincularMedico = async (procedimentoId, medicoId) => {
-    if (window.confirm('Tem certeza que deseja desvincular este médico do procedimento?')) {
-      try {
-        await api.delete(`/procedimentos/${procedimentoId}/medicos/${medicoId}`);
-        setSnackbar({
-          open: true,
-          message: "Médico desvinculado com sucesso!",
-          severity: "success"
-        });
-        loadProcedimentos();
-      } catch (error) {
-        setSnackbar({
-          open: true,
-          message: error.response?.data?.message || "Erro ao desvincular médico",
-          severity: "error"
-        });
-      }
-    }
+    const procedimento = procedimentos.find(p => p.id === procedimentoId);
+    const medico = procedimento?.medicos?.find(m => m.id === medicoId);
+    setConfirmDialog({
+      open: true,
+      title: '🔗 Desvincular Médico',
+      message: `Tem certeza que deseja desvincular o médico "${medico?.nome}" do procedimento "${procedimento?.nome}"?`,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/procedimentos/${procedimentoId}/medicos/${medicoId}`);
+          setSnackbar({
+            open: true,
+            message: "Médico desvinculado com sucesso!",
+            severity: "success"
+          });
+          loadProcedimentos();
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: error.response?.data?.message || "Erro ao desvincular médico",
+            severity: "error"
+          });
+        }
+        setConfirmDialog({ ...confirmDialog, open: false });
+      },
+      type: 'warning'
+    });
   };
 
   // Mudança de aba
@@ -568,7 +632,7 @@ export default function Cadastros() {
                         <TableCell>
                           {medico.especialidades?.[0]?.nome || '-'}
                         </TableCell>
-                        <TableCell>{medico.telefone || '-'}</TableCell>
+                        <TableCell>{medico.telefone ? formatPhoneNumber(medico.telefone) : '-'}</TableCell>
                         <TableCell>{medico.email || '-'}</TableCell>
                         <TableCell>
                           <Chip 
@@ -879,9 +943,14 @@ export default function Cadastros() {
                 name="telefone"
                 label="Telefone"
                 value={medicoForm.telefone}
-                onChange={(e) => setMedicoForm({...medicoForm, telefone: e.target.value})}
+                onChange={(e) => {
+                  const formatted = formatPhoneNumber(e.target.value);
+                  setMedicoForm({...medicoForm, telefone: formatted});
+                }}
                 fullWidth
                 margin="dense"
+                placeholder="(11) 99999-9999"
+                inputProps={{ maxLength: 15 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -1186,6 +1255,43 @@ export default function Cadastros() {
             disabled={!vinculoForm.medico_id}
           >
             Vincular
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo de Confirmação de Exclusão */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+      >
+        <DialogTitle id="confirm-dialog-title" sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+          {confirmDialog.title}
+        </DialogTitle>
+        <DialogContent>
+          <Typography id="confirm-dialog-description" variant="body1">
+            {confirmDialog.message}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            ⚠️ Esta ação é irreversível e pode afetar outros dados relacionados.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button 
+            onClick={() => setConfirmDialog({ ...confirmDialog, open: false })} 
+            color="primary"
+            variant="outlined"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={confirmDialog.onConfirm} 
+            color="error" 
+            variant="contained"
+            startIcon={<DeleteIcon />}
+          >
+            Excluir
           </Button>
         </DialogActions>
       </Dialog>
