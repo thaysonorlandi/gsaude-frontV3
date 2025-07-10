@@ -4,6 +4,9 @@ import { useUser } from '../../contexts/contexts';
 import Logo from '../../assets/logoGSaude.png';
 import PersonIcon from '@mui/icons-material/Person';
 import LoginIcon from '@mui/icons-material/Login';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import './login.css';
 
@@ -11,6 +14,7 @@ function Login() {
   const [form, setForm] = useState({ usuario: '', senha: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useUser();
 
@@ -125,7 +129,7 @@ function Login() {
           <div className='input-icon'>
             <LoginIcon />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="senha"
               placeholder="Senha"
               value={form.senha}
@@ -133,6 +137,20 @@ function Login() {
               required
               disabled={loading}
             />
+            <IconButton
+              onClick={() => setShowPassword(!showPassword)}
+              edge="end"
+              size="small"
+              style={{ 
+                position: 'absolute', 
+                right: '8px', 
+                padding: '4px',
+                backgroundColor: 'transparent',
+                color: 'black'
+              }}
+            >
+              {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+            </IconButton>
           </div>
           <Button color="primary" type="submit" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
