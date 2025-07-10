@@ -60,9 +60,8 @@ export default function VerificarAgendamentos() {
 
   // Dados vindos da API
   const [especialidades, setEspecialidades] = useState([]);
-  const [tiposExame, setTiposExame] = useState([]);
+  const [procedimentos, setProcedimentos] = useState([]);
   const [medicos, setMedicos] = useState([]);
-  const [convenios, setConvenios] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
 
   // Estado para controle do Dialog e agendamento selecionado
@@ -77,18 +76,16 @@ export default function VerificarAgendamentos() {
       setLoading(true);
       try {
         // Carregar todos os dados necessários da API
-        const [especialidadesRes, tiposExameRes, medicosRes, conveniosRes, agendamentosRes] = await Promise.all([
+        const [especialidadesRes, procedimentosRes, medicosRes, agendamentosRes] = await Promise.all([
           api.get('/especialidades'),
-          api.get('/tipos-exame'),
+          api.get('/procedimentos'),
           api.get('/medicos'),
-          api.get('/convenios'),
           api.get('/agendamentos')
         ]);
         
         setEspecialidades(especialidadesRes.data);
-        setTiposExame(tiposExameRes.data);
+        setProcedimentos(procedimentosRes.data);
         setMedicos(medicosRes.data);
-        setConvenios(conveniosRes.data);
         setAgendamentos(agendamentosRes.data);
         setError(null);
       } catch (err) {
@@ -97,13 +94,12 @@ export default function VerificarAgendamentos() {
         
         // Usar dados de demonstração em caso de erro
         setEspecialidades(["Cardiologia", "Dermatologia", "Ortopedia"]);
-        setTiposExame(["Raio-X", "Ultrassom", "Hemograma"]);
+        setProcedimentos(["Raio-X", "Ultrassom", "Hemograma"]);
         setMedicos([
           { id: 1, nome: "Dr. João", especialidade: "Cardiologia" },
           { id: 2, nome: "Dra. Ana", especialidade: "Dermatologia" },
           { id: 3, nome: "Dr. Pedro", especialidade: "Ortopedia" },
         ]);
-        setConvenios(["Unimed", "Amil", "Bradesco Saúde", "SulAmérica", "Particular"]);
         setAgendamentos([
           {
             id: 1,
@@ -259,15 +255,34 @@ export default function VerificarAgendamentos() {
 
   // Alterar campos do formulário
   const handleChange = (e) => {
+    const { name, value } = e.target;
+    
     setForm((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
+
+    // Se o campo alterado for a hora, automaticamente preenche o horário de início nos detalhes financeiros
+    if (name === 'hora' && value) {
+      setDetalhesFinanceiros((prev) => ({
+        ...prev,
+        horario_inicio: value
+      }));
+    }
   };
 
   // Alterar campos financeiros
   const handleFinanceiroChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // Validação especial para duração em minutos
+    if (name === 'duracao_minutos') {
+      const numeroValue = parseInt(value);
+      if (numeroValue < 0 || (value !== '' && isNaN(numeroValue))) {
+        return; // Não permite valores negativos ou não numéricos
+      }
+    }
+    
     setDetalhesFinanceiros((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -318,11 +333,6 @@ export default function VerificarAgendamentos() {
 
   // Estado para pop-up de confirmação
   const [openConfirm, setOpenConfirm] = useState(false);
-
-  // Cancelar agendamento
-  const handleCancelar = () => {
-    setOpenConfirm(true);
-  };
 
   // Confirma o cancelamento
   const handleConfirmarCancelamento = async () => {
@@ -560,7 +570,7 @@ export default function VerificarAgendamentos() {
                     onChange={(e) => setExameFiltro(e.target.value)}
                   >
                     <MenuItem value="">Todos</MenuItem>
-                    {tiposExame.map((ex, index) => (
+                    {procedimentos.map((ex, index) => (
                       <MenuItem key={index} value={typeof ex === 'string' ? ex : ex.nome}>
                         {typeof ex === 'string' ? ex : ex.nome}
                       </MenuItem>
@@ -831,7 +841,7 @@ export default function VerificarAgendamentos() {
                     />
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <FormControl fullWidth margin="dense" size="small">
+                    <FormControl fullWidth margin="dense" size="small" sx={{ minWidth: 160 }}>
                       <InputLabel id="status-label">Status</InputLabel>
                       <Select
                         labelId="status-label"
@@ -840,6 +850,7 @@ export default function VerificarAgendamentos() {
                         label="Status"
                         onChange={handleChange}
                         disabled={form.status === "Cancelada"}
+                        sx={{ minWidth: 140 }}
                       >
                         <MenuItem value="Aguardando">Aguardando</MenuItem>
                         <MenuItem value="Realizada">Realizada</MenuItem>
@@ -891,6 +902,7 @@ export default function VerificarAgendamentos() {
                             size="small"
                             InputProps={{
                               endAdornment: <InputAdornment position="end">min</InputAdornment>,
+                              inputProps: { min: 1, max: 480 } // Mínimo 1 minuto, máximo 8 horas
                             }}
                             disabled={detalhesFinanceiros.enviado_financeiro}
                           />

@@ -130,6 +130,7 @@
   border-radius: 8px;
   margin-top: 10px;
   margin-bottom: 10px;
+  background-color: #f8f9fa;
 }
 
 /* Estilos para hover nos itens da lista */
@@ -144,4 +145,58 @@
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: bold;
+}
+
+/* Estilos específicos para o campo de status */
+.status-field {
+  min-width: 160px !important;
+}
+
+.status-field .MuiSelect-select {
+  min-width: 140px !important;
+}
+
+/* Garantir que o FormControl também tenha largura mínima */
+.MuiFormControl-root[data-status-field="true"] {
+  min-width: 160px !important;
+}
+
+/* Melhoria na exibição das horas */
+.hora-display {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+}
+
+/* Estilos para campos de duração */
+.duracao-field input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.duracao-field input[type="number"]::-webkit-outer-spin-button,
+.duracao-field input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Campos financeiros com destaque */
+.financial-fields-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px 0;
+}
+
+.currency-field .MuiInputBase-input {
+  text-align: right;
+}
+
+/* Melhorias nos botões do modal */
+.dialog-actions-custom {
+  padding: 16px 24px !important;
+  gap: 12px;
+}
+
+.dialog-actions-custom .MuiButton-root {
+  min-width: 120px;
 }
