@@ -39,9 +39,9 @@ import SendIcon from "@mui/icons-material/Send";
 import api from "../../services/api";
 
 function getStatusClass(status) {
-  if (status === "Realizada") return "status-realizada";
+  if (status === "Realizado") return "status-realizada";
   if (status === "Aguardando") return "status-aguardando";
-  if (status === "Cancelada") return "status-cancelada";
+  if (status === "Cancelado") return "status-cancelada";
   return "";
 }
 
@@ -157,7 +157,7 @@ export default function VerificarAgendamentos() {
             telefone: "(11) 96543-2109",
             email: "jose@email.com",
             convenio: "SulAmérica",
-            status: "Cancelada",
+            status: "Cancelado",
             detalhes_financeiros: {
               valor_consulta: "",
               valor_pago_funcionario: "",
@@ -179,7 +179,7 @@ export default function VerificarAgendamentos() {
             telefone: "(11) 95432-1098",
             email: "paula@email.com",
             convenio: "Bradesco Saúde",
-            status: "Realizada",
+            status: "Realizado",
             detalhes_financeiros: {
               valor_consulta: "250.00",
               valor_pago_funcionario: "150.00",
@@ -233,10 +233,12 @@ export default function VerificarAgendamentos() {
     });
     
     // Inicializa detalhes financeiros do item ou com valores padrão
+    // Se não há horário de início definido, usa a hora original do agendamento
+    const horaFormatada = item.hora ? dayjs(item.hora, "HH:mm").format("HH:mm") : "";
     setDetalhesFinanceiros(item.detalhes_financeiros || {
       valor_consulta: "",
       valor_pago_funcionario: "",
-      horario_inicio: "",
+      horario_inicio: horaFormatada,
       duracao_minutos: "",
       observacao: "",
       enviado_financeiro: false
@@ -261,14 +263,6 @@ export default function VerificarAgendamentos() {
       ...prev,
       [name]: value,
     }));
-
-    // Se o campo alterado for a hora, automaticamente preenche o horário de início nos detalhes financeiros
-    if (name === 'hora' && value) {
-      setDetalhesFinanceiros((prev) => ({
-        ...prev,
-        horario_inicio: value
-      }));
-    }
   };
 
   // Alterar campos financeiros
@@ -283,6 +277,20 @@ export default function VerificarAgendamentos() {
       }
     }
     
+    // Validação especial para horário de início
+    if (name === 'horario_inicio') {
+      // Garante que o horário está no formato HH:mm
+      if (value && value.includes('T')) {
+        // Se vier um timestamp, extrai apenas a parte da hora
+        const timeOnly = dayjs(value).format("HH:mm");
+        setDetalhesFinanceiros((prev) => ({
+          ...prev,
+          [name]: timeOnly,
+        }));
+        return;
+      }
+    }
+    
     setDetalhesFinanceiros((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -294,17 +302,25 @@ export default function VerificarAgendamentos() {
     try {
       setLoading(true);
       
-      const dadosAtualizados = {
-        ...form,
-        detalhes_financeiros: detalhesFinanceiros
+      // Preparar dados para atualização - apenas campos necessários
+      const dadosBasicos = {
+        data_agendamento: form.data,
+        status: form.status,
+        telefone_paciente: form.telefone || agendamentoSelecionado.telefone_paciente || agendamentoSelecionado.telefone,
+        observacoes: form.observacoes || agendamentoSelecionado.observacoes
       };
       
-      // Tenta salvar na API
+      console.log('Dados para atualização:', dadosBasicos);
+      console.log('ID do agendamento:', agendamentoSelecionado.id);
+      
+      // Tenta salvar na API usando a nova rota
       try {
-        await api.put(`/agendamentos/${agendamentoSelecionado.id}`, dadosAtualizados);
+        await api.put(`/agendados/${agendamentoSelecionado.id}`, dadosBasicos);
+        showSnackbar("Agendamento atualizado com sucesso!");
       } catch (apiError) {
         console.error("Erro ao atualizar na API:", apiError);
-        // Continua com a atualização local mesmo com erro na API
+        showSnackbar("Erro ao atualizar na API: " + (apiError.message || 'Erro desconhecido'), "error");
+        return; // Para de executar se houver erro na API
       }
       
       // Atualiza o estado local para refletir as mudanças imediatamente
@@ -313,15 +329,16 @@ export default function VerificarAgendamentos() {
           item.id === agendamentoSelecionado.id
             ? { ...item, 
                 data: form.data, 
-                hora: form.hora, 
                 status: form.status,
+                telefone: form.telefone || item.telefone,
+                data_agendamento: form.data,
+                telefone_paciente: form.telefone || item.telefone_paciente,
                 detalhes_financeiros: detalhesFinanceiros 
               }
             : item
         )
       );
       
-      showSnackbar("Agendamento atualizado com sucesso!");
       handleCloseDialog();
     } catch (err) {
       console.error("Erro ao salvar alterações:", err);
@@ -339,29 +356,31 @@ export default function VerificarAgendamentos() {
     try {
       setLoading(true);
       
-      const dadosAtualizados = {
-        ...form,
-        status: "Cancelada"
+      // Preparar dados para cancelamento
+      const dadosBasicos = {
+        status: "Cancelado",
+        observacoes: "Agendamento cancelado pelo usuário"
       };
       
-      // Tenta atualizar na API
+      // Tenta atualizar na API usando a nova rota
       try {
-        await api.put(`/agendamentos/${agendamentoSelecionado.id}`, dadosAtualizados);
+        await api.put(`/agendados/${agendamentoSelecionado.id}`, dadosBasicos);
+        showSnackbar("Agendamento cancelado com sucesso.", "success");
       } catch (apiError) {
         console.error("Erro ao cancelar na API:", apiError);
-        // Continua com a atualização local mesmo com erro na API
+        showSnackbar("Erro ao cancelar agendamento: " + (apiError.message || 'Erro desconhecido'), "error");
+        return; // Para de executar se houver erro na API
       }
       
       // Atualiza o estado local
       setAgendamentos((prev) =>
         prev.map((item) =>
           item.id === agendamentoSelecionado.id
-            ? { ...item, status: "Cancelada" }
+            ? { ...item, status: "Cancelado" }
             : item
         )
       );
       
-      showSnackbar("Agendamento cancelado com sucesso.");
       setOpenConfirm(false);
       handleCloseDialog();
     } catch (err) {
@@ -384,17 +403,34 @@ export default function VerificarAgendamentos() {
         return;
       }
       
-      const financeirosAtualizados = {
-        ...detalhesFinanceiros,
-        enviado_financeiro: true
+      // Prepara os dados no formato esperado pela API
+      const dadosFinanceiros = {
+        valor_consulta: detalhesFinanceiros.valor_consulta,
+        valor_pago_medico: detalhesFinanceiros.valor_pago_funcionario,
+        duracao_consulta: detalhesFinanceiros.duracao_minutos,
+        horario_inicio_real: detalhesFinanceiros.horario_inicio,
+        observacoes_financeiras: detalhesFinanceiros.observacao,
+        status: 'Realizado' // Marca como realizado quando envia para financeiro
       };
       
-      // Tenta enviar para o financeiro via API
+      // Primeiro salva os dados financeiros
       try {
-        await api.post(`/agendamentos/${agendamentoSelecionado.id}/financeiro`, financeirosAtualizados);
+        await api.put(`/agendados/${agendamentoSelecionado.id}/status-financeiro`, dadosFinanceiros);
+        console.log('Dados financeiros salvos com sucesso');
+      } catch (apiError) {
+        console.error("Erro ao salvar dados financeiros:", apiError);
+        showSnackbar("Erro ao salvar dados financeiros: " + (apiError.response?.data?.message || 'Erro desconhecido'), "error");
+        setLoading(false);
+        return;
+      }
+      
+      // Depois tenta enviar para o financeiro
+      try {
+        await api.post(`/agendados/${agendamentoSelecionado.id}/enviar-financeiro`);
+        showSnackbar("Enviado para o financeiro com sucesso!");
       } catch (apiError) {
         console.error("Erro ao enviar para financeiro na API:", apiError);
-        // Continua com a atualização local mesmo com erro na API
+        showSnackbar("Dados salvos, mas erro ao enviar para financeiro: " + (apiError.response?.data?.message || 'Erro desconhecido'), "warning");
       }
       
       // Atualiza o estado local
@@ -403,6 +439,7 @@ export default function VerificarAgendamentos() {
           item.id === agendamentoSelecionado.id
             ? { 
                 ...item, 
+                status: 'Realizado',
                 detalhes_financeiros: {
                   ...detalhesFinanceiros,
                   enviado_financeiro: true
@@ -417,7 +454,11 @@ export default function VerificarAgendamentos() {
         enviado_financeiro: true
       });
       
-      showSnackbar("Enviado para o financeiro com sucesso!");
+      setForm({
+        ...form,
+        status: 'Realizado'
+      });
+      
     } catch (err) {
       console.error("Erro ao enviar para financeiro:", err);
       showSnackbar("Erro ao enviar para o financeiro.", "error");
@@ -431,34 +472,34 @@ export default function VerificarAgendamentos() {
     try {
       setLoading(true);
       
-      const dadosAtualizados = {
-        ...form,
-        status: "Realizada"
+      // Preparar dados para marcar como realizada
+      const dadosBasicos = {
+        status: "Realizado"
       };
       
-      // Tenta atualizar na API
+      // Tenta atualizar na API usando a nova rota
       try {
-        await api.put(`/agendamentos/${agendamentoSelecionado.id}`, dadosAtualizados);
+        await api.put(`/agendados/${agendamentoSelecionado.id}`, dadosBasicos);
+        showSnackbar("Status atualizado para Realizado!", "success");
       } catch (apiError) {
         console.error("Erro ao atualizar status na API:", apiError);
-        // Continua com a atualização local mesmo com erro na API
+        showSnackbar("Erro ao atualizar status: " + (apiError.message || 'Erro desconhecido'), "error");
+        return; // Para de executar se houver erro na API
       }
       
       // Atualiza o estado local
       setAgendamentos((prev) =>
         prev.map((item) =>
           item.id === agendamentoSelecionado.id
-            ? { ...item, status: "Realizada" }
+            ? { ...item, status: "Realizado" }
             : item
         )
       );
       
       setForm({
         ...form,
-        status: "Realizada"
+        status: "Realizado"
       });
-      
-      showSnackbar("Status atualizado para Realizada!");
     } catch (err) {
       console.error("Erro ao atualizar status:", err);
       showSnackbar("Erro ao atualizar status.", "error");
@@ -548,9 +589,9 @@ export default function VerificarAgendamentos() {
                     onChange={(e) => setStatusFiltro(e.target.value)}
                   >
                     <MenuItem value="">Todos</MenuItem>
-                    <MenuItem value="Realizada">Realizada</MenuItem>
+                    <MenuItem value="Realizado">Realizado</MenuItem>
                     <MenuItem value="Aguardando">Aguardando</MenuItem>
-                    <MenuItem value="Cancelada">Cancelada</MenuItem>
+                    <MenuItem value="Cancelado">Cancelado</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -606,9 +647,9 @@ export default function VerificarAgendamentos() {
                     onChange={(e) => setStatusFiltro(e.target.value)}
                   >
                     <MenuItem value="">Todos</MenuItem>
-                    <MenuItem value="Realizada">Realizada</MenuItem>
+                    <MenuItem value="Realizado">Realizado</MenuItem>
                     <MenuItem value="Aguardando">Aguardando</MenuItem>
-                    <MenuItem value="Cancelada">Cancelada</MenuItem>
+                    <MenuItem value="Cancelado">Cancelado</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -646,9 +687,9 @@ export default function VerificarAgendamentos() {
                     onChange={(e) => setStatusFiltro(e.target.value)}
                   >
                     <MenuItem value="">Todos</MenuItem>
-                    <MenuItem value="Realizada">Realizada</MenuItem>
+                    <MenuItem value="Realizado">Realizado</MenuItem>
                     <MenuItem value="Aguardando">Aguardando</MenuItem>
-                    <MenuItem value="Cancelada">Cancelada</MenuItem>
+                    <MenuItem value="Cancelado">Cancelado</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -707,8 +748,8 @@ export default function VerificarAgendamentos() {
               <span className="dot-consulta" /> Consulta &nbsp;&nbsp;
               <span className="dot-exame" /> Exame &nbsp;&nbsp;
               <span className="status-aguardando">Aguardando</span> &nbsp;&nbsp;
-              <span className="status-realizada">Realizada</span> &nbsp;&nbsp;
-              <span className="status-cancelada">Cancelada</span>
+              <span className="status-realizada">Realizado</span> &nbsp;&nbsp;
+              <span className="status-cancelada">Cancelado</span>
             </Box>
           </>
         )}
@@ -747,16 +788,7 @@ export default function VerificarAgendamentos() {
                       size="small"
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      label="E-mail"
-                      value={agendamentoSelecionado.email || ''}
-                      fullWidth
-                      margin="dense"
-                      InputProps={{ readOnly: true }}
-                      size="small"
-                    />
-                  </Grid>
+
                   <Grid item xs={12} md={6}>
                     <TextField
                       label="Telefone"
@@ -812,35 +844,7 @@ export default function VerificarAgendamentos() {
                     </Grid>
                   )}
                   <Grid item xs={12} md={4}>
-                    <TextField
-                      label="Data"
-                      name="data"
-                      type="date"
-                      value={form.data || ''}
-                      onChange={handleChange}
-                      fullWidth
-                      margin="dense"
-                      size="small"
-                      InputLabelProps={{ shrink: true }}
-                      disabled={form.status === "Realizada" || form.status === "Cancelada"}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <TextField
-                      label="Hora"
-                      name="hora"
-                      type="time"
-                      value={form.hora || ''}
-                      onChange={handleChange}
-                      fullWidth
-                      margin="dense"
-                      size="small"
-                      InputLabelProps={{ shrink: true }}
-                      disabled={form.status === "Realizada" || form.status === "Cancelada"}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <FormControl fullWidth margin="dense" size="small" sx={{ minWidth: 160 }}>
+                    <FormControl fullWidth margin="dense" size="small" sx={{ minWidth: 224 }}>
                       <InputLabel id="status-label">Status</InputLabel>
                       <Select
                         labelId="status-label"
@@ -848,14 +852,43 @@ export default function VerificarAgendamentos() {
                         value={form.status || 'Aguardando'}
                         label="Status"
                         onChange={handleChange}
-                        disabled={form.status === "Cancelada"}
+                        disabled={form.status === "Cancelado"}
                         sx={{ minWidth: 140 }}
                       >
                         <MenuItem value="Aguardando">Aguardando</MenuItem>
-                        <MenuItem value="Realizada">Realizada</MenuItem>
-                        <MenuItem value="Cancelada">Cancelada</MenuItem>
+                        <MenuItem value="Realizado">Realizado</MenuItem>
+                        <MenuItem value="Cancelado">Cancelado</MenuItem>
                       </Select>
                     </FormControl>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      label="Data"
+                      name="data"
+                      type="string"
+                      value={dayjs(form.data).format("DD/MM/YYYY")}
+                      onChange={handleChange}
+                      fullWidth
+                      sx={{ maxWidth: 140 }}
+                      margin="dense"
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                      disabled={form.status === "Realizado" || form.status === "Cancelado"}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      label="Hora"
+                      name="hora"
+                      type="string"
+                      value={form.hora && form.hora.includes(':') ? form.hora : dayjs(form.hora).format("HH:mm")}
+                      fullWidth
+                      sx={{ maxWidth: 90 }}
+                      margin="dense"
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{ readOnly: true }}
+                    />
                   </Grid>
                 </Grid>
               )}
@@ -869,8 +902,7 @@ export default function VerificarAgendamentos() {
                   
                   {/* Linha 1: Horários */}
                   <Grid item xs={12}>
-                    <div className="financial-fields-container">
-                      <Grid container spacing={3}>
+                      <Grid container spacing={3} sx={{ alignItems: 'flex-start'}}>
                         <Grid item xs={12} md={4}>
                           <TextField
                             label="Horário de Início"
@@ -881,6 +913,7 @@ export default function VerificarAgendamentos() {
                             fullWidth
                             margin="dense"
                             size="small"
+                            sx={{ minWidth: 200 }}
                             InputLabelProps={{ shrink: true }}
                             InputProps={{
                               startAdornment: <InputAdornment position="start"><AccessTimeIcon /></InputAdornment>,
@@ -899,6 +932,7 @@ export default function VerificarAgendamentos() {
                             fullWidth
                             margin="dense"
                             size="small"
+                            sx={{ minWidth: 200 }}
                             InputProps={{
                               endAdornment: <InputAdornment position="end">min</InputAdornment>,
                               inputProps: { min: 1, max: 480 } // Mínimo 1 minuto, máximo 8 horas
@@ -934,13 +968,11 @@ export default function VerificarAgendamentos() {
                           />
                         </Grid>
                       </Grid>
-                    </div>
                   </Grid>
                   
                   {/* Linha 2: Valores */}
                   <Grid item xs={12}>
-                    <div className="financial-fields-container">
-                      <Grid container spacing={3}>
+                      <Grid container spacing={3} sx={{ alignItems: 'flex-start' }}>
                         <Grid item xs={12} md={6}>
                           <TextField
                             className="currency-field"
@@ -974,7 +1006,7 @@ export default function VerificarAgendamentos() {
                         <Grid item xs={12} md={6}>
                           <TextField
                             className="currency-field"
-                            label="Valor Pago ao Profissional"
+                            label="Valor Pago ao Médico"
                             name="valor_pago_funcionario"
                             value={detalhesFinanceiros.valor_pago_funcionario ? `${Number(detalhesFinanceiros.valor_pago_funcionario).toFixed(2).replace('.', ',')}` : ''}
                             onChange={(e) => {
@@ -1001,7 +1033,6 @@ export default function VerificarAgendamentos() {
                           />
                         </Grid>
                       </Grid>
-                    </div>
                   </Grid>
                   
                   {/* Linha 3: Observações */}
@@ -1013,9 +1044,9 @@ export default function VerificarAgendamentos() {
                       rows={3}
                       value={detalhesFinanceiros.observacao || ''}
                       onChange={handleFinanceiroChange}
-                      fullWidth
                       margin="dense"
                       size="small"
+                      sx={{ width: '66.66%', minWidth: 400 }}
                       disabled={detalhesFinanceiros.enviado_financeiro}
                     />
                   </Grid>
@@ -1034,13 +1065,13 @@ export default function VerificarAgendamentos() {
                     />
                   </Grid>
                   
-                  <Grid item xs={12} sx={{ mt: 2, textAlign: 'right' }}>
+                  <Grid item xs={12} sx={{ mt: 1 }}>
                     <Button
                       variant="contained"
                       color="primary"
                       startIcon={<SendIcon />}
                       onClick={handleEnviarFinanceiro}
-                      disabled={detalhesFinanceiros.enviado_financeiro || form.status === "Cancelada"}
+                      disabled={detalhesFinanceiros.enviado_financeiro || form.status === "Cancelado"}
                     >
                       Enviar para Financeiro
                     </Button>
@@ -1052,13 +1083,13 @@ export default function VerificarAgendamentos() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Fechar</Button>
-          {form.status !== "Realizada" && form.status !== "Cancelada" && (
+          {form.status !== "Realizado" && form.status !== "Cancelado" && (
             <Button 
               variant="outlined" 
               color="success" 
               onClick={handleMarcarRealizada}
             >
-              Marcar como Realizada
+              Marcar como Realizado
             </Button>
           )}
           <Button 
