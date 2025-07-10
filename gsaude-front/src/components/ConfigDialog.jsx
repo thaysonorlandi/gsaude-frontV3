@@ -9,6 +9,9 @@ import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import InputAdornment from '@mui/material/InputAdornment';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
@@ -40,6 +43,8 @@ export default function ConfigDialog({ open, onClose }) {
   const [confirmarSenha, setConfirmarSenha] = React.useState('');
   const [permissao, setPermissao] = React.useState('recepcao');
   const [editingUser, setEditingUser] = React.useState(null);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [snackbar, setSnackbar] = React.useState({
     open: false,
     message: '',
@@ -83,17 +88,6 @@ export default function ConfigDialog({ open, onClose }) {
     }
   }, [open]);
 
-  // Efeito para garantir que os campos sejam limpos quando entrar em modo de edição
-  React.useEffect(() => {
-    if (editingUser) {
-      // Força a limpeza dos campos quando entrar em modo de edição
-      setNome('');
-      setEmail('');
-      setSenha('');
-      setConfirmarSenha('');
-    }
-  }, [editingUser]);
-
   const recarregarUsuarios = async () => {
     try {
       setLoading(true);
@@ -124,6 +118,8 @@ export default function ConfigDialog({ open, onClose }) {
     setConfirmarSenha('');
     setPermissao('recepcao');
     setEditingUser(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const handleSubmit = async (e) => {
@@ -184,11 +180,13 @@ export default function ConfigDialog({ open, onClose }) {
   };
 
   const handleEdit = (usuario) => {
-    // Primeiro reseta o form completamente
-    resetForm();
-    // Depois define como modo de edição
+    // Define como modo de edição e preenche os campos com dados atuais
     setEditingUser(usuario);
-    // Mantém apenas a permissão pré-preenchida
+    setNome(usuario.name || '');
+    setEmail(usuario.email || '');
+    setSenha(''); // Senha sempre vazia por segurança
+    setConfirmarSenha('');
+    // Mantém a permissão atual
     if (usuario.permissions && usuario.permissions.length > 0) {
       setPermissao(usuario.permissions[0]);
     } else {
@@ -343,7 +341,8 @@ export default function ConfigDialog({ open, onClose }) {
                   variant="standard"
                   value={nome}
                   onChange={e => setNome(e.target.value)}
-                  placeholder={editingUser ? `Digite o novo nome (atual: ${editingUser.name})` : ''}
+                  placeholder={editingUser ? '' : 'Digite o nome do usuário'}
+                  autoComplete="off"
                   required
                 />
                 
@@ -355,30 +354,59 @@ export default function ConfigDialog({ open, onClose }) {
                   variant="standard"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder={editingUser ? `Digite o novo email (atual: ${editingUser.email})` : ''}
+                  placeholder={editingUser ? '' : 'Digite o e-mail do usuário'}
+                  autoComplete="off"
                   required
                 />
 
                 <TextField
                   margin="dense"
                   label={editingUser ? "Nova Senha (deixe em branco para manter)" : "Senha"}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   fullWidth
                   variant="standard"
                   value={senha}
                   onChange={e => setSenha(e.target.value)}
+                  autoComplete="new-password"
                   required={!editingUser}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
 
                 <TextField
                   margin="dense"
                   label="Confirmar Senha"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   fullWidth
                   variant="standard"
                   value={confirmarSenha}
                   onChange={e => setConfirmarSenha(e.target.value)}
+                  autoComplete="new-password"
                   required={!editingUser || senha}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                          size="small"
+                        >
+                          {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
                 
                 <FormControl fullWidth margin="dense" variant="standard" required>
@@ -407,25 +435,28 @@ export default function ConfigDialog({ open, onClose }) {
             )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={onClose} disabled={loading}>
-              Fechar
-            </Button>
-            {editingUser && (
+            <Box display="flex" justifyContent="space-between" width="100%">
               <Button 
-                onClick={resetForm} 
+                variant="outlined" 
+                onClick={resetForm}
+                color="error"
                 disabled={loading}
-                color="warning"
               >
-                Cancelar Edição
+                {editingUser ? 'Cancelar Edição' : 'Limpar Campos'}
               </Button>
-            )}
-            <Button 
-              type="submit" 
-              variant="contained" 
-              disabled={loading}
-            >
-              {loading ? 'Salvando...' : editingUser ? 'Atualizar Usuário' : 'Adicionar Usuário'}
-            </Button>
+              <Box display="flex" gap={1}>
+                <Button onClick={onClose} disabled={loading}>
+                  Fechar
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  disabled={loading}
+                >
+                  {loading ? 'Salvando...' : editingUser ? 'Atualizar Usuário' : 'Adicionar Usuário'}
+                </Button>
+              </Box>
+            </Box>
           </DialogActions>
         </form>
       </Dialog>
