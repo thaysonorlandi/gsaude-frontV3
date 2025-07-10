@@ -300,12 +300,22 @@ export default function Agendamento() {
   };
 
   function handleCancelar() {
+    // Abre o diálogo de confirmação
     setOpenCancelDialog(true);
   }
 
   function handleConfirmCancel() {
-    setOpenCancelDialog(false);
+    // Limpa todo o formulário
     setForm(FORMULARIO_INICIAL);
+    // Reseta para a primeira etapa
+    setActiveStep(0);
+    // Limpa horário selecionado
+    setHorarioSelecionado({});
+    // Limpa qualquer erro
+    setError(null);
+    // Fecha o diálogo
+    setOpenCancelDialog(false);
+    // Redireciona para a página inicial
     navigate("/home");
   }
 
@@ -319,12 +329,6 @@ export default function Agendamento() {
     1: ["data", "hora"],         // etapa 2: horários
     2: ["nomePaciente", "idadePaciente", "convenioId", "telefonePaciente"], // etapa 3: dados adicionais
   };
-
-  // Função dinâmica de validação:
-  function isStepValid(step) {
-    const campos = CAMPOS_OBRIGATORIOS[step] || [];
-    return campos.every((campo) => form[campo] && String(form[campo]).trim() !== "");
-  }
 
   // Supondo que form.medico tem o nome do médico selecionado
 
@@ -410,6 +414,27 @@ export default function Agendamento() {
     // Se passou nas validações, avança para a próxima etapa
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
     setError(null); // Limpa qualquer erro anterior
+  };
+
+  // Função para formatar data para exibição (dd-mm-yyyy)
+  const formatarDataParaExibicao = (data) => {
+    if (!data) return '';
+    
+    // Se já está no formato YYYY-MM-DD, converter para DD-MM-YYYY
+    if (typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data)) {
+      const partes = data.split('-');
+      return `${partes[2]}-${partes[1]}-${partes[0]}`;
+    }
+    
+    // Se é um objeto Date
+    if (data instanceof Date) {
+      const day = String(data.getDate()).padStart(2, '0');
+      const month = String(data.getMonth() + 1).padStart(2, '0');
+      const year = data.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    
+    return data;
   };
 
   return (
@@ -576,7 +601,7 @@ export default function Agendamento() {
               {horarioSelecionado.data && horarioSelecionado.hora && (
                 <Box sx={{ mb: 2, p: 2, bgcolor: '#e3f2fd', borderRadius: 1 }}>
                   <Typography variant="subtitle2" color="primary">
-                    Horário selecionado: {horarioSelecionado.data} às {horarioSelecionado.hora}
+                    Horário selecionado: {formatarDataParaExibicao(horarioSelecionado.data)} às {horarioSelecionado.hora}
                   </Typography>
                 </Box>
               )}
@@ -702,49 +727,60 @@ export default function Agendamento() {
           )}
 
           {/* Botões sempre visíveis e alinhados */}
-          <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 2 }}>
+          <Stack direction="row" spacing={2} justifyContent="space-between" sx={{ mt: 2 }}>
             <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              sx={{ mr: 1 }}
-            >
-              Voltar
-            </Button>
-            {activeStep < steps.length - 1 ? (
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                disabled={
-                  (activeStep === 0 && (!form.filialId || !form.procedimento || (!form.especialidadeId && !form.procedimentoId) || !form.medicoId)) ||
-                  (activeStep === 1 && (!form.data || !form.hora)) ||
-                  loading
+              variant="outlined"
+              color="error"
+              onClick={handleCancelar}
+              sx={{ 
+                borderColor: '#d32f2f',
+                color: '#d32f2f',
+                '&:hover': {
+                  borderColor: '#b71c1c',
+                  backgroundColor: 'rgba(211, 47, 47, 0.04)'
                 }
-              >
-                Próximo
-              </Button>
-            ) : (
-              <Button
-                variant="contained"
-                onClick={handleFinalizar}
-                disabled={
-                  !form.nomePaciente || 
-                  !form.idadePaciente || 
-                  !form.convenioId || 
-                  !form.telefonePaciente ||
-                  !form.data ||
-                  !form.hora ||
-                  loading
-                }
-              >
-                {loading ? <CircularProgress size={20} /> : 'Finalizar'}
-              </Button>
-            )}
-            <Button
-              sx={{ ml: 1 }}
-              onClick={() => setOpenCancelDialog(true)}
+              }}
             >
               Cancelar
             </Button>
+            
+            <Stack direction="row" spacing={2}>
+              <Button
+                disabled={activeStep === 0}
+                onClick={handleBack}
+              >
+                Voltar
+              </Button>
+              {activeStep < steps.length - 1 ? (
+                <Button
+                  variant="contained"
+                  onClick={handleNext}
+                  disabled={
+                    (activeStep === 0 && (!form.filialId || !form.procedimento || (!form.especialidadeId && !form.procedimentoId) || !form.medicoId)) ||
+                    (activeStep === 1 && (!form.data || !form.hora)) ||
+                    loading
+                  }
+                >
+                  Próximo
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  onClick={handleFinalizar}
+                  disabled={
+                    !form.nomePaciente || 
+                    !form.idadePaciente || 
+                    !form.convenioId || 
+                    !form.telefonePaciente ||
+                    !form.data ||
+                    !form.hora ||
+                    loading
+                  }
+                >
+                  {loading ? <CircularProgress size={20} /> : 'Finalizar'}
+                </Button>
+              )}
+            </Stack>
           </Stack>
         </form>
       </Paper>
@@ -800,18 +836,12 @@ export default function Agendamento() {
               </Typography>
               
               <Typography sx={{ mb: 1 }}>
-                <strong>Data:</strong> {dadosAgendamento.data}
+                <strong>Data:</strong> {formatarDataParaExibicao(dadosAgendamento.data)}
               </Typography>
               
               <Typography sx={{ mb: 1 }}>
                 <strong>Horário:</strong> {dadosAgendamento.hora}
               </Typography>
-              
-              {dadosAgendamento.id && (
-                <Typography sx={{ mt: 2, fontSize: '0.9em', color: 'text.secondary' }}>
-                  <strong>ID do Agendamento:</strong> #{dadosAgendamento.id}
-                </Typography>
-              )}
             </Box>
           )}
         </DialogContent>
@@ -854,15 +884,15 @@ export default function Agendamento() {
         <DialogTitle>Cancelar Agendamento?</DialogTitle>
         <DialogContent>
           <Typography>
-            Deseja cancelar a operação e retornar para a página inicial?
+            Tem certeza que deseja cancelar o agendamento? Todos os dados preenchidos serão perdidos.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCancelDialog} color="primary">
-            Não
+            Não, continuar
           </Button>
           <Button onClick={handleConfirmCancel} color="error" variant="contained">
-            Sim
+            Sim, cancelar
           </Button>
         </DialogActions>
       </Dialog>
