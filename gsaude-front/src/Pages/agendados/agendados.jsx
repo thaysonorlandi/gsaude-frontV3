@@ -697,7 +697,7 @@ export default function VerificarAgendamentos() {
                           <b>Paciente:</b> {item.paciente_nome} &nbsp;|&nbsp;
                           <b>Médico:</b> {item.medico_nome} &nbsp;|&nbsp;
                           <b>Data:</b> {dayjs(item.data).format("DD/MM/YYYY")} &nbsp;|&nbsp;
-                          <b>Hora:</b> {item.hora}
+                          <b>Hora:</b> {dayjs(item.hora).format("HH:mm")}
                         </span>
                       }
                     />
