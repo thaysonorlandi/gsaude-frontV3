@@ -139,7 +139,7 @@ function Financeiro() {
                 <Card className="card-financeiro receita">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Valores Recebidos das Consultas
+                      Valores Recebidos
                     </Typography>
                     <Typography variant="h4">
                       {resumoFinanceiro.receitaTotal}
@@ -151,7 +151,7 @@ function Financeiro() {
                 <Card className="card-financeiro despesa">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Valores Pagos aos Médicos
+                      Valores Pagos
                     </Typography>
                     <Typography variant="h4">
                       {resumoFinanceiro.despesaTotal}
@@ -189,7 +189,7 @@ function Financeiro() {
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                       <Box>
                         <Typography variant="body1">
-                          Número de Consultas Realizadas: <strong>{resumoFinanceiro.consultasRealizadas}</strong>
+                          Realizadas: <strong>{resumoFinanceiro.consultasRealizadas}</strong>
                         </Typography>
                         <Typography variant="body1">
                           Aguardando: <strong>{resumoFinanceiro.consultasAguardando}</strong>
@@ -197,7 +197,7 @@ function Financeiro() {
                       </Box>
                       <Box textAlign="right">
                         <Typography variant="body1">
-                          Média dos Valores: <strong>{resumoFinanceiro.valorMedioConsulta}</strong>
+                          Média de Valores: <strong>{resumoFinanceiro.valorMedioConsulta}</strong>
                         </Typography>
                         <Typography variant="body1">
                           Tempo Médio: <strong>{resumoFinanceiro.tempoMedioConsulta}</strong>
@@ -216,7 +216,7 @@ function Financeiro() {
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                       <Box>
                         <Typography variant="body1">
-                          Número de Exames Realizados: <strong>{resumoFinanceiro.examesRealizados}</strong>
+                          Realizados: <strong>{resumoFinanceiro.examesRealizados}</strong>
                         </Typography>
                         <Typography variant="body1">
                           Aguardando: <strong>{resumoFinanceiro.examesAguardando}</strong>
@@ -224,7 +224,7 @@ function Financeiro() {
                       </Box>
                       <Box textAlign="right">
                         <Typography variant="body1">
-                          Média dos Valores: <strong>{resumoFinanceiro.valorMedioExame}</strong>
+                          Média de Valores: <strong>{resumoFinanceiro.valorMedioExame}</strong>
                         </Typography>
                         <Typography variant="body1">
                           Tempo Médio: <strong>{resumoFinanceiro.tempoMedioExame}</strong>
