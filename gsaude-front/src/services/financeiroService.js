@@ -5,8 +5,18 @@ export const financeiroService = {
   // Buscar dados consolidados de agendamentos financeiros
   async getDadosFinanceiros() {
     try {
-      const response = await api.get('/agendados/relatorios/financeiro');
-      return response.data.data || response.data;
+      // Usar a rota de agendados que já funciona, ao invés da rota específica de relatório
+      const response = await api.get('/agendados');
+      console.log('Resposta da API /agendados:', response);
+      
+      // Verificar estrutura da resposta
+      let dados = response.data;
+      if (dados.success && dados.data) {
+        dados = dados.data;
+      }
+      
+      console.log('Dados processados:', dados);
+      return Array.isArray(dados) ? dados : [];
     } catch (error) {
       console.error('Erro ao carregar dados financeiros:', error);
       throw error;
@@ -21,11 +31,15 @@ export const financeiroService = {
       return this.getResumoVazio();
     }
 
+    console.log('Calculando resumo financeiro para:', dadosAgendamentos.length, 'agendamentos');
+
     const agendamentosRealizados = dadosAgendamentos.filter(item => 
       (item.status === 'Realizado' || item.status === 'realizado') && 
       item.valor_consulta && 
       parseFloat(item.valor_consulta) > 0
     );
+
+    console.log('Agendamentos realizados com valores:', agendamentosRealizados.length);
 
     // Cálculos de receita, despesa e lucro
     const receitaTotal = agendamentosRealizados.reduce((total, item) => {
@@ -50,7 +64,7 @@ export const financeiroService = {
     const consultasRealizadas = consultas.length;
     const consultasAguardando = dadosAgendamentos.filter(item => 
       (item.tipo_procedimento === 'consulta' || item.tipo === 'Consulta') && 
-      (item.status === 'Aguardando' || item.status === 'agendado' || item.status === 'confirmado')
+      (item.status === 'Aguardando' || item.status === 'Confirmado')
     ).length;
 
     const valorMedioConsulta = consultasRealizadas > 0 
@@ -65,7 +79,7 @@ export const financeiroService = {
     const examesRealizados = exames.length;
     const examesAguardando = dadosAgendamentos.filter(item => 
       (item.tipo_procedimento === 'exame' || item.tipo === 'Exame') && 
-      (item.status === 'Aguardando' || item.status === 'agendado' || item.status === 'confirmado')
+      (item.status === 'Aguardando' || item.status === 'Confirmado')
     ).length;
 
     const valorMedioExame = examesRealizados > 0 
@@ -76,7 +90,7 @@ export const financeiroService = {
       ? exames.reduce((total, item) => total + (parseInt(item.duracao_consulta) || 0), 0) / examesRealizados
       : 0;
 
-    return {
+    const resultado = {
       receitaTotal: this.formatarMoeda(receitaTotal),
       despesaTotal: this.formatarMoeda(despesaTotal),
       lucroLiquido: this.formatarMoeda(lucroLiquido),
@@ -89,6 +103,9 @@ export const financeiroService = {
       tempoMedioConsulta: `${Math.round(tempoMedioConsulta)} minutos`,
       tempoMedioExame: `${Math.round(tempoMedioExame)} minutos`
     };
+
+    console.log('Resumo financeiro calculado:', resultado);
+    return resultado;
   },
 
   // Retorna um resumo vazio em caso de erro
@@ -116,6 +133,8 @@ export const financeiroService = {
       return { consultas: [], exames: [] };
     }
 
+    console.log('Processando detalhamento para:', dadosAgendamentos.length, 'agendamentos');
+
     const consultasDetalhadas = dadosAgendamentos
       .filter(item => item.tipo_procedimento === 'consulta' || item.tipo === 'Consulta')
       .map(item => ({
@@ -138,6 +157,11 @@ export const financeiroService = {
         data: this.formatarData(item.data_agendamento || item.data),
         status: this.traduzirStatus(item.status)
       }));
+
+    console.log('Detalhamento processado:', {
+      consultas: consultasDetalhadas.length,
+      exames: examesDetalhados.length
+    });
 
     return {
       consultas: consultasDetalhadas,
