@@ -190,7 +190,7 @@ export const agendamentoService = {
         }
       });
       
-      const endpoint = params.toString() ? `/agendamentos?${params}` : '/agendamentos';
+      const endpoint = params.toString() ? `/agendados?${params}` : '/agendados';
       const response = await apiRequest(endpoint);
       return response.data || response;
     } catch (error) {
