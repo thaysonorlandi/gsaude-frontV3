@@ -229,7 +229,8 @@ export default function VerificarAgendamentos() {
       ...item,
       data: item.data,
       hora: item.hora,
-      status: item.status
+      status: item.status,
+      telefone: item.telefone || item.telefone_paciente || ''
     });
     
     // Inicializa detalhes financeiros do item ou com valores padrão
@@ -255,14 +256,38 @@ export default function VerificarAgendamentos() {
     setDetalhesFinanceiros({});
   };
 
+  // Função para aplicar máscara de telefone
+  const formatPhoneNumber = (value) => {
+    // Remove todos os caracteres não numéricos
+    const cleanValue = value.replace(/\D/g, '');
+    
+    // Aplica a máscara (XX) XXXXX-XXXX
+    if (cleanValue.length <= 2) {
+      return `(${cleanValue}`;
+    } else if (cleanValue.length <= 7) {
+      return `(${cleanValue.slice(0, 2)}) ${cleanValue.slice(2)}`;
+    } else {
+      return `(${cleanValue.slice(0, 2)}) ${cleanValue.slice(2, 7)}-${cleanValue.slice(7, 11)}`;
+    }
+  };
+
   // Alterar campos do formulário
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    // Aplicar máscara se for campo telefone
+    if (name === 'telefone') {
+      const maskedValue = formatPhoneNumber(value);
+      setForm((prev) => ({
+        ...prev,
+        [name]: maskedValue,
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   // Alterar campos financeiros
@@ -786,17 +811,24 @@ export default function VerificarAgendamentos() {
                       margin="dense"
                       InputProps={{ readOnly: true }}
                       size="small"
+                      disabled
                     />
                   </Grid>
 
                   <Grid item xs={12} md={6}>
                     <TextField
                       label="Telefone"
-                      value={agendamentoSelecionado.telefone || ''}
+                      name="telefone"
+                      value={form.telefone || agendamentoSelecionado.telefone || ''}
+                      onChange={handleChange}
                       fullWidth
                       margin="dense"
-                      InputProps={{ readOnly: true }}
                       size="small"
+                      placeholder="(XX) XXXXX-XXXX"
+                      inputProps={{
+                        maxLength: 15 // Limita o tamanho máximo do campo
+                      }}
+                      disabled
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -807,6 +839,7 @@ export default function VerificarAgendamentos() {
                       margin="dense"
                       InputProps={{ readOnly: true }}
                       size="small"
+                      disabled
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -817,6 +850,7 @@ export default function VerificarAgendamentos() {
                       margin="dense"
                       InputProps={{ readOnly: true }}
                       size="small"
+                      disabled
                     />
                   </Grid>
                   {agendamentoSelecionado.tipo === "Consulta" && (
@@ -827,7 +861,8 @@ export default function VerificarAgendamentos() {
                         fullWidth
                         margin="dense"
                         InputProps={{ readOnly: true }}
-                        size="small"
+                        size="small" 
+                        disabled
                       />
                     </Grid>
                   )}
@@ -840,6 +875,7 @@ export default function VerificarAgendamentos() {
                         margin="dense"
                         InputProps={{ readOnly: true }}
                         size="small"
+                        disabled
                       />
                     </Grid>
                   )}
@@ -873,7 +909,7 @@ export default function VerificarAgendamentos() {
                       margin="dense"
                       size="small"
                       InputLabelProps={{ shrink: true }}
-                      disabled={form.status === "Realizado" || form.status === "Cancelado"}
+                      disabled
                     />
                   </Grid>
                   <Grid item xs={12} md={4}>
@@ -888,6 +924,7 @@ export default function VerificarAgendamentos() {
                       size="small"
                       InputLabelProps={{ shrink: true }}
                       InputProps={{ readOnly: true }}
+                      disabled
                     />
                   </Grid>
                 </Grid>
@@ -965,6 +1002,7 @@ export default function VerificarAgendamentos() {
                               readOnly: true,
                               startAdornment: <InputAdornment position="start"><AccessTimeIcon /></InputAdornment>,
                             }}
+                            disabled={detalhesFinanceiros.enviado_financeiro}
                           />
                         </Grid>
                       </Grid>
@@ -1062,7 +1100,7 @@ export default function VerificarAgendamentos() {
                         />
                       }
                       label="Enviado para Financeiro"
-                    />
+                                          />
                   </Grid>
                   
                   <Grid item xs={12} sx={{ mt: 1 }}>
