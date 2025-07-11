@@ -5,6 +5,7 @@ import Agendamento from '../pages/agendamento/agendamento.jsx';
 import Agendados from '../pages/agendados/agendados.jsx';
 import Financeiro from '../pages/financeiro/financeiro.jsx';
 import Cadastros from '../pages/cadastros/cadastros.jsx';
+import TesteAPI from '../Pages/TesteAPI.jsx';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
 
 const router = createBrowserRouter([
@@ -57,6 +58,10 @@ const router = createBrowserRouter([
   {
     path: '/register',
     element: <h1>Register Page</h1>,
+  },
+  {
+    path: '/teste-api',
+    element: <TesteAPI />,
   },
   {
     path: '*',

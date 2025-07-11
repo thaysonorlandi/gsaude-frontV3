@@ -80,13 +80,26 @@ export default function VerificarAgendamentos() {
           api.get('/especialidades'),
           api.get('/procedimentos'),
           api.get('/medicos'),
-          api.get('/agendamentos')
+          api.get('/agendados') // Mudança aqui: usar /agendados que retorna os dados financeiros
         ]);
+        
+        console.log('=== DADOS CARREGADOS DA API ===');
+        console.log('Resposta completa agendamentos:', agendamentosRes);
+        console.log('Agendamentos recebidos:', agendamentosRes.data);
+        
+        // A API retorna { success: true, data: [...] }, então precisamos acessar .data.data
+        const agendamentosData = agendamentosRes.data?.data || agendamentosRes.data;
+        console.log('Dados processados de agendamentos:', agendamentosData);
+        
+        if (agendamentosData && agendamentosData.length > 0) {
+          console.log('Primeiro agendamento:', agendamentosData[0]);
+          console.log('Detalhes financeiros do primeiro:', agendamentosData[0].detalhes_financeiros);
+        }
         
         setEspecialidades(especialidadesRes.data);
         setProcedimentos(procedimentosRes.data);
         setMedicos(medicosRes.data);
-        setAgendamentos(agendamentosRes.data);
+        setAgendamentos(agendamentosData);
         setError(null);
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
@@ -224,6 +237,10 @@ export default function VerificarAgendamentos() {
 
   // Abrir Dialog com os detalhes do agendamento
   const handleOpenDialog = (item) => {
+    console.log('=== ABRINDO DIALOG ===');
+    console.log('Item selecionado:', item);
+    console.log('Detalhes financeiros do item:', item.detalhes_financeiros);
+    
     setAgendamentoSelecionado(item);
     setForm({
       ...item,
@@ -236,14 +253,17 @@ export default function VerificarAgendamentos() {
     // Inicializa detalhes financeiros do item ou com valores padrão
     // Se não há horário de início definido, usa a hora original do agendamento
     const horaFormatada = item.hora ? dayjs(item.hora, "HH:mm").format("HH:mm") : "";
-    setDetalhesFinanceiros(item.detalhes_financeiros || {
+    const detalhesFinanceirosInicial = item.detalhes_financeiros || {
       valor_consulta: "",
       valor_pago_funcionario: "",
       horario_inicio: horaFormatada,
       duracao_minutos: "",
       observacao: "",
       enviado_financeiro: false
-    });
+    };
+    
+    console.log('Detalhes financeiros inicializados:', detalhesFinanceirosInicial);
+    setDetalhesFinanceiros(detalhesFinanceirosInicial);
     
     setOpenDialog(true);
   };
