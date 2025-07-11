@@ -186,7 +186,7 @@ function Financeiro() {
                     <Typography variant="h6" gutterBottom>
                       Consultas
                     </Typography>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ gap: 2 }}>
                       <Box>
                         <Typography variant="body1">
                           Realizadas: <strong>{resumoFinanceiro.consultasRealizadas}</strong>
@@ -213,7 +213,7 @@ function Financeiro() {
                     <Typography variant="h6" gutterBottom>
                       Exames
                     </Typography>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ gap: 2 }}>
                       <Box>
                         <Typography variant="body1">
                           Realizados: <strong>{resumoFinanceiro.examesRealizados}</strong>
