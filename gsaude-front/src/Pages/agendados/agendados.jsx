@@ -782,7 +782,7 @@ export default function VerificarAgendamentos() {
                           <b>Paciente:</b> {item.paciente_nome} &nbsp;|&nbsp;
                           <b>Médico:</b> {item.medico_nome} &nbsp;|&nbsp;
                           <b>Data:</b> {dayjs(item.data).format("DD/MM/YYYY")} &nbsp;|&nbsp;
-                          <b>Hora:</b> {dayjs(item.hora).format("HH:mm")}
+                          <b>Hora:</b> {item.hora}
                         </span>
                       }
                     />
@@ -908,7 +908,7 @@ export default function VerificarAgendamentos() {
                         value={form.status || 'Aguardando'}
                         label="Status"
                         onChange={handleChange}
-                        disabled={form.status === "Cancelado"}
+                        disabled={form.status === "Cancelado" || form.status === "Realizado"}
                         sx={{ minWidth: 140 }}
                       >
                         <MenuItem value="Aguardando">Aguardando</MenuItem>
@@ -925,7 +925,7 @@ export default function VerificarAgendamentos() {
                       value={dayjs(form.data).format("DD/MM/YYYY")}
                       onChange={handleChange}
                       fullWidth
-                      sx={{ maxWidth: 140 }}
+                      sx={{ maxWidth: 135 }}
                       margin="dense"
                       size="small"
                       InputLabelProps={{ shrink: true }}
@@ -937,9 +937,9 @@ export default function VerificarAgendamentos() {
                       label="Hora"
                       name="hora"
                       type="string"
-                      value={dayjs(form.hora).format("HH:mm")}
+                      value={form.hora}
                       fullWidth
-                      sx={{ maxWidth: 90 }}
+                      sx={{ maxWidth: 95 }}
                       margin="dense"
                       size="small"
                       InputLabelProps={{ shrink: true }}
