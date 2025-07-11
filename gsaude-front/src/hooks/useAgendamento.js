@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { agendamentoService } from '../services/agendamentoService';
 
 export function useAgendamento() {
@@ -12,12 +12,8 @@ export function useAgendamento() {
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
 
-  // Carregar dados iniciais
-  useEffect(() => {
-    carregarDadosIniciais();
-  }, []);
-
-  async function carregarDadosIniciais() {
+  // Declarar todas as funções primeiro
+  const carregarDadosIniciais = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -44,10 +40,9 @@ export function useAgendamento() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  // Carregar médicos por especialidade (para consultas)
-  async function carregarMedicosPorEspecialidade(especialidadeId) {
+  const carregarMedicosPorEspecialidade = useCallback(async (especialidadeId) => {
     if (!especialidadeId) {
       setMedicos([]);
       return;
@@ -68,10 +63,9 @@ export function useAgendamento() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  // Carregar médicos por procedimento (para exames)
-  const carregarMedicosPorProcedimento = async (procedimentoId) => {
+  const carregarMedicosPorProcedimento = useCallback(async (procedimentoId) => {
     try {
       setLoading(true);
       console.log('Carregando médicos para procedimento:', procedimentoId);
@@ -85,10 +79,9 @@ export function useAgendamento() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  // Carregar horários disponíveis
-  async function carregarHorarios(medicoId, data = null) {
+  const carregarHorarios = useCallback(async (medicoId, data = null, periodo = 'semana') => {
     if (!medicoId) {
       setHorariosDisponiveis([]);
       return;
@@ -98,8 +91,8 @@ export function useAgendamento() {
     setError(null);
 
     try {
-      console.log('Carregando horários para médico:', medicoId, 'data:', data);
-      const horariosData = await agendamentoService.getHorariosDisponiveis(medicoId, data);
+      console.log('Carregando horários para médico:', medicoId, 'data:', data, 'período:', periodo);
+      const horariosData = await agendamentoService.getHorariosDisponiveis(medicoId, data, periodo);
       console.log('Horários carregados:', horariosData);
       setHorariosDisponiveis(horariosData || []);
     } catch (err) {
@@ -109,10 +102,25 @@ export function useAgendamento() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  // Criar agendamento
-  async function criarAgendamento(dadosAgendamento) {
+  const carregarAgendamentos = useCallback(async (filtros = {}) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const agendamentosData = await agendamentoService.getAgendamentos(filtros);
+      setAgendamentos(agendamentosData || []);
+    } catch (err) {
+      console.error('Erro ao carregar agendamentos:', err);
+      setError('Erro ao carregar agendamentos');
+      setAgendamentos([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const criarAgendamento = useCallback(async (dadosAgendamento) => {
     setLoading(true);
     setError(null);
 
@@ -127,31 +135,19 @@ export function useAgendamento() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [carregarAgendamentos]);
 
-  // Carregar lista de agendamentos
-  async function carregarAgendamentos(filtros = {}) {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const agendamentosData = await agendamentoService.getAgendamentos(filtros);
-      setAgendamentos(agendamentosData || []);
-    } catch (err) {
-      console.error('Erro ao carregar agendamentos:', err);
-      setError('Erro ao carregar agendamentos');
-      setAgendamentos([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Agora declaram os useEffects
+  useEffect(() => {
+    carregarDadosIniciais();
+  }, [carregarDadosIniciais]);
 
   return {
     loading,
     error,
     filiais,
     especialidades,
-    procedimentos, // Único array para procedimentos/exames
+    procedimentos,
     medicos,
     convenios,
     horariosDisponiveis,

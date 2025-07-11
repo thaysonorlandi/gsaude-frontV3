@@ -143,11 +143,12 @@ export const agendamentoService = {
   },
 
   // Buscar horários disponíveis
-  async getHorariosDisponiveis(medicoId, data = null) {
+  async getHorariosDisponiveis(medicoId, data = null, periodo = 'semana') {
     try {
-      const endpoint = data 
-        ? `/medicos/${medicoId}/horarios-disponiveis?data=${data}`
-        : `/medicos/${medicoId}/horarios-disponiveis`;
+      let endpoint = `/medicos/${medicoId}/horarios-disponiveis?periodo=${periodo}`;
+      if (data) {
+        endpoint += `&data=${data}`;
+      }
       console.log('Buscando horários do endpoint:', endpoint);
       
       const response = await apiRequest(endpoint);

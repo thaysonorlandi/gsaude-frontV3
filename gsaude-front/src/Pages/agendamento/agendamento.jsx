@@ -50,6 +50,7 @@ export default function Agendamento() {
   const [activeStep, setActiveStep] = useState(0);
   const [form, setForm] = React.useState(FORMULARIO_INICIAL);
   const [horarioSelecionado, setHorarioSelecionado] = useState({});
+  const [periodoSelecionado, setPeriodoSelecionado] = useState('semana');
   const [open, setOpen] = useState(false);
   const [showMsg, setShowMsg] = useState(false);
   const [dadosAgendamento, setDadosAgendamento] = useState(null);
@@ -99,7 +100,7 @@ export default function Agendamento() {
       console.log('Carregando médicos por especialidade:', form.especialidadeId);
       carregarMedicosPorEspecialidade(form.especialidadeId);
     }
-  }, [form.especialidadeId]);
+  }, [form.especialidadeId, form.procedimento, carregarMedicosPorEspecialidade]);
 
   // Carrega médicos quando muda o procedimento (antes era tipoExameId)
   useEffect(() => {
@@ -107,15 +108,15 @@ export default function Agendamento() {
       console.log('Carregando médicos por procedimento:', form.procedimentoId);
       carregarMedicosPorProcedimento(form.procedimentoId);
     }
-  }, [form.procedimentoId]);
+  }, [form.procedimentoId, form.procedimento, carregarMedicosPorProcedimento]);
 
-  // Carrega horários quando muda o médico
+  // Carrega horários quando muda o médico ou período
   useEffect(() => {
     if (form.medicoId) {
-      console.log('Carregando horários para médico:', form.medicoId);
-      carregarHorarios(form.medicoId);
+      console.log('Carregando horários para médico:', form.medicoId, 'período:', periodoSelecionado);
+      carregarHorarios(form.medicoId, null, periodoSelecionado);
     }
-  }, [form.medicoId]);
+  }, [form.medicoId, periodoSelecionado, carregarHorarios]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -596,6 +597,24 @@ export default function Agendamento() {
                   )}
                 </Box>
               )}
+
+              {/* Seletor de período */}
+              {form.medicoId && (
+                <Box sx={{ mb: 3 }}>
+                  <FormControl variant="outlined" size="small" sx={{ minWidth: 200 }}>
+                    <InputLabel>Período</InputLabel>
+                    <Select
+                      value={periodoSelecionado}
+                      onChange={(e) => setPeriodoSelecionado(e.target.value)}
+                      label="Período"
+                    >
+                      <MenuItem value="semana">Esta semana</MenuItem>
+                      <MenuItem value="mes">Este mês</MenuItem>
+                      <MenuItem value="proximo_mes">Próximo mês</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
               
               {/* Horário selecionado */}
               {horarioSelecionado.data && horarioSelecionado.hora && (
@@ -612,6 +631,8 @@ export default function Agendamento() {
                 </Box>
               ) : (
                 <Box className="horarios-disponiveis">
+                  {/* Log de debug para renderização */}
+                  {console.log('RENDER - horariosDisponiveis:', horariosDisponiveis)}
                   {horariosDisponiveis.length > 0 ? horariosDisponiveis.map((dia) => (
                     <Box key={dia.data} className="horarios-dia">
                       <Typography className="horarios-dia-titulo">
