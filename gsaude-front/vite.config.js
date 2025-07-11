@@ -7,6 +7,8 @@ export default defineConfig(({ mode }) => {
   
   return {
     plugins: [react()],
+    // Configuração para GitHub Pages
+    base: mode === 'production' ? '/gsaude-frontV3/' : '/',
     server: {
       host: '0.0.0.0',
       port: 5174,
