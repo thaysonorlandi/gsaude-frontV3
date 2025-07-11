@@ -881,7 +881,7 @@ export default function VerificarAgendamentos() {
                       label="Hora"
                       name="hora"
                       type="string"
-                      value={form.hora && form.hora.includes(':') ? form.hora : dayjs(form.hora).format("HH:mm")}
+                      value={dayjs(form.hora).format("HH:mm")}
                       fullWidth
                       sx={{ maxWidth: 90 }}
                       margin="dense"
