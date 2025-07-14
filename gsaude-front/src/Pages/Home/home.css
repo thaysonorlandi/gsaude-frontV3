@@ -46,13 +46,12 @@
 
 /* Estilo do logo */
 .home-logo {
-  height: 50px;                  /* Altura fixa do logo */
-  width: auto;                   /* Largura proporcional */
-  max-width: 150px;              /* Largura máxima */
+  height: 70px;                  /* Altura fixa do logo */
+  width: 70px;                   /* Largura proporcional */
+  max-width: 200px;              /* Largura máxima */
   object-fit: contain;           /* Mantém proporção */
-  background-color: white;       /* Fundo branco para o logo */
   padding: 4px;                  /* Pequeno padding interno */
-  border-radius: 4px;            /* Bordas ligeiramente arredondadas */
+  border-radius: 15px;            /* Bordas ligeiramente arredondadas */
 }
 
 /* Título da home */

@@ -27,6 +27,7 @@ import Button from '@mui/material/Button';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useUser } from '../../contexts/contexts';
+
 import { getSystemConfig } from '../../services/systemConfigService';
 
 function Home() {
@@ -106,13 +107,11 @@ function Home() {
       <AppBar position="static" className="home-appbar">
         <Toolbar className="home-toolbar">
           <Box className="home-appbar-content">
-            {logoUrl && (
-              <img 
-                src={logoUrl} 
-                alt="Logo" 
-                className="home-logo"
-              />
-            )}
+            <img
+              src={logoUrl}
+              alt="Logo"
+              className="home-logo"
+            />
             <Typography variant="h6" noWrap component="div" className="home-title">
               Agendamento de Consultas e Exames
             </Typography>
