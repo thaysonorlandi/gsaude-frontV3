@@ -290,13 +290,13 @@ export default function ConfigDialog({ open, onClose }) {
                               }
                               secondary={
                                 <>
-                                  <Typography variant="body2" color="textSecondary">
+                                  <span style={{ fontSize: '0.875rem', color: 'rgba(0, 0, 0, 0.6)' }}>
                                     Telas: {getUserPermissionScreens(usuario.permissions)}
-                                  </Typography>
+                                  </span>
                                   {usuario.phone && (
-                                    <Typography variant="body2" color="textSecondary">
+                                    <span style={{ fontSize: '0.875rem', color: 'rgba(0, 0, 0, 0.6)', display: 'block' }}>
                                       Telefone: {usuario.phone}
-                                    </Typography>
+                                    </span>
                                   )}
                                 </>
                               }
