@@ -1,39 +1,23 @@
 // Serviços para integração com a API do backend
-const API_BASE_URL = 'http://localhost:8000/api/v1';
-
-// Função auxiliar para obter token de autenticação
-function getAuthToken() {
-  return localStorage.getItem('token') || sessionStorage.getItem('token');
-}
+import api from './api.js';
 
 // Função auxiliar para fazer requisições HTTP
 async function apiRequest(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint}`;
-  const token = getAuthToken();
-  
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-    },
-    ...options,
-  };
-
   try {
-    console.log('API Request:', url);
-    const response = await fetch(url, config);
+    const response = await api({
+      url: endpoint,
+      method: options.method || 'GET',
+      data: options.body ? JSON.parse(options.body) : undefined,
+      ...options
+    });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Erro de conexão' }));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('API Response:', data);
-    return data;
+    return response.data;
   } catch (error) {
     console.error('API Error:', error);
+    // Se for erro de resposta do axios, extrair a mensagem
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.message || `HTTP error! status: ${error.response.status}`);
+    }
     throw error;
   }
 }
@@ -149,10 +133,8 @@ export const agendamentoService = {
       if (data) {
         endpoint += `&data=${data}`;
       }
-      console.log('Buscando horários do endpoint:', endpoint);
       
       const response = await apiRequest(endpoint);
-      console.log('Resposta de horários:', response);
       
       // Verificar se a resposta tem a estrutura esperada
       if (response.success && response.data) {
@@ -168,12 +150,10 @@ export const agendamentoService = {
   // Criar agendamento
   async criarAgendamento(dadosAgendamento) {
     try {
-      console.log('Dados do agendamento a serem enviados:', dadosAgendamento);
       const response = await apiRequest('/agendamentos', {
         method: 'POST',
         body: JSON.stringify(dadosAgendamento),
       });
-      console.log('Resposta do agendamento:', response);
       return response.data || response;
     } catch (error) {
       console.error('Erro ao criar agendamento:', error);
