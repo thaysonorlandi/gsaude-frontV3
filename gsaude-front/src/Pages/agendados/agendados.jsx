@@ -221,15 +221,25 @@ export default function VerificarAgendamentos() {
     setSnackbarOpen(true);
   };
 
-  // Filtrar agendamentos baseado nos filtros selecionados
-  const agendamentosFiltrados = agendamentos.filter((item) => {
-    if (tipoFiltro && item.tipo !== tipoFiltro) return false;
-    if (especialidadeFiltro && item.tipo === "Consulta" && item.especialidade !== especialidadeFiltro) return false;
-    if (exameFiltro && item.tipo === "Exame" && item.exame !== exameFiltro) return false;
-    if (medicoFiltro && item.medico_nome !== medicoFiltro) return false;
-    if (statusFiltro && item.status !== statusFiltro) return false;
-    return true;
-  });
+  // Filtrar e ordenar agendamentos por data decrescente
+  const agendamentosFiltrados = agendamentos
+    .filter((item) => {
+      if (tipoFiltro && item.tipo !== tipoFiltro) return false;
+      if (especialidadeFiltro && item.tipo === "Consulta" && item.especialidade !== especialidadeFiltro) return false;
+      if (exameFiltro && item.tipo === "Exame" && item.exame !== exameFiltro) return false;
+      if (medicoFiltro && item.medico_nome !== medicoFiltro) return false;
+      if (statusFiltro && item.status !== statusFiltro) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Ordena por data decrescente (mais recente primeiro)
+      if (a.data < b.data) return 1;
+      if (a.data > b.data) return -1;
+      // Se datas iguais, ordena por hora decrescente
+      if (a.hora < b.hora) return 1;
+      if (a.hora > b.hora) return -1;
+      return 0;
+    });
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
