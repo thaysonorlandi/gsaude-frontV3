@@ -16,7 +16,12 @@ import {
   Tabs,
   Tab,
   CircularProgress,
-  Alert
+  Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TableSortLabel
 } from '@mui/material';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import financeiroService from '../../services/financeiroService';
@@ -26,6 +31,12 @@ function Financeiro() {
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estados para ordenação
+  const [orderByConsultas, setOrderByConsultas] = useState('data');
+  const [orderConsultas, setOrderConsultas] = useState('desc');
+  const [orderByExames, setOrderByExames] = useState('data');
+  const [orderExames, setOrderExames] = useState('desc');
   
   const [resumoFinanceiro, setResumoFinanceiro] = useState({
     receitaTotal: 'R$ 0,00',
@@ -103,6 +114,90 @@ function Financeiro() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  // Função para converter valor monetário em número para ordenação
+  const parseValor = (valor) => {
+    if (!valor) return 0;
+    // Remove R$, espaços e substitui vírgula por ponto
+    return parseFloat(valor.replace(/[R$\s]/g, '').replace(',', '.')) || 0;
+  };
+
+  // Função para converter data em formato Date para ordenação
+  const parseData = (data) => {
+    if (!data) return new Date(0);
+    // Se já é uma data válida
+    if (data instanceof Date) return data;
+    // Se é string no formato DD/MM/YYYY
+    if (typeof data === 'string' && data.includes('/')) {
+      const [dia, mes, ano] = data.split('/');
+      return new Date(ano, mes - 1, dia);
+    }
+    // Tenta converter diretamente
+    return new Date(data);
+  };
+
+  // Função para ordenar consultas
+  const handleRequestSortConsultas = (property) => {
+    const isAsc = orderByConsultas === property && orderConsultas === 'asc';
+    setOrderConsultas(isAsc ? 'desc' : 'asc');
+    setOrderByConsultas(property);
+  };
+
+  // Função para ordenar exames
+  const handleRequestSortExames = (property) => {
+    const isAsc = orderByExames === property && orderExames === 'asc';
+    setOrderExames(isAsc ? 'desc' : 'asc');
+    setOrderByExames(property);
+  };
+
+  // Função para ordenar arrays
+  const getSortedData = (array, orderBy, order) => {
+    return array.slice().sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (orderBy) {
+        case 'valor':
+          aValue = parseValor(a.valor);
+          bValue = parseValor(b.valor);
+          break;
+        case 'data':
+          aValue = parseData(a.data);
+          bValue = parseData(b.data);
+          break;
+        case 'paciente':
+          aValue = a.paciente?.toLowerCase() || '';
+          bValue = b.paciente?.toLowerCase() || '';
+          break;
+        case 'medico':
+          aValue = a.medico?.toLowerCase() || '';
+          bValue = b.medico?.toLowerCase() || '';
+          break;
+        case 'status':
+          aValue = a.status?.toLowerCase() || '';
+          bValue = b.status?.toLowerCase() || '';
+          break;
+        case 'tipo':
+          aValue = a.tipo?.toLowerCase() || '';
+          bValue = b.tipo?.toLowerCase() || '';
+          break;
+        case 'duracao':
+          aValue = parseInt(a.duracao) || 0;
+          bValue = parseInt(b.duracao) || 0;
+          break;
+        default:
+          aValue = a[orderBy];
+          bValue = b[orderBy];
+      }
+
+      if (aValue < bValue) {
+        return order === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return order === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
   };
 
   return (
@@ -202,7 +297,7 @@ function Financeiro() {
                         <Typography variant="body1">
                           Tempo Médio: <strong>{resumoFinanceiro.tempoMedioConsulta}</strong>
                         </Typography>
-                      </Box>
+                      </Box> 
                     </Box>
                   </CardContent>
                 </Card>
@@ -256,16 +351,64 @@ function Financeiro() {
                   <Table>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Paciente</TableCell>
-                        <TableCell>Médico</TableCell>
-                        <TableCell>Valor</TableCell>
-                        <TableCell>Data</TableCell>
-                        <TableCell>Duração</TableCell>
-                        <TableCell>Status</TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByConsultas === 'paciente'}
+                            direction={orderByConsultas === 'paciente' ? orderConsultas : 'asc'}
+                            onClick={() => handleRequestSortConsultas('paciente')}
+                          >
+                            Paciente
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByConsultas === 'medico'}
+                            direction={orderByConsultas === 'medico' ? orderConsultas : 'asc'}
+                            onClick={() => handleRequestSortConsultas('medico')}
+                          >
+                            Médico
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByConsultas === 'valor'}
+                            direction={orderByConsultas === 'valor' ? orderConsultas : 'asc'}
+                            onClick={() => handleRequestSortConsultas('valor')}
+                          >
+                            Valor
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByConsultas === 'data'}
+                            direction={orderByConsultas === 'data' ? orderConsultas : 'asc'}
+                            onClick={() => handleRequestSortConsultas('data')}
+                          >
+                            Data
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByConsultas === 'duracao'}
+                            direction={orderByConsultas === 'duracao' ? orderConsultas : 'asc'}
+                            onClick={() => handleRequestSortConsultas('duracao')}
+                          >
+                            Duração
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByConsultas === 'status'}
+                            direction={orderByConsultas === 'status' ? orderConsultas : 'asc'}
+                            onClick={() => handleRequestSortConsultas('status')}
+                          >
+                            Status
+                          </TableSortLabel>
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {consultasRecentes.map((consulta) => (
+                      {getSortedData(consultasRecentes, orderByConsultas, orderConsultas).map((consulta) => (
                         <TableRow key={consulta.id} className={consulta.status === 'Realizada' ? 'row-realizada' : 'row-aguardando'}>
                           <TableCell>{consulta.paciente}</TableCell>
                           <TableCell>{consulta.medico}</TableCell>
@@ -290,15 +433,55 @@ function Financeiro() {
                   <Table>
                     <TableHead>
                       <TableRow>
-                        <TableCell>Paciente</TableCell>
-                        <TableCell>Tipo</TableCell>
-                        <TableCell>Valor</TableCell>
-                        <TableCell>Data</TableCell>
-                        <TableCell>Status</TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByExames === 'paciente'}
+                            direction={orderByExames === 'paciente' ? orderExames : 'asc'}
+                            onClick={() => handleRequestSortExames('paciente')}
+                          >
+                            Paciente
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByExames === 'tipo'}
+                            direction={orderByExames === 'tipo' ? orderExames : 'asc'}
+                            onClick={() => handleRequestSortExames('tipo')}
+                          >
+                            Tipo
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByExames === 'valor'}
+                            direction={orderByExames === 'valor' ? orderExames : 'asc'}
+                            onClick={() => handleRequestSortExames('valor')}
+                          >
+                            Valor
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByExames === 'data'}
+                            direction={orderByExames === 'data' ? orderExames : 'asc'}
+                            onClick={() => handleRequestSortExames('data')}
+                          >
+                            Data
+                          </TableSortLabel>
+                        </TableCell>
+                        <TableCell>
+                          <TableSortLabel
+                            active={orderByExames === 'status'}
+                            direction={orderByExames === 'status' ? orderExames : 'asc'}
+                            onClick={() => handleRequestSortExames('status')}
+                          >
+                            Status
+                          </TableSortLabel>
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {examesRecentes.map((exame) => (
+                      {getSortedData(examesRecentes, orderByExames, orderExames).map((exame) => (
                         <TableRow key={exame.id} className={exame.status === 'Realizada' ? 'row-realizada' : 'row-aguardando'}>
                           <TableCell>{exame.paciente}</TableCell>
                           <TableCell>{exame.tipo}</TableCell>
