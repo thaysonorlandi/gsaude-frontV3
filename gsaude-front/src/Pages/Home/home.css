@@ -40,16 +40,15 @@
 .home-appbar-content {
   display: flex;                 /* Layout flexível */
   align-items: center;           /* Centraliza verticalmente */
-  gap: 10px;                     /* Espaçamento entre logo e título */
+  gap: 5px;                     /* Espaçamento entre logo e título */
   width: 100%;                   /* Ocupa toda a largura */
 }
 
 /* Estilo do logo */
 .home-logo {
   height: 70px;                  /* Altura fixa do logo */
-  width: 70px;                   /* Largura proporcional */
+  width: 90px;                   /* Largura proporcional */
   max-width: 200px;              /* Largura máxima */
-  object-fit: contain;           /* Mantém proporção */
   padding: 4px;                  /* Pequeno padding interno */
   border-radius: 15px;            /* Bordas ligeiramente arredondadas */
 }
