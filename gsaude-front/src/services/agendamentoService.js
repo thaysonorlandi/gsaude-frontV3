@@ -33,12 +33,38 @@ const FALLBACK_DATA = {
     { id: 2, nome: 'Neurologia', descricao: 'Especialidade do sistema nervoso' }
   ],
   procedimentos: [
-    { id: 1, nome: 'Eletrocardiograma', descricao: 'Exame do coração', valor: 80.00 },
-    { id: 2, nome: 'Raio-X Tórax', descricao: 'Exame de imagem do tórax', valor: 60.00 }
+    { 
+      id: 1, 
+      nome: 'Eletrocardiograma', 
+      descricao: 'Exame do coração', 
+      valor: 80.00,
+      duracao_minutos: 30 
+    },
+    { 
+      id: 2, 
+      nome: 'Raio-X Tórax', 
+      descricao: 'Exame de imagem do tórax', 
+      valor: 60.00,
+      duracao_minutos: 15
+    }
   ],
   convenios: [
     { id: 1, nome: 'Unimed', telefone: '(11) 2222-3333' },
     { id: 2, nome: 'Bradesco Saúde', telefone: '(11) 4444-5555' }
+  ],
+  medicos: [
+    { 
+      id: 1, 
+      nome: 'Dr. João Silva', 
+      tipo_agenda: 'fixa',
+      especialidades: [1]
+    },
+    { 
+      id: 2, 
+      nome: 'Dra. Maria Santos', 
+      tipo_agenda: 'flexivel',
+      especialidades: [2]
+    }
   ]
 };
 
@@ -48,6 +74,22 @@ export const agendamentoService = {
   async getDadosIniciais() {
     try {
       const response = await apiRequest('/agendamento/dados-iniciais');
+
+      // Garantir que todos os médicos tenham tipo_agenda
+      if (response.medicos) {
+        response.medicos = response.medicos.map(medico => ({
+          ...medico,
+          tipo_agenda: medico.tipo_agenda || 'fixa'
+        }));
+      }
+
+      // Garantir que todos os procedimentos tenham duracao_minutos
+      if (response.procedimentos) {
+        response.procedimentos = response.procedimentos.map(proc => ({
+          ...proc,
+          duracao_minutos: proc.duracao_minutos || 30
+        }));
+      }
       return response.data || response;
     } catch (error) {
       console.warn('Erro ao carregar dados da API, usando dados de fallback:', error);
@@ -177,6 +219,116 @@ export const agendamentoService = {
     } catch (error) {
       console.warn('Erro ao carregar agendamentos:', error);
       return [];
+    }
+  },
+
+  // Buscar disponibilidade de um médico em uma data específica
+  async getDisponibilidadeMedico(medicoId, data) {
+    try {
+      const endpoint = `/medicos/${medicoId}/disponibilidade?data=${data}`;
+      const response = await apiRequest(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error('Erro ao carregar disponibilidade do médico:', error);
+      return null;
+    }
+  },
+
+  // Buscar agendas específicas de um médico
+  async getAgendasEspecificas(medicoId, inicio, fim) {
+    try {
+      const endpoint = `/medicos/${medicoId}/agendas-especificas?inicio=${inicio}&fim=${fim}`;
+      const response = await apiRequest(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error('Erro ao carregar agendas específicas:', error);
+      return [];
+    }
+  },
+
+  // Criar uma agenda específica para um médico
+  async criarAgendaEspecifica(medicoId, dadosAgenda) {
+    try {
+      const endpoint = `/medicos/${medicoId}/agendas-especificas`;
+      const response = await apiRequest(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(dadosAgenda)
+      });
+      return response.data || response;
+    } catch (error) {
+      console.error('Erro ao criar agenda específica:', error);
+      throw error;
+    }
+  },
+
+  // Atualizar uma agenda específica
+  async atualizarAgendaEspecifica(medicoId, agendaId, dadosAgenda) {
+    try {
+      const endpoint = `/medicos/${medicoId}/agendas-especificas/${agendaId}`;
+      const response = await apiRequest(endpoint, {
+        method: 'PUT',
+        body: JSON.stringify(dadosAgenda)
+      });
+      return response.data || response;
+    } catch (error) {
+      console.error('Erro ao atualizar agenda específica:', error);
+      throw error;
+    }
+  },
+
+  // Excluir uma agenda específica
+  async excluirAgendaEspecifica(medicoId, agendaId) {
+    try {
+      const endpoint = `/medicos/${medicoId}/agendas-especificas/${agendaId}`;
+      await apiRequest(endpoint, {
+        method: 'DELETE'
+      });
+      return true;
+    } catch (error) {
+      console.error('Erro ao excluir agenda específica:', error);
+      throw error;
+    }
+  },
+
+  // Buscar agenda fixa do médico
+  async getAgendaFixa(medicoId) {
+    try {
+      const endpoint = `/medicos/${medicoId}/agenda-fixa`;
+      const response = await apiRequest(endpoint);
+      return response.data || response;
+    } catch (error) {
+      console.error('Erro ao carregar agenda fixa:', error);
+      return null;
+    }
+  },
+
+  // Atualizar agenda fixa do médico
+  async atualizarAgendaFixa(medicoId, dadosAgenda) {
+    try {
+      const endpoint = `/medicos/${medicoId}/agenda-fixa`;
+      const response = await apiRequest(endpoint, {
+        method: 'PUT',
+        body: JSON.stringify(dadosAgenda)
+      });
+      return response.data || response;
+    } catch (error) {
+      console.error('Erro ao atualizar agenda fixa:', error);
+      throw error;
+    }
+  },
+
+  // Atualizar tipo de agenda do médico
+  async atualizarTipoAgenda(medicoId, tipoAgenda) {
+    try {
+      const endpoint = `/medicos/${medicoId}/tipo-agenda`;
+      const response = await apiRequest(endpoint, {
+        method: 'PUT',
+        body: JSON.stringify({ tipo_agenda: tipoAgenda })
+      });
+      return response.data || response;
+    } catch (error) {
+      console.error('Erro ao atualizar tipo de agenda:', error);
+      throw error;
     }
   }
 };

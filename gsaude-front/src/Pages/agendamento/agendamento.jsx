@@ -20,6 +20,7 @@ import {
   Alert,
   Stack,
   CircularProgress,
+  Grid,
 } from "@mui/material";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import "./agendamento.css";
@@ -55,6 +56,17 @@ export default function Agendamento() {
   const [showMsg, setShowMsg] = useState(false);
   const [dadosAgendamento, setDadosAgendamento] = useState(null);
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
+  
+  // Estados para horário de encaixe
+  const [showEncaixeDialog, setShowEncaixeDialog] = useState(false);
+  const [encaixeForm, setEncaixeForm] = useState({
+    data: '',
+    hora_inicio: '',
+    hora_fim: '',
+    intervalo_minutos: 30,
+    observacoes: ''
+  });
+
   const navigate = useNavigate();
 
   // Hook para gerenciar dados do agendamento
@@ -378,6 +390,39 @@ export default function Agendamento() {
     }));
   }
 
+  // Funções para o modal de encaixe
+  const handleEncaixeSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Importar API
+      const api = (await import('../../services/api')).default;
+      
+      await api.post(`/medicos/${form.medicoId}/horarios-encaixe`, encaixeForm);
+      setShowEncaixeDialog(false);
+      resetEncaixeForm();
+      
+      // Recarregar horários para mostrar o novo encaixe
+      if (form.medicoId) {
+        carregarHorarios(form.medicoId, null, periodoSelecionado);
+      }
+      
+      setError(null);
+    } catch (error) {
+      console.error('Erro ao adicionar horário de encaixe:', error);
+      setError(error.response?.data?.message || "Erro ao adicionar horário de encaixe");
+    }
+  };
+
+  const resetEncaixeForm = () => {
+    setEncaixeForm({
+      data: '',
+      hora_inicio: '',
+      hora_fim: '',
+      intervalo_minutos: 30,
+      observacoes: ''
+    });
+  };
+
   // Função para voltar para a etapa anterior
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
@@ -613,6 +658,17 @@ export default function Agendamento() {
                       <MenuItem value="proximo_mes">Próximo mês</MenuItem>
                     </Select>
                   </FormControl>
+                  
+                  {/* Botão para adicionar horário de encaixe */}
+                  <Button
+                    variant="outlined"
+                    color="warning"
+                    size="small"
+                    sx={{ ml: 2 }}
+                    onClick={() => setShowEncaixeDialog(true)}
+                  >
+                    + Adicionar Encaixe
+                  </Button>
                 </Box>
               )}
               
@@ -915,6 +971,99 @@ export default function Agendamento() {
           <Button onClick={handleConfirmCancel} color="error" variant="contained">
             Sim, cancelar
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo para Adicionar Horário de Encaixe */}
+      <Dialog open={showEncaixeDialog} onClose={() => {
+        setShowEncaixeDialog(false);
+        resetEncaixeForm();
+      }} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Adicionar Horário de Encaixe - {medicos.find(m => m.id == form.medicoId)?.nome}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                name="data"
+                label="Data"
+                type="date"
+                value={encaixeForm.data}
+                onChange={(e) => setEncaixeForm({...encaixeForm, data: e.target.value})}
+                fullWidth
+                required
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  min: new Date().toISOString().split('T')[0] // Não permite datas passadas
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="hora_inicio"
+                label="Hora Início"
+                type="time"
+                value={encaixeForm.hora_inicio}
+                onChange={(e) => setEncaixeForm({...encaixeForm, hora_inicio: e.target.value})}
+                fullWidth
+                required
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="hora_fim"
+                label="Hora Fim"
+                type="time"
+                value={encaixeForm.hora_fim}
+                onChange={(e) => setEncaixeForm({...encaixeForm, hora_fim: e.target.value})}
+                fullWidth
+                required
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth margin="dense">
+                <InputLabel>Intervalo entre consultas</InputLabel>
+                <Select
+                  name="intervalo_minutos"
+                  value={encaixeForm.intervalo_minutos}
+                  label="Intervalo entre consultas"
+                  onChange={(e) => setEncaixeForm({...encaixeForm, intervalo_minutos: e.target.value})}
+                  sx={{ minWidth: 200 }}
+                >
+                  <MenuItem value={15}>15 minutos</MenuItem>
+                  <MenuItem value={30}>30 minutos</MenuItem>
+                  <MenuItem value={45}>45 minutos</MenuItem>
+                  <MenuItem value={60}>60 minutos</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="observacoes"
+                label="Observações"
+                value={encaixeForm.observacoes}
+                onChange={(e) => setEncaixeForm({...encaixeForm, observacoes: e.target.value})}
+                fullWidth
+                multiline
+                rows={3}
+                margin="dense"
+                placeholder="Ex: Horário de encaixe para emergências"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setShowEncaixeDialog(false);
+            resetEncaixeForm();
+          }}>Cancelar</Button>
+          <Button variant="contained" onClick={handleEncaixeSubmit}>Adicionar Encaixe</Button>
         </DialogActions>
       </Dialog>
     </Box>

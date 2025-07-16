@@ -48,6 +48,7 @@ import BiotechIcon from '@mui/icons-material/Biotech';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LinkIcon from '@mui/icons-material/Link';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import api from '../../services/api';
@@ -65,10 +66,22 @@ export default function Cadastros() {
     telefone: '',
     email: '',
     especialidade_id: '',
+    tipo_agenda: 'fixa', // 'fixa' ou 'flexivel'
     ativo: true
   });
   const [editingMedico, setEditingMedico] = useState(null);
   const [showMedicoDialog, setShowMedicoDialog] = useState(false);
+
+  // Estados para agenda flexível
+  const [selectedMedicoForAgendaFlexivel, setSelectedMedicoForAgendaFlexivel] = useState(null);
+  const [showAgendaFlexivelDialog, setShowAgendaFlexivelDialog] = useState(false);
+  const [agendaFlexivelForm, setAgendaFlexivelForm] = useState({
+    data: '',
+    hora_inicio: '',
+    hora_fim: '',
+    intervalo_minutos: 30,
+    ativo: true
+  });
 
   // Estados para horários
   const [selectedMedicoForHorario, setSelectedMedicoForHorario] = useState(null);
@@ -152,6 +165,7 @@ export default function Cadastros() {
   const loadMedicos = async () => {
     try {
       const response = await api.get('/medicos');
+      console.log('Médicos carregados:', response.data);
       setMedicos(response.data);
     } catch (error) {
       console.error('Erro ao carregar médicos:', error);
@@ -194,16 +208,31 @@ export default function Cadastros() {
   // CRUD Médicos
   const handleMedicoSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validação do formulário
+    if (!medicoForm.nome || !medicoForm.crm || !medicoForm.especialidade_id || !medicoForm.tipo_agenda) {
+      setSnackbar({
+        open: true,
+        message: "Por favor, preencha todos os campos obrigatórios",
+        severity: "error"
+      });
+      return;
+    }
+    
     try {
+      console.log('Dados sendo enviados:', medicoForm);
+      
       if (editingMedico) {
-        await api.put(`/medicos/${editingMedico.id}`, medicoForm);
+        const response = await api.put(`/medicos/${editingMedico.id}`, medicoForm);
+        console.log('Resposta do PUT:', response.data);
         setSnackbar({
           open: true,
           message: "Médico atualizado com sucesso!",
           severity: "success"
         });
       } else {
-        await api.post('/medicos', medicoForm);
+        const response = await api.post('/medicos', medicoForm);
+        console.log('Resposta do POST:', response.data);
         setSnackbar({
           open: true,
           message: "Médico cadastrado com sucesso!",
@@ -215,6 +244,7 @@ export default function Cadastros() {
       resetMedicoForm();
       loadMedicos();
     } catch (error) {
+      console.error('Erro detalhado:', error);
       setSnackbar({
         open: true,
         message: error.response?.data?.message || "Erro ao salvar médico",
@@ -224,14 +254,18 @@ export default function Cadastros() {
   };
 
   const handleEditMedico = (medico) => {
-    setMedicoForm({
+    console.log('Médico sendo editado:', medico);
+    const formData = {
       nome: medico.nome,
       crm: medico.crm,
       telefone: medico.telefone ? formatPhoneNumber(medico.telefone) : '',
       email: medico.email || '',
       especialidade_id: medico.especialidades?.[0]?.id || '',
+      tipo_agenda: medico.tipo_agenda || 'fixa',
       ativo: medico.ativo
-    });
+    };
+    console.log('Dados do formulário:', formData);
+    setMedicoForm(formData);
     setEditingMedico(medico);
     setShowMedicoDialog(true);
   };
@@ -271,6 +305,7 @@ export default function Cadastros() {
       telefone: '',
       email: '',
       especialidade_id: '',
+      tipo_agenda: 'fixa', // 'fixa' ou 'flexivel'
       ativo: true
     });
     setEditingMedico(null);
@@ -564,6 +599,70 @@ export default function Cadastros() {
     });
   };
 
+  // CRUD Agenda Flexível
+  const handleOpenAgendaFlexivelDialog = (medico) => {
+    setSelectedMedicoForAgendaFlexivel(medico);
+    setShowAgendaFlexivelDialog(true);
+  };
+
+  const handleAgendaFlexivelSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/medicos/${selectedMedicoForAgendaFlexivel.id}/agenda-flexivel`, agendaFlexivelForm);
+      setSnackbar({
+        open: true,
+        message: "Agenda flexível adicionada com sucesso!",
+        severity: "success"
+      });
+      setShowAgendaFlexivelDialog(false);
+      resetAgendaFlexivelForm();
+      loadMedicos();
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || "Erro ao adicionar agenda flexível",
+        severity: "error"
+      });
+    }
+  };
+
+  const handleDeleteAgendaFlexivel = async (medicoId, agendaId) => {
+    setConfirmDialog({
+      open: true,
+      title: '🗑️ Excluir Agenda Flexível',
+      message: 'Tem certeza que deseja excluir esta agenda flexível? Esta ação não pode ser desfeita.',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/medicos/${medicoId}/agenda-flexivel/${agendaId}`);
+          setSnackbar({
+            open: true,
+            message: "Agenda flexível removida com sucesso!",
+            severity: "success"
+          });
+          loadMedicos();
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: error.response?.data?.message || "Erro ao remover agenda flexível",
+            severity: "error"
+          });
+        }
+        setConfirmDialog({ ...confirmDialog, open: false });
+      },
+      type: 'error'
+    });
+  };
+
+  const resetAgendaFlexivelForm = () => {
+    setAgendaFlexivelForm({
+      data: '',
+      hora_inicio: '',
+      hora_fim: '',
+      intervalo_minutos: 30,
+      ativo: true
+    });
+  };
+
   // Mudança de aba
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -619,6 +718,7 @@ export default function Cadastros() {
                     <TableCell>Especialidade</TableCell>
                     <TableCell>Telefone</TableCell>
                     <TableCell>Email</TableCell>
+                    <TableCell>Tipo de Agenda</TableCell>
                     <TableCell>Status</TableCell>
                     <TableCell align="center">Ações</TableCell>
                   </TableRow>
@@ -634,6 +734,15 @@ export default function Cadastros() {
                         </TableCell>
                         <TableCell>{medico.telefone ? formatPhoneNumber(medico.telefone) : '-'}</TableCell>
                         <TableCell>{medico.email || '-'}</TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={medico.tipo_agenda === 'flexivel' ? 'Flexível' : 'Fixa'} 
+                            color={medico.tipo_agenda === 'flexivel' ? 'primary' : 'default'}
+                            size="small"
+                            variant="outlined"
+                            title={`Tipo: ${medico.tipo_agenda || 'não definido'}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <Chip 
                             label={medico.ativo ? "Ativo" : "Inativo"} 
@@ -656,6 +765,16 @@ export default function Cadastros() {
                           >
                             <ScheduleIcon fontSize="small" />
                           </IconButton>
+                          {medico.tipo_agenda === 'flexivel' && (
+                            <IconButton 
+                              color="info" 
+                              size="small"
+                              onClick={() => handleOpenAgendaFlexivelDialog(medico)}
+                              title="Agenda Flexível"
+                            >
+                              <CalendarTodayIcon fontSize="small" />
+                            </IconButton>
+                          )}
                           <IconButton 
                             color="error" 
                             size="small"
@@ -665,21 +784,30 @@ export default function Cadastros() {
                           </IconButton>
                         </TableCell>
                       </TableRow>
-                      {medico.horarios && medico.horarios.length > 0 && (
+                      {((medico.horarios && medico.horarios.length > 0) || (medico.agenda_flexivel && medico.agenda_flexivel.length > 0)) && (
                         <TableRow>
-                          <TableCell colSpan={7}>
+                          <TableCell colSpan={8}>
                             <Accordion>
                               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 <Typography variant="body2">
-                                  Horários de Atendimento ({medico.horarios.length})
+                                  Horários de Atendimento ({(medico.horarios?.length || 0) + (medico.agenda_flexivel?.length || 0)})
                                 </Typography>
                               </AccordionSummary>
                               <AccordionDetails>
                                 <Grid container spacing={1}>
-                                  {medico.horarios.map((horario) => (
-                                    <Grid item xs={12} sm={6} md={4} key={horario.id}>
-                                      <Paper variant="outlined" sx={{ p: 1 }}>
+                                  {/* Horários Fixos */}
+                                  {medico.horarios?.map((horario) => (
+                                    <Grid item xs={12} sm={6} md={4} key={`horario-${horario.id}`}>
+                                      <Paper variant="outlined" sx={{ p: 1, backgroundColor: '#f3e5f5' }}>
                                         <Typography variant="caption">
+                                          <Chip 
+                                            label="Fixo" 
+                                            size="small" 
+                                            color="secondary" 
+                                            variant="filled"
+                                            sx={{ mb: 0.5, fontSize: '0.7rem' }}
+                                          />
+                                          <br />
                                           <strong>{getDiaSemanaTexto(horario.dia_semana)}</strong><br />
                                           {horario.hora_inicio} às {horario.hora_fim}<br />
                                           Intervalo: {horario.intervalo_minutos}min
@@ -689,6 +817,36 @@ export default function Cadastros() {
                                             size="small" 
                                             color="error"
                                             onClick={() => handleDeleteHorario(medico.id, horario.id)}
+                                          >
+                                            <DeleteIcon fontSize="small" />
+                                          </IconButton>
+                                        </Box>
+                                      </Paper>
+                                    </Grid>
+                                  ))}
+                                  
+                                  {/* Agenda Flexível */}
+                                  {medico.agenda_flexivel?.map((agenda) => (
+                                    <Grid item xs={12} sm={6} md={4} key={`agenda-${agenda.id}`}>
+                                      <Paper variant="outlined" sx={{ p: 1, backgroundColor: '#e3f2fd' }}>
+                                        <Typography variant="caption">
+                                          <Chip 
+                                            label="Flexível" 
+                                            size="small" 
+                                            color="primary" 
+                                            variant="filled"
+                                            sx={{ mb: 0.5, fontSize: '0.7rem' }}
+                                          />
+                                          <br />
+                                          <strong>{new Date(agenda.data).toLocaleDateString('pt-BR')}</strong><br />
+                                          {agenda.hora_inicio} às {agenda.hora_fim}<br />
+                                          Intervalo: {agenda.intervalo_minutos}min
+                                        </Typography>
+                                        <Box sx={{ mt: 1 }}>
+                                          <IconButton 
+                                            size="small" 
+                                            color="error"
+                                            onClick={() => handleDeleteAgendaFlexivel(medico.id, agenda.id)}
                                           >
                                             <DeleteIcon fontSize="small" />
                                           </IconButton>
@@ -983,6 +1141,21 @@ export default function Cadastros() {
               </FormControl>
             </Grid>
             <Grid item xs={12}>
+              <FormControl fullWidth margin="dense" required>
+                <InputLabel>Tipo de Agenda</InputLabel>
+                <Select
+                  name="tipo_agenda"
+                  value={medicoForm.tipo_agenda}
+                  label="Tipo de Agenda"
+                  onChange={(e) => setMedicoForm({...medicoForm, tipo_agenda: e.target.value})}
+                  sx={{ minWidth: 200 }}
+                >
+                  <MenuItem value="fixa">Agenda Fixa</MenuItem>
+                  <MenuItem value="flexivel">Agenda Flexível</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1089,6 +1262,89 @@ export default function Cadastros() {
         <DialogActions>
           <Button onClick={() => setShowHorarioDialog(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleHorarioSubmit}>Adicionar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo para Adicionar Agenda Flexível */}
+      <Dialog open={showAgendaFlexivelDialog} onClose={() => setShowAgendaFlexivelDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Adicionar Agenda Flexível - {selectedMedicoForAgendaFlexivel?.nome}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                name="data"
+                label="Data"
+                type="date"
+                value={agendaFlexivelForm.data}
+                onChange={(e) => setAgendaFlexivelForm({...agendaFlexivelForm, data: e.target.value})}
+                fullWidth
+                required
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="hora_inicio"
+                label="Hora Início"
+                type="time"
+                value={agendaFlexivelForm.hora_inicio}
+                onChange={(e) => setAgendaFlexivelForm({...agendaFlexivelForm, hora_inicio: e.target.value})}
+                fullWidth
+                required
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                name="hora_fim"
+                label="Hora Fim"
+                type="time"
+                value={agendaFlexivelForm.hora_fim}
+                onChange={(e) => setAgendaFlexivelForm({...agendaFlexivelForm, hora_fim: e.target.value})}
+                fullWidth
+                required
+                margin="dense"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth margin="dense">
+                <InputLabel>Intervalo entre consultas</InputLabel>
+                <Select
+                  name="intervalo_minutos"
+                  value={agendaFlexivelForm.intervalo_minutos}
+                  label="Intervalo entre consultas"
+                  onChange={(e) => setAgendaFlexivelForm({...agendaFlexivelForm, intervalo_minutos: e.target.value})}
+                  sx={{ minWidth: 200 }}
+                >
+                  <MenuItem value={15}>15 minutos</MenuItem>
+                  <MenuItem value={30}>30 minutos</MenuItem>
+                  <MenuItem value={45}>45 minutos</MenuItem>
+                  <MenuItem value={60}>60 minutos</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={agendaFlexivelForm.ativo}
+                    onChange={(e) => setAgendaFlexivelForm({...agendaFlexivelForm, ativo: e.target.checked})}
+                    color="primary"
+                  />
+                }
+                label="Agenda ativa"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowAgendaFlexivelDialog(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleAgendaFlexivelSubmit}>Adicionar</Button>
         </DialogActions>
       </Dialog>
 
