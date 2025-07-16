@@ -168,6 +168,17 @@ export const agendamentoService = {
     }
   },
 
+  // Buscar exames por especialidade (para vinculação)
+  async getExamesPorEspecialidade(especialidadeId) {
+    try {
+      const response = await apiRequest(`/especialidades/${especialidadeId}/exames`);
+      return response.data || response;
+    } catch (error) {
+      console.warn('Erro ao carregar exames por especialidade:', error);
+      return [];
+    }
+  },
+
   // Buscar horários disponíveis
   async getHorariosDisponiveis(medicoId, data = null, periodo = 'semana') {
     try {

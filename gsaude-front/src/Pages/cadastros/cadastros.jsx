@@ -111,6 +111,7 @@ export default function Cadastros() {
     descricao: '',
     valor: '',
     tempo_estimado: '',
+    especialidade_id: '',
     ativo: true
   });
   const [editingProcedimento, setEditingProcedimento] = useState(null);
@@ -152,6 +153,28 @@ export default function Cadastros() {
     } else {
       return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
     }
+  };
+
+  // Função para máscara de valor monetário
+  const formatCurrency = (value) => {
+    // Remove todos os caracteres não numéricos
+    const numbers = value.replace(/\D/g, '');
+    
+    // Converte para número com 2 casas decimais
+    const num = parseFloat(numbers) / 100;
+    
+    // Aplica a máscara xxx,xx
+    if (isNaN(num) || num === 0) {
+      return '';
+    }
+    
+    return num.toFixed(2).replace('.', ',');
+  };
+
+  // Função para converter valor formatado para número
+  const parseCurrency = (value) => {
+    if (!value) return '';
+    return value.replace(',', '.');
   };
 
   // Carregar dados iniciais
@@ -463,15 +486,23 @@ export default function Cadastros() {
   const handleProcedimentoSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Converter o valor formatado de volta para número
+      const valorNumerico = parseCurrency(procedimentoForm.valor);
+      
+      const procedimentoData = {
+        ...procedimentoForm,
+        valor: valorNumerico
+      };
+      
       if (editingProcedimento) {
-        await api.put(`/procedimentos/${editingProcedimento.id}`, procedimentoForm);
+        await api.put(`/procedimentos/${editingProcedimento.id}`, procedimentoData);
         setSnackbar({
           open: true,
           message: "Procedimento atualizado com sucesso!",
           severity: "success"
         });
       } else {
-        await api.post('/procedimentos', procedimentoForm);
+        await api.post('/procedimentos', procedimentoData);
         setSnackbar({
           open: true,
           message: "Procedimento cadastrado com sucesso!",
@@ -495,8 +526,9 @@ export default function Cadastros() {
     setProcedimentoForm({
       nome: procedimento.nome,
       descricao: procedimento.descricao || '',
-      valor: procedimento.valor?.toString() || '',
+      valor: procedimento.valor ? formatCurrency(procedimento.valor.toString()) : '',
       tempo_estimado: procedimento.tempo_estimado?.toString() || '',
+      especialidade_id: procedimento.especialidade_id?.toString() || '',
       ativo: procedimento.ativo
     });
     setEditingProcedimento(procedimento);
@@ -537,6 +569,7 @@ export default function Cadastros() {
       descricao: '',
       valor: '',
       tempo_estimado: '',
+      especialidade_id: '',
       ativo: true
     });
     setEditingProcedimento(null);
@@ -737,10 +770,15 @@ export default function Cadastros() {
                         <TableCell>
                           <Chip 
                             label={medico.tipo_agenda === 'flexivel' ? 'Flexível' : 'Fixa'} 
-                            color={medico.tipo_agenda === 'flexivel' ? 'primary' : 'default'}
+                            color={medico.tipo_agenda === 'flexivel' ? 'primary' : 'secondary'}
                             size="small"
                             variant="outlined"
                             title={`Tipo: ${medico.tipo_agenda || 'não definido'}`}
+                            sx={medico.tipo_agenda === 'fixa' ? { 
+                              color: 'purple', 
+                              borderColor: 'purple',
+                              '&:hover': { backgroundColor: 'rgba(128, 0, 128, 0.1)' }
+                            } : {}}
                           />
                         </TableCell>
                         <TableCell>
@@ -899,6 +937,7 @@ export default function Cadastros() {
                   <TableRow>
                     <TableCell>Nome</TableCell>
                     <TableCell>Descrição</TableCell>
+                    <TableCell>Especialidade</TableCell>
                     <TableCell>Valor (R$)</TableCell>
                     <TableCell>Duração (min)</TableCell>
                     <TableCell>Status</TableCell>
@@ -911,6 +950,9 @@ export default function Cadastros() {
                       <TableRow>
                         <TableCell>{procedimento.nome}</TableCell>
                         <TableCell>{procedimento.descricao || '-'}</TableCell>
+                        <TableCell>
+                          {procedimento.especialidade ? procedimento.especialidade.nome : '-'}
+                        </TableCell>
                         <TableCell>
                           {procedimento.valor ? Number(procedimento.valor).toLocaleString('pt-BR', {
                             style: 'currency',
@@ -1366,6 +1408,44 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
+            <Grid item xs={12} sm={8}>
+              <FormControl variant="outlined" fullWidth margin="dense">
+                <InputLabel>Especialidade</InputLabel>
+                <Select
+                  name="especialidade_id"
+                  value={procedimentoForm.especialidade_id}
+                  onChange={(e) => setProcedimentoForm({...procedimentoForm, especialidade_id: e.target.value})}
+                  label="Especialidade"
+                  sx={{ minWidth: 300 }}
+                >
+                  <MenuItem value="">
+                    <em>Selecione uma especialidade</em>
+                  </MenuItem>
+                  {especialidades.map((especialidade) => (
+                    <MenuItem key={especialidade.id} value={especialidade.id}>
+                      {especialidade.nome}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                name="valor"
+                label="Valor (R$)"
+                value={procedimentoForm.valor}
+                onChange={(e) => {
+                  const formatted = formatCurrency(e.target.value);
+                  setProcedimentoForm({...procedimentoForm, valor: formatted});
+                }}
+                fullWidth
+                margin="dense"
+                placeholder="0,00"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                }}
+              />
+            </Grid>
             <Grid item xs={12}>
               <TextField
                 name="descricao"
@@ -1376,20 +1456,6 @@ export default function Cadastros() {
                 multiline
                 rows={3}
                 margin="dense"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="valor"
-                label="Valor (R$)"
-                type="number"
-                value={procedimentoForm.valor}
-                onChange={(e) => setProcedimentoForm({...procedimentoForm, valor: e.target.value})}
-                fullWidth
-                margin="dense"
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">R$</InputAdornment>,
-                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>

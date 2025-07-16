@@ -81,6 +81,29 @@ export function useAgendamento() {
     }
   }, []);
 
+  const carregarExamesPorEspecialidade = useCallback(async (especialidadeId) => {
+    if (!especialidadeId) {
+      setProcedimentos([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('Carregando exames por especialidade:', especialidadeId);
+      const examesData = await agendamentoService.getExamesPorEspecialidade(especialidadeId);
+      console.log('Exames carregados:', examesData);
+      setProcedimentos(examesData || []);
+    } catch (err) {
+      console.error('Erro ao carregar exames por especialidade:', err);
+      setError('Erro ao carregar exames');
+      setProcedimentos([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const carregarHorarios = useCallback(async (medicoId, data = null, periodo = 'semana') => {
     if (!medicoId) {
       setHorariosDisponiveis([]);
@@ -155,6 +178,7 @@ export function useAgendamento() {
     carregarDadosIniciais,
     carregarMedicosPorEspecialidade,
     carregarMedicosPorProcedimento,
+    carregarExamesPorEspecialidade,
     carregarHorarios,
     criarAgendamento,
     carregarAgendamentos,

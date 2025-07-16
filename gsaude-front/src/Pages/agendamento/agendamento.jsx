@@ -81,6 +81,7 @@ export default function Agendamento() {
     horariosDisponiveis,
     carregarMedicosPorEspecialidade,
     carregarMedicosPorProcedimento, // Mudou de carregarMedicosPorTipoExame
+    carregarExamesPorEspecialidade,
     carregarHorarios,
     criarAgendamento,
     setError,
@@ -113,6 +114,14 @@ export default function Agendamento() {
       carregarMedicosPorEspecialidade(form.especialidadeId);
     }
   }, [form.especialidadeId, form.procedimento, carregarMedicosPorEspecialidade]);
+
+  // Carrega exames quando muda a especialidade (para exames)
+  useEffect(() => {
+    if (form.especialidadeId && form.procedimento === "exame") {
+      console.log('Carregando exames por especialidade:', form.especialidadeId);
+      carregarExamesPorEspecialidade(form.especialidadeId);
+    }
+  }, [form.especialidadeId, form.procedimento, carregarExamesPorEspecialidade]);
 
   // Carrega médicos quando muda o procedimento (antes era tipoExameId)
   useEffect(() => {
@@ -443,8 +452,8 @@ export default function Agendamento() {
         return;
       }
       
-      if (form.procedimento === 'exame' && !form.procedimentoId) {
-        setError('Selecione um tipo de exame');
+      if (form.procedimento === 'exame' && (!form.especialidadeId || !form.procedimentoId)) {
+        setError('Selecione uma especialidade e um tipo de exame');
         return;
       }
     }
@@ -541,8 +550,31 @@ export default function Agendamento() {
                 </FormControl>
               </Box>
 
-              {/* Se for exame, mostra procedimentos */}
+              {/* Se for exame, mostra especialidades primeiro */}
               {form.procedimento === "exame" && (
+                <Box className="agendamento-form-row">
+                  <Typography className="agendamento-label">Especialidade:</Typography>
+                  <FormControl variant="standard" size="small" fullWidth>
+                    <InputLabel>Especialidade</InputLabel>
+                    <Select
+                      name="especialidadeId"
+                      value={form.especialidadeId || ""}
+                      onChange={handleChange}
+                      label="Especialidade"
+                      displayEmpty
+                    >
+                      {especialidades.map((especialidade) => (
+                        <MenuItem key={especialidade.id} value={especialidade.id}>
+                          {especialidade.nome}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
+
+              {/* Se for exame E tem especialidade, mostra procedimentos filtrados */}
+              {form.procedimento === "exame" && form.especialidadeId && (
                 <Box className="agendamento-form-row">
                   <Typography className="agendamento-label">Tipo de Exame:</Typography>
                   <FormControl variant="standard" size="small" fullWidth>
@@ -587,8 +619,8 @@ export default function Agendamento() {
                 </Box>
               )}
 
-              {/* Médico - aparece quando tem especialidade ou procedimento */}
-              {(form.especialidadeId || form.procedimentoId) && (
+              {/* Médico - aparece quando tem especialidade (e procedimento se for exame) */}
+              {form.especialidadeId && (form.procedimento === "consulta" || (form.procedimento === "exame" && form.procedimentoId)) && (
                 <Box className="agendamento-form-row">
                   <Typography className="agendamento-label">Médico:</Typography>
                   <FormControl variant="standard" size="small" fullWidth>
@@ -833,7 +865,7 @@ export default function Agendamento() {
                   variant="contained"
                   onClick={handleNext}
                   disabled={
-                    (activeStep === 0 && (!form.filialId || !form.procedimento || (!form.especialidadeId && !form.procedimentoId) || !form.medicoId)) ||
+                    (activeStep === 0 && (!form.filialId || !form.procedimento || !form.especialidadeId || (form.procedimento === 'exame' && !form.procedimentoId) || !form.medicoId)) ||
                     (activeStep === 1 && (!form.data || !form.hora)) ||
                     loading
                   }
