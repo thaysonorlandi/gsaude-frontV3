@@ -111,7 +111,7 @@ export default function Cadastros() {
     descricao: '',
     valor: '',
     tempo_estimado: '',
-    especialidade_id: '',
+    especialidade_id: null,
     ativo: true
   });
   const [editingProcedimento, setEditingProcedimento] = useState(null);
@@ -492,7 +492,9 @@ export default function Cadastros() {
       
       const procedimentoData = {
         ...procedimentoForm,
-        valor: valorNumerico
+        valor: valorNumerico,
+        // Converter string vazia para null para especialidade_id
+        especialidade_id: procedimentoForm.especialidade_id === '' ? null : procedimentoForm.especialidade_id
       };
       
       if (editingProcedimento) {
@@ -529,7 +531,7 @@ export default function Cadastros() {
       descricao: procedimento.descricao || '',
       valor: procedimento.valor ? formatCurrency(procedimento.valor.toString()) : '',
       tempo_estimado: procedimento.tempo_estimado?.toString() || '',
-      especialidade_id: procedimento.especialidade_id?.toString() || '',
+      especialidade_id: procedimento.especialidade_id || null,
       ativo: procedimento.ativo
     });
     setEditingProcedimento(procedimento);
@@ -570,7 +572,7 @@ export default function Cadastros() {
       descricao: '',
       valor: '',
       tempo_estimado: '',
-      especialidade_id: '',
+      especialidade_id: null,
       ativo: true
     });
     setEditingProcedimento(null);
@@ -1427,8 +1429,8 @@ export default function Cadastros() {
                 <InputLabel>Especialidade</InputLabel>
                 <Select
                   name="especialidade_id"
-                  value={procedimentoForm.especialidade_id}
-                  onChange={(e) => setProcedimentoForm({...procedimentoForm, especialidade_id: e.target.value})}
+                  value={procedimentoForm.especialidade_id || ""}
+                  onChange={(e) => setProcedimentoForm({...procedimentoForm, especialidade_id: e.target.value || null})}
                   label="Especialidade"
                   sx={{ minWidth: 300 }}
                 >

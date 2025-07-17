@@ -88,6 +88,10 @@ export const agendamentoService = {
   // Buscar exames por especialidade (para vinculação)
   async getExamesPorEspecialidade(especialidadeId) {
     const response = await apiRequest(`/especialidades/${especialidadeId}/exames`);
+    // A nova API retorna { success: true, data: [...] }
+    if (response.success && response.data) {
+      return response.data;
+    }
     return response.data || response;
   },
 
@@ -107,7 +111,6 @@ export const agendamentoService = {
       }
       return response.data || response;
     } catch (error) {
-      
       return [];
     }
   },
@@ -135,7 +138,6 @@ export const agendamentoService = {
       const response = await apiRequest(endpoint);
       return response.data || response;
     } catch (error) {
-      
       return [];
     }
   },
@@ -147,7 +149,6 @@ export const agendamentoService = {
       const response = await apiRequest(endpoint);
       return response.data || response;
     } catch (error) {
-      
       return null;
     }
   },
@@ -159,7 +160,6 @@ export const agendamentoService = {
       const response = await apiRequest(endpoint);
       return response.data || response;
     } catch (error) {
-      
       return [];
     }
   },
@@ -200,7 +200,6 @@ export const agendamentoService = {
       const response = await apiRequest(endpoint);
       return response.data || response;
     } catch (error) {
-      
       return null;
     }
   },
