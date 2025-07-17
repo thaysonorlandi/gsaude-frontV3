@@ -468,7 +468,7 @@ export default function VerificarAgendamentos() {
         </Typography>
         
         <Grid container spacing={2} className="agenda-filtros">
-          <Grid xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <FormControl fullWidth size="small">
               <InputLabel id="tipo-label">Tipo</InputLabel>
               <Select
@@ -487,7 +487,7 @@ export default function VerificarAgendamentos() {
           {/* Se for Consulta, mostra Especialidade, Médico e Status */}
           {tipoFiltro === "Consulta" && (
             <>
-              <Grid xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="esp-label">Especialidade</InputLabel>
                   <Select
@@ -505,7 +505,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="medico-label">Médico</InputLabel>
                   <Select
@@ -523,7 +523,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="status-label">Status</InputLabel>
                   <Select
@@ -545,7 +545,7 @@ export default function VerificarAgendamentos() {
           {/* Se for Exame, mostra Tipo de Exame, Médico e Status */}
           {tipoFiltro === "Exame" && (
             <>
-              <Grid xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="exame-label">Tipo de Exame</InputLabel>
                   <Select
@@ -563,7 +563,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="medico-label">Médico</InputLabel>
                   <Select
@@ -581,7 +581,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="status-label">Status</InputLabel>
                   <Select
@@ -603,7 +603,7 @@ export default function VerificarAgendamentos() {
           {/* Se nenhum tipo selecionado, mostra todos os filtros exceto especialidade e tipo de exame */}
           {!tipoFiltro && (
             <>
-              <Grid xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="medico-label">Médico</InputLabel>
                   <Select
@@ -621,7 +621,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="status-label">Status</InputLabel>
                   <Select
@@ -722,7 +722,7 @@ export default function VerificarAgendamentos() {
               {/* Tab de Informações Gerais */}
               {tabValue === 0 && (
                 <Grid container spacing={2}>
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       label="Paciente"
                       value={agendamentoSelecionado.paciente_nome || ''}
@@ -734,7 +734,7 @@ export default function VerificarAgendamentos() {
                     />
                   </Grid>
 
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       label="Telefone"
                       name="telefone"
@@ -750,7 +750,7 @@ export default function VerificarAgendamentos() {
                       disabled
                     />
                   </Grid>
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       label="Convênio"
                       value={agendamentoSelecionado.convenio || ''}
@@ -761,7 +761,7 @@ export default function VerificarAgendamentos() {
                       disabled
                     />
                   </Grid>
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       label="Médico"
                       value={agendamentoSelecionado.medico_nome || ''}
@@ -773,7 +773,7 @@ export default function VerificarAgendamentos() {
                     />
                   </Grid>
                   {agendamentoSelecionado.tipo === "Consulta" && (
-                    <Grid xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Especialidade"
                         value={agendamentoSelecionado.especialidade || ''}
@@ -786,7 +786,7 @@ export default function VerificarAgendamentos() {
                     </Grid>
                   )}
                   {agendamentoSelecionado.tipo === "Exame" && (
-                    <Grid xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label="Tipo de Exame"
                         value={agendamentoSelecionado.exame || ''}
@@ -798,7 +798,7 @@ export default function VerificarAgendamentos() {
                       />
                     </Grid>
                   )}
-                  <Grid xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <FormControl fullWidth margin="dense" size="small" sx={{ minWidth: 224 }}>
                       <InputLabel id="status-label">Status</InputLabel>
                       <Select
@@ -816,7 +816,7 @@ export default function VerificarAgendamentos() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
                       label="Data"
                       name="data"
@@ -831,7 +831,7 @@ export default function VerificarAgendamentos() {
                       disabled
                     />
                   </Grid>
-                  <Grid xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
                       label="Hora"
                       name="hora"
@@ -852,14 +852,14 @@ export default function VerificarAgendamentos() {
               {/* Tab de Detalhes Financeiros */}
               {tabValue === 1 && (
                 <Grid container spacing={3}>
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Divider sx={{ mb: 2 }} />
                   </Grid>
                   
                   {/* Linha 1: Horários */}
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                       <Grid container spacing={3} sx={{ alignItems: 'flex-start'}}>
-                        <Grid xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <TextField
                             label="Horário de Início"
                             name="horario_inicio"
@@ -878,7 +878,7 @@ export default function VerificarAgendamentos() {
                           />
                         </Grid>
                         
-                        <Grid xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <TextField
                             label="Duração (minutos)"
                             name="duracao_minutos"
@@ -897,7 +897,7 @@ export default function VerificarAgendamentos() {
                           />
                         </Grid>
 
-                        <Grid xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <TextField
                             label="Horário Final"
                             type="text"
@@ -928,9 +928,9 @@ export default function VerificarAgendamentos() {
                   </Grid>
                   
                   {/* Linha 2: Valores */}
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                       <Grid container spacing={3} sx={{ alignItems: 'flex-start' }}>
-                        <Grid xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <TextField
                             className="currency-field"
                             label="Valor da Consulta/Exame"
@@ -960,7 +960,7 @@ export default function VerificarAgendamentos() {
                           />
                         </Grid>
                         
-                        <Grid xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <TextField
                             className="currency-field"
                             label="Valor Pago ao Médico"
@@ -993,7 +993,7 @@ export default function VerificarAgendamentos() {
                   </Grid>
                   
                   {/* Linha 3: Observações */}
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <TextField
                       label="Observações"
                       name="observacao"
@@ -1008,7 +1008,7 @@ export default function VerificarAgendamentos() {
                     />
                   </Grid>
                   
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -1022,7 +1022,7 @@ export default function VerificarAgendamentos() {
                                           />
                   </Grid>
                   
-                  <Grid xs={12} sx={{ mt: 1 }}>
+                  <Grid size={{ xs: 12 }} sx={{ mt: 1 }}>
                     <Button
                       variant="contained"
                       color="primary"

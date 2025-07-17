@@ -140,6 +140,17 @@ export default function Cadastros() {
     type: ''
   });
 
+  // Estados para controle de accordions expandidos (resolve problema de acessibilidade)
+  const [expandedAccordions, setExpandedAccordions] = useState({});
+
+  // Função para controlar expansão dos accordions
+  const handleAccordionChange = (panelId) => (event, isExpanded) => {
+    setExpandedAccordions(prev => ({
+      ...prev,
+      [panelId]: isExpanded
+    }));
+  };
+
   // Função para máscara de telefone
   const formatPhoneNumber = (value) => {
     // Remove todos os caracteres não numéricos
@@ -815,7 +826,10 @@ export default function Cadastros() {
                       {((medico.horarios && medico.horarios.length > 0) || (medico.agenda_flexivel && medico.agenda_flexivel.length > 0)) && (
                         <TableRow>
                           <TableCell colSpan={8}>
-                            <Accordion>
+                            <Accordion 
+                              expanded={expandedAccordions[`medico-${medico.id}`] || false}
+                              onChange={handleAccordionChange(`medico-${medico.id}`)}
+                            >
                               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 <Typography variant="body2">
                                   Horários de Atendimento ({(medico.horarios?.length || 0) + (medico.agenda_flexivel?.length || 0)})
@@ -825,7 +839,7 @@ export default function Cadastros() {
                                 <Grid container spacing={1}>
                                   {/* Horários Fixos */}
                                   {medico.horarios?.map((horario) => (
-                                    <Grid xs={12} sm={6} md={4} key={`horario-${horario.id}`}>
+                                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={`horario-${horario.id}`}>
                                       <Paper variant="outlined" sx={{ p: 1, backgroundColor: '#f3e5f5' }}>
                                         <Typography variant="caption">
                                           <Chip 
@@ -845,6 +859,7 @@ export default function Cadastros() {
                                             size="small" 
                                             color="error"
                                             onClick={() => handleDeleteHorario(medico.id, horario.id)}
+                                            tabIndex={expandedAccordions[`medico-${medico.id}`] ? 0 : -1}
                                           >
                                             <DeleteIcon fontSize="small" />
                                           </IconButton>
@@ -855,7 +870,7 @@ export default function Cadastros() {
                                   
                                   {/* Agenda Flexível */}
                                   {medico.agenda_flexivel?.map((agenda) => (
-                                    <Grid xs={12} sm={6} md={4} key={`agenda-${agenda.id}`}>
+                                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={`agenda-${agenda.id}`}>
                                       <Paper variant="outlined" sx={{ p: 1, backgroundColor: '#e3f2fd' }}>
                                         <Typography variant="caption">
                                           <Chip 
@@ -875,6 +890,7 @@ export default function Cadastros() {
                                             size="small" 
                                             color="error"
                                             onClick={() => handleDeleteAgendaFlexivel(medico.id, agenda.id)}
+                                            tabIndex={expandedAccordions[`medico-${medico.id}`] ? 0 : -1}
                                           >
                                             <DeleteIcon fontSize="small" />
                                           </IconButton>
@@ -985,7 +1001,10 @@ export default function Cadastros() {
                       {procedimento.medicos && procedimento.medicos.length > 0 && (
                         <TableRow>
                           <TableCell colSpan={6}>
-                            <Accordion>
+                            <Accordion 
+                              expanded={expandedAccordions[`procedimento-${procedimento.id}`] || false}
+                              onChange={handleAccordionChange(`procedimento-${procedimento.id}`)}
+                            >
                               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 <Typography variant="body2">
                                   Médicos Vinculados ({procedimento.medicos.length})
@@ -994,7 +1013,11 @@ export default function Cadastros() {
                               <AccordionDetails>
                                 <List dense>
                                   {procedimento.medicos.map((medico) => (
-                                    <ListItem key={medico.id} divider>
+                                    <ListItem 
+                                      key={medico.id} 
+                                      divider
+                                      tabIndex={expandedAccordions[`procedimento-${procedimento.id}`] ? 0 : -1}
+                                    >
                                       <ListItemText
                                         primary={medico.nome}
                                         secondary={`CRM: ${medico.crm}`}
@@ -1006,6 +1029,7 @@ export default function Cadastros() {
                                           size="small"
                                           onClick={() => handleDesvincularMedico(procedimento.id, medico.id)}
                                           title="Desvincular médico"
+                                          tabIndex={expandedAccordions[`procedimento-${procedimento.id}`] ? 0 : -1}
                                         >
                                           <RemoveCircleOutlineIcon fontSize="small" />
                                         </IconButton>
@@ -1106,7 +1130,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="nome"
                 label="Nome"
@@ -1117,7 +1141,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="crm"
                 label="CRM"
@@ -1128,7 +1152,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="telefone"
                 label="Telefone"
@@ -1143,7 +1167,7 @@ export default function Cadastros() {
                 inputProps={{ maxLength: 15 }}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="email"
                 label="Email"
@@ -1154,7 +1178,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth margin="dense" required>
                 <InputLabel>Especialidade</InputLabel>
                 <Select
@@ -1172,7 +1196,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth margin="dense" required>
                 <InputLabel>Tipo de Agenda</InputLabel>
                 <Select
@@ -1187,7 +1211,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1214,7 +1238,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth margin="dense" required>
                 <InputLabel>Dia da Semana</InputLabel>
                 <Select
@@ -1234,7 +1258,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="hora_inicio"
                 label="Hora Início"
@@ -1247,7 +1271,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="hora_fim"
                 label="Hora Fim"
@@ -1260,7 +1284,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth margin="dense" required>
                 <InputLabel>Intervalo entre Consultas</InputLabel>
                 <Select
@@ -1277,7 +1301,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1304,7 +1328,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 name="data"
                 label="Data"
@@ -1317,7 +1341,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="hora_inicio"
                 label="Hora Início"
@@ -1330,7 +1354,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="hora_fim"
                 label="Hora Fim"
@@ -1343,7 +1367,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth margin="dense">
                 <InputLabel>Intervalo entre consultas</InputLabel>
                 <Select
@@ -1360,7 +1384,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1387,7 +1411,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 name="nome"
                 label="Nome do Procedimento"
@@ -1398,7 +1422,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid xs={12} sm={8}>
+            <Grid size={{ xs: 12, sm: 8 }}>
               <FormControl variant="outlined" fullWidth margin="dense">
                 <InputLabel>Especialidade</InputLabel>
                 <Select
@@ -1419,7 +1443,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid xs={12} sm={4}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 name="valor"
                 label="Valor (R$)"
@@ -1436,7 +1460,7 @@ export default function Cadastros() {
                 }}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 name="descricao"
                 label="Descrição"
@@ -1448,7 +1472,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="tempo_estimado"
                 label="Tempo Estimado (minutos)"
@@ -1462,7 +1486,7 @@ export default function Cadastros() {
                 }}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1489,7 +1513,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 name="nome"
                 label="Nome da Especialidade"
@@ -1500,7 +1524,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 name="descricao"
                 label="Descrição"
@@ -1512,7 +1536,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControlLabel
                 control={
                   <Switch

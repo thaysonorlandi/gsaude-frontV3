@@ -998,7 +998,7 @@ export default function Agendamento() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 name="data"
                 label="Data"
@@ -1014,7 +1014,7 @@ export default function Agendamento() {
                 }}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="hora_inicio"
                 label="Hora Início"
@@ -1027,7 +1027,7 @@ export default function Agendamento() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 name="hora_fim"
                 label="Hora Fim"
@@ -1040,7 +1040,7 @@ export default function Agendamento() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <FormControl fullWidth margin="dense">
                 <InputLabel>Intervalo entre consultas</InputLabel>
                 <Select
@@ -1057,7 +1057,7 @@ export default function Agendamento() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 name="observacoes"
                 label="Observações"

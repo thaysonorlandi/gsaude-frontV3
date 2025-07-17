@@ -218,7 +218,7 @@ function Financeiro() {
               Resumo Financeiro
             </Typography>
             <Grid container spacing={3}>
-              <Grid xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Card className="card-financeiro receita">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -230,7 +230,7 @@ function Financeiro() {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Card className="card-financeiro despesa">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -242,7 +242,7 @@ function Financeiro() {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid xs={12} md={4}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Card className="card-financeiro lucro">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -263,7 +263,7 @@ function Financeiro() {
               Resumo de Atendimentos
             </Typography>
             <Grid container spacing={3}>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Card className="card-financeiro">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -290,7 +290,7 @@ function Financeiro() {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <Card className="card-financeiro">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
