@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/contexts';
+import { getSystemConfig } from '../../services/systemConfigService';
 import Logo from '../../assets/logoGSaude.png';
 import PersonIcon from '@mui/icons-material/Person';
 import LoginIcon from '@mui/icons-material/Login';
@@ -15,8 +16,26 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(Logo); // Usar logo padrão inicialmente
   const navigate = useNavigate();
   const { login } = useUser();
+
+  // Buscar logo do sistema
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const response = await getSystemConfig('site_logo');
+        if (response.success && response.data.value) {
+          setLogoUrl(response.data.value);
+        }
+      } catch {
+        // Em caso de erro, mantém o logo padrão
+        console.log('Logo do sistema não encontrado, usando logo padrão');
+      }
+    };
+
+    fetchLogo();
+  }, []);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -86,7 +105,7 @@ function Login() {
   return (
     <div className="background">
       <div className="login-container">
-        <img src={Logo} alt="Logo GSaude" style={{ width: 200, marginBottom: 24 }} />
+        <img src={logoUrl} alt="Logo GSaude" style={{ width: 200, marginBottom: 24 }} />
         {error && <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
         <form onSubmit={handleLogin}>
           <div className='input-icon'>
