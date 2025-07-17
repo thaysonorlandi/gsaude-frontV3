@@ -2,9 +2,32 @@
 
 Interface web moderna para o sistema de agendamento médico GSaude, desenvolvida em React com Vite.
 
+## 🚀 Início Rápido
+
+```bash
+# 1. Clone o repositório
+git clone <URL_DO_SEU_REPOSITORIO>
+cd gsaude-front
+
+# 2. Instale as dependências
+npm install
+
+# 3. Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
+
+# 4. Certifique-se que o backend está rodando na porta 8000
+
+# 5. Inicie o servidor de desenvolvimento
+npm run dev
+```
+
+> **⚡ Acesse**: http://localhost:5174
+
 ## 📋 Índice
 
-- [🛠️ Tecnologias](#️-tecnologias)
+- [� Início Rápido](#-início-rápido)
+- [�🛠️ Tecnologias](#️-tecnologias)
 - [📋 Pré-requisitos](#-pré-requisitos)
 - [🚀 Instalação](#-instalação)
 - [⚙️ Configuração](#️-configuração)
@@ -26,17 +49,28 @@ Interface web moderna para o sistema de agendamento médico GSaude, desenvolvida
 
 ## 📋 Pré-requisitos
 
+### Frontend
 - Node.js 18+ 
 - npm ou yarn
+
+### Backend (Obrigatório)
+- PHP 8.0+
+- Composer
+- MySQL/MariaDB
+- Backend GSaude API rodando na porta 8000
+
+### Opcional (para deploy)
 - Conta GitHub (para deploy no GitHub Pages)
 
 ## 🚀 Instalação
 
 ### 1. Clonar o repositório
 ```bash
-git clone https://github.com/thaysonorlandi/gsaude-frontV3.git
-cd gsaude-frontV3
+git clone <URL_DO_SEU_REPOSITORIO>
+cd gsaude-front
 ```
+
+> **Nota**: Substitua `<URL_DO_SEU_REPOSITORIO>` pela URL do seu repositório Git.
 
 ### 2. Instalar dependências
 ```bash
@@ -56,11 +90,15 @@ VITE_DEV_SERVER_HOST=0.0.0.0
 VITE_DEV_SERVER_PORT=5174
 ```
 
+> **⚠️ Importante**: Certifique-se de que o backend Laravel esteja rodando na porta 8000.
+
 #### Produção (.env.production)
 ```env
-VITE_API_URL=https://api.seu-dominio.com/api/v1
+VITE_API_URL=https://sua-api-em-producao.com/api/v1
 VITE_BUILD_TARGET=es2015
 ```
+
+> **Nota**: Substitua pela URL real da sua API em produção.
 
 ### Configuração da API
 
@@ -77,6 +115,17 @@ const api = axios.create({
   }
 });
 ```
+
+### ⚠️ Dependência do Backend
+
+Este frontend precisa do backend **GSaude API** (Laravel) rodando para funcionar:
+
+1. **Clone o repositório do backend** (gsaude-api)
+2. **Configure o banco de dados** MySQL/MariaDB
+3. **Execute as migrações** com `php artisan migrate --seed`
+4. **Inicie o servidor** com `php artisan serve` (porta 8000)
+
+> **Importante**: O backend deve estar rodando em `http://localhost:8000` antes de iniciar o frontend.
 
 ## 🏃 Executar
 
@@ -112,19 +161,23 @@ npm run preview
 
 1. **Configure as variáveis no repositório:**
    - Vá em Settings > Secrets and variables > Actions
-   - Adicione: `VITE_API_URL` com a URL da sua API
+   - Adicione: `VITE_API_URL` com a URL da sua API em produção
 
 2. **Push para main disparará deploy automático**
+
+> **Nota**: Certifique-se de ter configurado o GitHub Pages nas configurações do repositório.
 
 ### GitHub Pages (Manual)
 ```bash
 # Configurar URL da API
-echo "VITE_API_URL=https://api.seu-dominio.com/api/v1" > .env.production
+echo "VITE_API_URL=https://sua-api-em-producao.com/api/v1" > .env.production
 
 # Build e deploy
 npm run build
 npm run deploy
 ```
+
+> **Nota**: Substitua pela URL real da sua API em produção.
 
 ### Outros Provedores
 ```bash
@@ -291,8 +344,8 @@ npm run deploy       # Deploy GitHub Pages
 - **API**: http://localhost:8000/api/v1
 
 ### Produção
-- **App**: https://thaysonorlandi.github.io/gsaude-frontV3/
-- **API**: Configure sua URL
+- **App**: Configure sua URL de deploy (GitHub Pages, Netlify, Vercel, etc.)
+- **API**: Configure sua URL de API em produção
 
 ## 📞 Suporte
 
