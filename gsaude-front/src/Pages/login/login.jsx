@@ -34,27 +34,10 @@ function Login() {
       
       try {
         // Tenta fazer o login pela API real
-        console.log('Tentando autenticação na API...');
         
-        // Determina as credenciais baseadas no input do usuário
-        let email, password;
-        
-        if (form.usuario.toLowerCase() === 'admin') {
-          email = 'admin@gsaude.com';
-          password = form.senha || '123456'; // usa a senha digitada ou padrão
-        } else if (form.usuario.toLowerCase() === 'recepcao') {
-          email = 'secretaria@gsaude.com';
-          password = form.senha || 'secret123';
-        } else if (form.usuario.toLowerCase() === 'paciente') {
-          email = 'paciente@gsaude.com';
-          password = form.senha || 'paciente123';
-        } else {
-          // Se não é um dos padrões, assume que é um email real
-          email = form.usuario;
-          password = form.senha;
-        }
-
-        console.log('Credenciais mapeadas:', { email, password: '***' });
+        // Utiliza as credenciais fornecidas pelo usuário
+        const email = form.usuario;
+        const password = form.senha;
 
         const response = await fetch('http://localhost:8000/api/v1/auth/login', {
           method: 'POST',
@@ -65,12 +48,8 @@ function Login() {
           body: JSON.stringify({ email: email, password: password })
         });
         
-        console.log('Status da resposta:', response.status);
-        console.log('Headers da resposta:', response.headers);
-        
         if (response.ok) {
           const data = await response.json();
-          console.log('Dados recebidos da API:', data);
           userData = {
             nome: data.user.nome,
             tipo: data.user.tipo,
@@ -78,14 +57,11 @@ function Login() {
             id: data.user.id
           };
           userType = data.user.tipo;
-          console.log('Login na API bem-sucedido:', { ...userData, token: '***' });
         } else {
-          const errorData = await response.json();
-          console.error('Erro na API - Status:', response.status, 'Data:', errorData);
+          await response.json();
           throw new Error('Credenciais inválidas');
         }
-      } catch (apiError) {
-        console.error('Erro completo ao tentar autenticar na API:', apiError);
+      } catch {
         setError('Erro ao fazer login. Verifique suas credenciais.');
         setLoading(false);
         return;
@@ -100,8 +76,7 @@ function Login() {
       } else {
         navigate('/home');
       }
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
+    } catch {
       setError('Erro ao fazer login. Verifique suas credenciais e tente novamente.');
     } finally {
       setLoading(false);

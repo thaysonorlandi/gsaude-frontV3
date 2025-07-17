@@ -72,38 +72,26 @@ function Financeiro() {
         setExamesRecentes(detalhamento.exames);
         
         setError(null);
-      } catch (err) {
-        console.error('Erro ao carregar dados financeiros:', err);
-        setError('Erro ao carregar dados. Usando dados de demonstração.');
+      } catch {
+        setError('Erro ao carregar dados financeiros');
         
-        // Fallback para dados de demonstração
+        // Usar valores vazios em caso de erro
         setResumoFinanceiro({
-          receitaTotal: 'R$ 125.800,00',
-          despesaTotal: 'R$ 68.450,00',
-          lucroLiquido: 'R$ 57.350,00',
-          consultasRealizadas: 285,
-          consultasAguardando: 42,
-          examesRealizados: 432,
-          examesAguardando: 38,
-          valorMedioConsulta: 'R$ 180,00',
-          valorMedioExame: 'R$ 150,00',
-          tempoMedioConsulta: '35 minutos',
-          tempoMedioExame: '32 minutos',
+          receitaTotal: 'R$ 0,00',
+          despesaTotal: 'R$ 0,00',
+          lucroLiquido: 'R$ 0,00',
+          consultasRealizadas: 0,
+          consultasAguardando: 0,
+          examesRealizados: 0,
+          examesAguardando: 0,
+          valorMedioConsulta: 'R$ 0,00',
+          valorMedioExame: 'R$ 0,00',
+          tempoMedioConsulta: '0 minutos',
+          tempoMedioExame: '0 minutos',
         });
 
-        setConsultasRecentes([
-          { id: 1, paciente: 'Maria Silva', medico: 'Dr. João Cardoso', valor: 'R$ 200,00', data: '07/07/2025', duracao: '40 min', status: 'Realizada' },
-          { id: 2, paciente: 'Pedro Santos', medico: 'Dra. Ana Soares', valor: 'R$ 180,00', data: '07/07/2025', duracao: '30 min', status: 'Realizada' },
-          { id: 3, paciente: 'Lucas Oliveira', medico: 'Dr. Paulo Menezes', valor: 'R$ 190,00', data: '08/07/2025', duracao: '25 min', status: 'Aguardando' },
-          { id: 4, paciente: 'Julia Castro', medico: 'Dra. Carla Mendes', valor: 'R$ 210,00', data: '08/07/2025', duracao: '45 min', status: 'Aguardando' },
-        ]);
-
-        setExamesRecentes([
-          { id: 1, paciente: 'Roberto Alves', tipo: 'Raio-X', valor: 'R$ 120,00', data: '07/07/2025', status: 'Realizada' },
-          { id: 2, paciente: 'Fernanda Lima', tipo: 'Hemograma', valor: 'R$ 80,00', data: '07/07/2025', status: 'Realizada' },
-          { id: 3, paciente: 'Carlos Gomes', tipo: 'Ultrassonografia', valor: 'R$ 250,00', data: '08/07/2025', status: 'Aguardando' },
-          { id: 4, paciente: 'Amanda Dias', tipo: 'Eletrocardiograma', valor: 'R$ 180,00', data: '08/07/2025', status: 'Aguardando' },
-        ]);
+        setConsultasRecentes([]);
+        setExamesRecentes([]);
       } finally {
         setLoading(false);
       }
@@ -230,7 +218,7 @@ function Financeiro() {
               Resumo Financeiro
             </Typography>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
+              <Grid xs={12} md={4}>
                 <Card className="card-financeiro receita">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -242,7 +230,7 @@ function Financeiro() {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid xs={12} md={4}>
                 <Card className="card-financeiro despesa">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -254,7 +242,7 @@ function Financeiro() {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid xs={12} md={4}>
                 <Card className="card-financeiro lucro">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -275,7 +263,7 @@ function Financeiro() {
               Resumo de Atendimentos
             </Typography>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid xs={12} md={6}>
                 <Card className="card-financeiro">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
@@ -302,7 +290,7 @@ function Financeiro() {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid xs={12} md={6}>
                 <Card className="card-financeiro">
                   <CardContent>
                     <Typography variant="h6" gutterBottom>

@@ -188,10 +188,8 @@ export default function Cadastros() {
   const loadMedicos = async () => {
     try {
       const response = await api.get('/medicos');
-      console.log('Médicos carregados:', response.data);
       setMedicos(response.data);
     } catch (error) {
-      console.error('Erro ao carregar médicos:', error);
       setSnackbar({
         open: true,
         message: "Erro ao carregar médicos: " + (error.response?.data?.message || error.message),
@@ -205,7 +203,6 @@ export default function Cadastros() {
       const response = await api.get('/especialidades');
       setEspecialidades(response.data);
     } catch (error) {
-      console.error('Erro ao carregar especialidades:', error);
       setSnackbar({
         open: true,
         message: "Erro ao carregar especialidades: " + (error.response?.data?.message || error.message),
@@ -219,7 +216,6 @@ export default function Cadastros() {
       const response = await api.get('/procedimentos');
       setProcedimentos(response.data);
     } catch (error) {
-      console.error('Erro ao carregar procedimentos:', error);
       setSnackbar({
         open: true,
         message: "Erro ao carregar procedimentos: " + (error.response?.data?.message || error.message),
@@ -243,19 +239,16 @@ export default function Cadastros() {
     }
     
     try {
-      console.log('Dados sendo enviados:', medicoForm);
       
       if (editingMedico) {
-        const response = await api.put(`/medicos/${editingMedico.id}`, medicoForm);
-        console.log('Resposta do PUT:', response.data);
+        await api.put(`/medicos/${editingMedico.id}`, medicoForm);
         setSnackbar({
           open: true,
           message: "Médico atualizado com sucesso!",
           severity: "success"
         });
       } else {
-        const response = await api.post('/medicos', medicoForm);
-        console.log('Resposta do POST:', response.data);
+        await api.post('/medicos', medicoForm);
         setSnackbar({
           open: true,
           message: "Médico cadastrado com sucesso!",
@@ -267,7 +260,6 @@ export default function Cadastros() {
       resetMedicoForm();
       loadMedicos();
     } catch (error) {
-      console.error('Erro detalhado:', error);
       setSnackbar({
         open: true,
         message: error.response?.data?.message || "Erro ao salvar médico",
@@ -277,7 +269,6 @@ export default function Cadastros() {
   };
 
   const handleEditMedico = (medico) => {
-    console.log('Médico sendo editado:', medico);
     const formData = {
       nome: medico.nome,
       crm: medico.crm,
@@ -287,7 +278,6 @@ export default function Cadastros() {
       tipo_agenda: medico.tipo_agenda || 'fixa',
       ativo: medico.ativo
     };
-    console.log('Dados do formulário:', formData);
     setMedicoForm(formData);
     setEditingMedico(medico);
     setShowMedicoDialog(true);
@@ -835,7 +825,7 @@ export default function Cadastros() {
                                 <Grid container spacing={1}>
                                   {/* Horários Fixos */}
                                   {medico.horarios?.map((horario) => (
-                                    <Grid item xs={12} sm={6} md={4} key={`horario-${horario.id}`}>
+                                    <Grid xs={12} sm={6} md={4} key={`horario-${horario.id}`}>
                                       <Paper variant="outlined" sx={{ p: 1, backgroundColor: '#f3e5f5' }}>
                                         <Typography variant="caption">
                                           <Chip 
@@ -865,7 +855,7 @@ export default function Cadastros() {
                                   
                                   {/* Agenda Flexível */}
                                   {medico.agenda_flexivel?.map((agenda) => (
-                                    <Grid item xs={12} sm={6} md={4} key={`agenda-${agenda.id}`}>
+                                    <Grid xs={12} sm={6} md={4} key={`agenda-${agenda.id}`}>
                                       <Paper variant="outlined" sx={{ p: 1, backgroundColor: '#e3f2fd' }}>
                                         <Typography variant="caption">
                                           <Chip 
@@ -1116,7 +1106,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="nome"
                 label="Nome"
@@ -1127,7 +1117,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="crm"
                 label="CRM"
@@ -1138,7 +1128,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="telefone"
                 label="Telefone"
@@ -1153,7 +1143,7 @@ export default function Cadastros() {
                 inputProps={{ maxLength: 15 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="email"
                 label="Email"
@@ -1164,7 +1154,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth margin="dense" required>
                 <InputLabel>Especialidade</InputLabel>
                 <Select
@@ -1182,7 +1172,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth margin="dense" required>
                 <InputLabel>Tipo de Agenda</InputLabel>
                 <Select
@@ -1197,7 +1187,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1224,7 +1214,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth margin="dense" required>
                 <InputLabel>Dia da Semana</InputLabel>
                 <Select
@@ -1244,7 +1234,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="hora_inicio"
                 label="Hora Início"
@@ -1257,7 +1247,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="hora_fim"
                 label="Hora Fim"
@@ -1270,7 +1260,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth margin="dense" required>
                 <InputLabel>Intervalo entre Consultas</InputLabel>
                 <Select
@@ -1287,7 +1277,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1314,7 +1304,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 name="data"
                 label="Data"
@@ -1327,7 +1317,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="hora_inicio"
                 label="Hora Início"
@@ -1340,7 +1330,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="hora_fim"
                 label="Hora Fim"
@@ -1353,7 +1343,7 @@ export default function Cadastros() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth margin="dense">
                 <InputLabel>Intervalo entre consultas</InputLabel>
                 <Select
@@ -1370,7 +1360,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1397,7 +1387,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 name="nome"
                 label="Nome do Procedimento"
@@ -1408,7 +1398,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid item xs={12} sm={8}>
+            <Grid xs={12} sm={8}>
               <FormControl variant="outlined" fullWidth margin="dense">
                 <InputLabel>Especialidade</InputLabel>
                 <Select
@@ -1429,7 +1419,7 @@ export default function Cadastros() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid xs={12} sm={4}>
               <TextField
                 name="valor"
                 label="Valor (R$)"
@@ -1446,7 +1436,7 @@ export default function Cadastros() {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 name="descricao"
                 label="Descrição"
@@ -1458,7 +1448,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="tempo_estimado"
                 label="Tempo Estimado (minutos)"
@@ -1472,7 +1462,7 @@ export default function Cadastros() {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControlLabel
                 control={
                   <Switch
@@ -1499,7 +1489,7 @@ export default function Cadastros() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 name="nome"
                 label="Nome da Especialidade"
@@ -1510,7 +1500,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 name="descricao"
                 label="Descrição"
@@ -1522,7 +1512,7 @@ export default function Cadastros() {
                 margin="dense"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControlLabel
                 control={
                   <Switch

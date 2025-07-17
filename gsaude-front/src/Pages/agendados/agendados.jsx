@@ -83,18 +83,8 @@ export default function VerificarAgendamentos() {
           api.get('/agendados') // Mudança aqui: usar /agendados que retorna os dados financeiros
         ]);
         
-        console.log('=== DADOS CARREGADOS DA API ===');
-        console.log('Resposta completa agendamentos:', agendamentosRes);
-        console.log('Agendamentos recebidos:', agendamentosRes.data);
-        
         // A API retorna { success: true, data: [...] }, então precisamos acessar .data.data
         const agendamentosData = agendamentosRes.data?.data || agendamentosRes.data;
-        console.log('Dados processados de agendamentos:', agendamentosData);
-        
-        if (agendamentosData && agendamentosData.length > 0) {
-          console.log('Primeiro agendamento:', agendamentosData[0]);
-          console.log('Detalhes financeiros do primeiro:', agendamentosData[0].detalhes_financeiros);
-        }
         
         setEspecialidades(especialidadesRes.data);
         setProcedimentos(procedimentosRes.data);
@@ -103,106 +93,13 @@ export default function VerificarAgendamentos() {
         setError(null);
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
-        setError("Falha ao carregar dados. Usando dados de demonstração.");
+        setError("Falha ao carregar dados da API.");
         
-        // Usar dados de demonstração em caso de erro
-        setEspecialidades(["Cardiologia", "Dermatologia", "Ortopedia"]);
-        setProcedimentos(["Raio-X", "Ultrassom", "Hemograma"]);
-        setMedicos([
-          { id: 1, nome: "Dr. João", especialidade: "Cardiologia" },
-          { id: 2, nome: "Dra. Ana", especialidade: "Dermatologia" },
-          { id: 3, nome: "Dr. Pedro", especialidade: "Ortopedia" },
-        ]);
-        setAgendamentos([
-          {
-            id: 1,
-            tipo: "Consulta",
-            especialidade: "Cardiologia",
-            medico_id: 1,
-            medico_nome: "Dr. João",
-            data: "2025-07-08",
-            hora: "09:00",
-            paciente_nome: "Maria Silva",
-            telefone: "(11) 98765-4321",
-            email: "maria@email.com",
-            convenio: "Unimed",
-            status: "Aguardando",
-            detalhes_financeiros: {
-              valor_consulta: "",
-              valor_pago_funcionario: "",
-              horario_inicio: "",
-              duracao_minutos: "",
-              observacao: "",
-              enviado_financeiro: false
-            }
-          },
-          {
-            id: 2,
-            tipo: "Exame",
-            exame: "Raio-X",
-            medico_id: 3,
-            medico_nome: "Dr. Pedro",
-            data: "2025-07-08",
-            hora: "10:00",
-            paciente_nome: "Carlos Santos",
-            telefone: "(11) 97654-3210",
-            email: "carlos@email.com",
-            convenio: "Amil",
-            status: "Aguardando",
-            detalhes_financeiros: {
-              valor_consulta: "",
-              valor_pago_funcionario: "",
-              horario_inicio: "",
-              duracao_minutos: "",
-              observacao: "",
-              enviado_financeiro: false
-            }
-          },
-          {
-            id: 3,
-            tipo: "Consulta",
-            especialidade: "Dermatologia",
-            medico_id: 2,
-            medico_nome: "Dra. Ana",
-            data: "2025-07-09",
-            hora: "11:00",
-            paciente_nome: "José Oliveira",
-            telefone: "(11) 96543-2109",
-            email: "jose@email.com",
-            convenio: "SulAmérica",
-            status: "Cancelado",
-            detalhes_financeiros: {
-              valor_consulta: "",
-              valor_pago_funcionario: "",
-              horario_inicio: "",
-              duracao_minutos: "",
-              observacao: "",
-              enviado_financeiro: false
-            }
-          },
-          {
-            id: 4,
-            tipo: "Exame",
-            exame: "Hemograma",
-            medico_id: 1,
-            medico_nome: "Dr. João",
-            data: "2025-07-09",
-            hora: "14:00",
-            paciente_nome: "Paula Ferreira",
-            telefone: "(11) 95432-1098",
-            email: "paula@email.com",
-            convenio: "Bradesco Saúde",
-            status: "Realizado",
-            detalhes_financeiros: {
-              valor_consulta: "250.00",
-              valor_pago_funcionario: "150.00",
-              horario_inicio: "14:05",
-              duracao_minutos: "30",
-              observacao: "Paciente apresentou resultado normal",
-              enviado_financeiro: true
-            }
-          },
-        ]);
+        // Define dados vazios em caso de erro
+        setEspecialidades([]);
+        setProcedimentos([]);
+        setMedicos([]);
+        setAgendamentos([]);
       } finally {
         setLoading(false);
       }
@@ -247,9 +144,6 @@ export default function VerificarAgendamentos() {
 
   // Abrir Dialog com os detalhes do agendamento
   const handleOpenDialog = (item) => {
-    console.log('=== ABRINDO DIALOG ===');
-    console.log('Item selecionado:', item);
-    console.log('Detalhes financeiros do item:', item.detalhes_financeiros);
     
     setAgendamentoSelecionado(item);
     setForm({
@@ -272,7 +166,6 @@ export default function VerificarAgendamentos() {
       enviado_financeiro: false
     };
     
-    console.log('Detalhes financeiros inicializados:', detalhesFinanceirosInicial);
     setDetalhesFinanceiros(detalhesFinanceirosInicial);
     
     setOpenDialog(true);
@@ -364,9 +257,6 @@ export default function VerificarAgendamentos() {
         telefone_paciente: form.telefone || agendamentoSelecionado.telefone_paciente || agendamentoSelecionado.telefone,
         observacoes: form.observacoes || agendamentoSelecionado.observacoes
       };
-      
-      console.log('Dados para atualização:', dadosBasicos);
-      console.log('ID do agendamento:', agendamentoSelecionado.id);
       
       // Tenta salvar na API usando a nova rota
       try {
@@ -471,7 +361,6 @@ export default function VerificarAgendamentos() {
       // Primeiro salva os dados financeiros
       try {
         await api.put(`/agendados/${agendamentoSelecionado.id}/status-financeiro`, dadosFinanceiros);
-        console.log('Dados financeiros salvos com sucesso');
       } catch (apiError) {
         console.error("Erro ao salvar dados financeiros:", apiError);
         showSnackbar("Erro ao salvar dados financeiros: " + (apiError.response?.data?.message || 'Erro desconhecido'), "error");
@@ -579,7 +468,7 @@ export default function VerificarAgendamentos() {
         </Typography>
         
         <Grid container spacing={2} className="agenda-filtros">
-          <Grid item xs={12} md={3}>
+          <Grid xs={12} md={3}>
             <FormControl fullWidth size="small">
               <InputLabel id="tipo-label">Tipo</InputLabel>
               <Select
@@ -598,7 +487,7 @@ export default function VerificarAgendamentos() {
           {/* Se for Consulta, mostra Especialidade, Médico e Status */}
           {tipoFiltro === "Consulta" && (
             <>
-              <Grid item xs={12} md={3}>
+              <Grid xs={12} md={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="esp-label">Especialidade</InputLabel>
                   <Select
@@ -616,7 +505,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid xs={12} md={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="medico-label">Médico</InputLabel>
                   <Select
@@ -634,7 +523,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid xs={12} md={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="status-label">Status</InputLabel>
                   <Select
@@ -656,7 +545,7 @@ export default function VerificarAgendamentos() {
           {/* Se for Exame, mostra Tipo de Exame, Médico e Status */}
           {tipoFiltro === "Exame" && (
             <>
-              <Grid item xs={12} md={3}>
+              <Grid xs={12} md={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="exame-label">Tipo de Exame</InputLabel>
                   <Select
@@ -674,7 +563,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid xs={12} md={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="medico-label">Médico</InputLabel>
                   <Select
@@ -692,7 +581,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid xs={12} md={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="status-label">Status</InputLabel>
                   <Select
@@ -714,7 +603,7 @@ export default function VerificarAgendamentos() {
           {/* Se nenhum tipo selecionado, mostra todos os filtros exceto especialidade e tipo de exame */}
           {!tipoFiltro && (
             <>
-              <Grid item xs={12} md={3}>
+              <Grid xs={12} md={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="medico-label">Médico</InputLabel>
                   <Select
@@ -732,7 +621,7 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid xs={12} md={3}>
                 <FormControl fullWidth size="small">
                   <InputLabel id="status-label">Status</InputLabel>
                   <Select
@@ -833,7 +722,7 @@ export default function VerificarAgendamentos() {
               {/* Tab de Informações Gerais */}
               {tabValue === 0 && (
                 <Grid container spacing={2}>
-                  <Grid item xs={12} md={6}>
+                  <Grid xs={12} md={6}>
                     <TextField
                       label="Paciente"
                       value={agendamentoSelecionado.paciente_nome || ''}
@@ -845,7 +734,7 @@ export default function VerificarAgendamentos() {
                     />
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
+                  <Grid xs={12} md={6}>
                     <TextField
                       label="Telefone"
                       name="telefone"
@@ -861,7 +750,7 @@ export default function VerificarAgendamentos() {
                       disabled
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid xs={12} md={6}>
                     <TextField
                       label="Convênio"
                       value={agendamentoSelecionado.convenio || ''}
@@ -872,7 +761,7 @@ export default function VerificarAgendamentos() {
                       disabled
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid xs={12} md={6}>
                     <TextField
                       label="Médico"
                       value={agendamentoSelecionado.medico_nome || ''}
@@ -884,7 +773,7 @@ export default function VerificarAgendamentos() {
                     />
                   </Grid>
                   {agendamentoSelecionado.tipo === "Consulta" && (
-                    <Grid item xs={12} md={6}>
+                    <Grid xs={12} md={6}>
                       <TextField
                         label="Especialidade"
                         value={agendamentoSelecionado.especialidade || ''}
@@ -897,7 +786,7 @@ export default function VerificarAgendamentos() {
                     </Grid>
                   )}
                   {agendamentoSelecionado.tipo === "Exame" && (
-                    <Grid item xs={12} md={6}>
+                    <Grid xs={12} md={6}>
                       <TextField
                         label="Tipo de Exame"
                         value={agendamentoSelecionado.exame || ''}
@@ -909,7 +798,7 @@ export default function VerificarAgendamentos() {
                       />
                     </Grid>
                   )}
-                  <Grid item xs={12} md={4}>
+                  <Grid xs={12} md={4}>
                     <FormControl fullWidth margin="dense" size="small" sx={{ minWidth: 224 }}>
                       <InputLabel id="status-label">Status</InputLabel>
                       <Select
@@ -927,7 +816,7 @@ export default function VerificarAgendamentos() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid xs={12} md={4}>
                     <TextField
                       label="Data"
                       name="data"
@@ -942,7 +831,7 @@ export default function VerificarAgendamentos() {
                       disabled
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid xs={12} md={4}>
                     <TextField
                       label="Hora"
                       name="hora"
@@ -963,14 +852,14 @@ export default function VerificarAgendamentos() {
               {/* Tab de Detalhes Financeiros */}
               {tabValue === 1 && (
                 <Grid container spacing={3}>
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <Divider sx={{ mb: 2 }} />
                   </Grid>
                   
                   {/* Linha 1: Horários */}
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                       <Grid container spacing={3} sx={{ alignItems: 'flex-start'}}>
-                        <Grid item xs={12} md={4}>
+                        <Grid xs={12} md={4}>
                           <TextField
                             label="Horário de Início"
                             name="horario_inicio"
@@ -989,7 +878,7 @@ export default function VerificarAgendamentos() {
                           />
                         </Grid>
                         
-                        <Grid item xs={12} md={4}>
+                        <Grid xs={12} md={4}>
                           <TextField
                             label="Duração (minutos)"
                             name="duracao_minutos"
@@ -1008,7 +897,7 @@ export default function VerificarAgendamentos() {
                           />
                         </Grid>
 
-                        <Grid item xs={12} md={4}>
+                        <Grid xs={12} md={4}>
                           <TextField
                             label="Horário Final"
                             type="text"
@@ -1039,9 +928,9 @@ export default function VerificarAgendamentos() {
                   </Grid>
                   
                   {/* Linha 2: Valores */}
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                       <Grid container spacing={3} sx={{ alignItems: 'flex-start' }}>
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <TextField
                             className="currency-field"
                             label="Valor da Consulta/Exame"
@@ -1071,7 +960,7 @@ export default function VerificarAgendamentos() {
                           />
                         </Grid>
                         
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <TextField
                             className="currency-field"
                             label="Valor Pago ao Médico"
@@ -1104,7 +993,7 @@ export default function VerificarAgendamentos() {
                   </Grid>
                   
                   {/* Linha 3: Observações */}
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <TextField
                       label="Observações"
                       name="observacao"
@@ -1119,7 +1008,7 @@ export default function VerificarAgendamentos() {
                     />
                   </Grid>
                   
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -1133,7 +1022,7 @@ export default function VerificarAgendamentos() {
                                           />
                   </Grid>
                   
-                  <Grid item xs={12} sx={{ mt: 1 }}>
+                  <Grid xs={12} sx={{ mt: 1 }}>
                     <Button
                       variant="contained"
                       color="primary"

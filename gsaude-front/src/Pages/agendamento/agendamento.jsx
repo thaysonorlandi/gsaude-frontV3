@@ -110,7 +110,6 @@ export default function Agendamento() {
   // Carrega médicos quando muda a especialidade
   useEffect(() => {
     if (form.especialidadeId && form.procedimento === "consulta") {
-      console.log('Carregando médicos por especialidade:', form.especialidadeId);
       carregarMedicosPorEspecialidade(form.especialidadeId);
     }
   }, [form.especialidadeId, form.procedimento, carregarMedicosPorEspecialidade]);
@@ -118,7 +117,6 @@ export default function Agendamento() {
   // Carrega exames quando muda a especialidade (para exames)
   useEffect(() => {
     if (form.especialidadeId && form.procedimento === "exame") {
-      console.log('Carregando exames por especialidade:', form.especialidadeId);
       carregarExamesPorEspecialidade(form.especialidadeId);
     }
   }, [form.especialidadeId, form.procedimento, carregarExamesPorEspecialidade]);
@@ -126,7 +124,6 @@ export default function Agendamento() {
   // Carrega médicos quando muda o procedimento (antes era tipoExameId)
   useEffect(() => {
     if (form.procedimentoId && form.procedimento === "exame") {
-      console.log('Carregando médicos por procedimento:', form.procedimentoId);
       carregarMedicosPorProcedimento(form.procedimentoId);
     }
   }, [form.procedimentoId, form.procedimento, carregarMedicosPorProcedimento]);
@@ -134,7 +131,6 @@ export default function Agendamento() {
   // Carrega horários quando muda o médico ou período
   useEffect(() => {
     if (form.medicoId) {
-      console.log('Carregando horários para médico:', form.medicoId, 'período:', periodoSelecionado);
       carregarHorarios(form.medicoId, null, periodoSelecionado);
     }
   }, [form.medicoId, periodoSelecionado, carregarHorarios]);
@@ -246,12 +242,6 @@ export default function Agendamento() {
       const dataFormatada = garantirFormatoData(form.data);
       const horaFormatada = garantirFormatoHora(form.hora);
       
-      console.log('=== DADOS ANTES DO ENVIO ===');
-      console.log('Data original:', form.data);
-      console.log('Data formatada:', dataFormatada);
-      console.log('Hora original:', form.hora);
-      console.log('Hora formatada:', horaFormatada);
-      
       // Validação prévia
       if (!dataFormatada || !horaFormatada) {
         setError('Data e hora são obrigatórias e devem ser válidas');
@@ -281,9 +271,6 @@ export default function Agendamento() {
         convenio_id: parseInt(form.convenioId),
         telefone_paciente: removerMascaraTelefone(form.telefonePaciente),
       };
-
-      console.log('=== DADOS FINAIS PARA ENVIO ===');
-      console.log(JSON.stringify(dadosParaEnvio, null, 2));
 
       // Chama o serviço para criar o agendamento
       const resultado = await criarAgendamento(dadosParaEnvio);
@@ -356,7 +343,6 @@ export default function Agendamento() {
 
   // Atualize o handle para seleção de horário:
   function handleSelecionarHorario(data, hora) {
-    console.log('Horário selecionado - Data:', data, 'Hora:', hora);
     
     // Garantir que a data esteja no formato YYYY-MM-DD
     let dataFormatada = data;
@@ -388,8 +374,6 @@ export default function Agendamento() {
         horaFormatada = hora; // Já está no formato correto
       }
     }
-    
-    console.log('Data formatada:', dataFormatada, 'Hora formatada:', horaFormatada);
     
     setHorarioSelecionado({ data: dataFormatada, hora: horaFormatada });
     setForm((f) => ({
@@ -719,8 +703,6 @@ export default function Agendamento() {
                 </Box>
               ) : (
                 <Box className="horarios-disponiveis">
-                  {/* Log de debug para renderização */}
-                  {console.log('RENDER - horariosDisponiveis:', horariosDisponiveis)}
                   {horariosDisponiveis.length > 0 ? horariosDisponiveis.map((dia) => (
                     <Box key={dia.data} className="horarios-dia">
                       <Typography className="horarios-dia-titulo">
@@ -1016,7 +998,7 @@ export default function Agendamento() {
         </DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 name="data"
                 label="Data"
@@ -1032,7 +1014,7 @@ export default function Agendamento() {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="hora_inicio"
                 label="Hora Início"
@@ -1045,7 +1027,7 @@ export default function Agendamento() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid xs={12} sm={6}>
               <TextField
                 name="hora_fim"
                 label="Hora Fim"
@@ -1058,7 +1040,7 @@ export default function Agendamento() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth margin="dense">
                 <InputLabel>Intervalo entre consultas</InputLabel>
                 <Select
@@ -1075,7 +1057,7 @@ export default function Agendamento() {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 name="observacoes"
                 label="Observações"

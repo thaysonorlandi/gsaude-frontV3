@@ -18,10 +18,7 @@ export function useAgendamento() {
     setError(null);
 
     try {
-      console.log('Carregando dados iniciais...');
       const dados = await agendamentoService.getDadosIniciais();
-      
-      console.log('Dados iniciais carregados:', dados);
       
       setFiliais(dados.filiais || []);
       setEspecialidades(dados.especialidades || []);
@@ -52,9 +49,7 @@ export function useAgendamento() {
     setError(null);
 
     try {
-      console.log('Carregando médicos por especialidade:', especialidadeId);
       const medicosData = await agendamentoService.getMedicosPorEspecialidade(especialidadeId);
-      console.log('Médicos carregados:', medicosData);
       setMedicos(medicosData || []);
     } catch (err) {
       console.error('Erro ao carregar médicos por especialidade:', err);
@@ -68,9 +63,7 @@ export function useAgendamento() {
   const carregarMedicosPorProcedimento = useCallback(async (procedimentoId) => {
     try {
       setLoading(true);
-      console.log('Carregando médicos para procedimento:', procedimentoId);
       const medicosData = await agendamentoService.getMedicosPorProcedimento(procedimentoId);
-      console.log('Médicos recebidos:', medicosData);
       setMedicos(medicosData);
     } catch (error) {
       console.error('Erro ao carregar médicos por procedimento:', error);
@@ -91,9 +84,7 @@ export function useAgendamento() {
     setError(null);
 
     try {
-      console.log('Carregando exames por especialidade:', especialidadeId);
       const examesData = await agendamentoService.getExamesPorEspecialidade(especialidadeId);
-      console.log('Exames carregados:', examesData);
       setProcedimentos(examesData || []);
     } catch (err) {
       console.error('Erro ao carregar exames por especialidade:', err);
@@ -114,9 +105,7 @@ export function useAgendamento() {
     setError(null);
 
     try {
-      console.log('Carregando horários para médico:', medicoId, 'data:', data, 'período:', periodo);
       const horariosData = await agendamentoService.getHorariosDisponiveis(medicoId, data, periodo);
-      console.log('Horários carregados:', horariosData);
       setHorariosDisponiveis(horariosData || []);
     } catch (err) {
       console.error('Erro ao carregar horários:', err);

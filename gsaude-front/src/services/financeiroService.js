@@ -4,42 +4,30 @@ import api from './api';
 export const financeiroService = {
   // Buscar dados consolidados de agendamentos financeiros
   async getDadosFinanceiros() {
-    try {
-      // Usar a rota de agendados que já funciona, ao invés da rota específica de relatório
-      const response = await api.get('/agendados');
-      console.log('Resposta da API /agendados:', response);
-      
-      // Verificar estrutura da resposta
-      let dados = response.data;
-      if (dados.success && dados.data) {
-        dados = dados.data;
-      }
-      
-      console.log('Dados processados:', dados);
-      return Array.isArray(dados) ? dados : [];
-    } catch (error) {
-      console.error('Erro ao carregar dados financeiros:', error);
-      throw error;
+    // Usar a rota de agendados que já funciona, ao invés da rota específica de relatório
+    const response = await api.get('/agendados');
+    
+    // Verificar estrutura da resposta
+    let dados = response.data;
+    if (dados.success && dados.data) {
+      dados = dados.data;
     }
+    
+    return Array.isArray(dados) ? dados : [];
   },
 
   // Calcular resumo financeiro a partir dos dados
   calcularResumoFinanceiro(dadosAgendamentos) {
     // Garantir que dadosAgendamentos é um array
     if (!Array.isArray(dadosAgendamentos)) {
-      console.warn('Dados de agendamentos não é um array:', dadosAgendamentos);
       return this.getResumoVazio();
     }
-
-    console.log('Calculando resumo financeiro para:', dadosAgendamentos.length, 'agendamentos');
 
     const agendamentosRealizados = dadosAgendamentos.filter(item => 
       (item.status === 'Realizado' || item.status === 'realizado') && 
       item.valor_consulta && 
       parseFloat(item.valor_consulta) > 0
     );
-
-    console.log('Agendamentos realizados com valores:', agendamentosRealizados.length);
 
     // Cálculos de receita, despesa e lucro
     const receitaTotal = agendamentosRealizados.reduce((total, item) => {
@@ -104,7 +92,6 @@ export const financeiroService = {
       tempoMedioExame: `${Math.round(tempoMedioExame)} minutos`
     };
 
-    console.log('Resumo financeiro calculado:', resultado);
     return resultado;
   },
 
@@ -129,11 +116,8 @@ export const financeiroService = {
   processarDetalhamento(dadosAgendamentos) {
     // Garantir que dadosAgendamentos é um array
     if (!Array.isArray(dadosAgendamentos)) {
-      console.warn('Dados de agendamentos não é um array:', dadosAgendamentos);
       return { consultas: [], exames: [] };
     }
-
-    console.log('Processando detalhamento para:', dadosAgendamentos.length, 'agendamentos');
 
     const consultasDetalhadas = dadosAgendamentos
       .filter(item => item.tipo_procedimento === 'consulta' || item.tipo === 'Consulta')
@@ -157,11 +141,6 @@ export const financeiroService = {
         data: this.formatarData(item.data_agendamento || item.data),
         status: this.traduzirStatus(item.status)
       }));
-
-    console.log('Detalhamento processado:', {
-      consultas: consultasDetalhadas.length,
-      exames: examesDetalhados.length
-    });
 
     return {
       consultas: consultasDetalhadas,
@@ -195,8 +174,7 @@ export const financeiroService = {
       }
       
       return dataObj.toLocaleDateString('pt-BR');
-    } catch (error) {
-      console.warn('Erro ao formatar data:', data, error);
+    } catch {
       return data || '';
     }
   },

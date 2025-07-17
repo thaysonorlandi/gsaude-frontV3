@@ -49,8 +49,8 @@ function Home() {
         if (response.success && response.data.value) {
           setLogoUrl(response.data.value);
         }
-      } catch (error) {
-        console.error('Erro ao carregar logo do sistema:', error);
+      } catch {
+        // Logo não encontrada, usar padrão
       }
     };
 
