@@ -10,7 +10,7 @@ export function usePermissions() {
     // Define as permissões de acordo com o tipo de usuário
     const USER_PERMISSIONS = {
       admin: {
-        pages: ['agendamento', 'agendados', 'financeiro', 'cadastros', 'configuracoes'],
+        pages: ['agendamento', 'agendados', 'financeiro', 'cadastros', 'relatorios', 'configuracoes'],
         canAccessAll: true
       },
       recepcao: {

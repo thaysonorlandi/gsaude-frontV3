@@ -14,6 +14,7 @@ import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import './home.css';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -160,7 +161,7 @@ function Home() {
                   </ListItem>
                 )}
               </List>
-              {(hasPermission('cadastros') || hasPermission('configuracoes')) && <Divider />}
+              {(hasPermission('cadastros') || hasPermission('relatorios') || hasPermission('configuracoes')) && <Divider />}
               <List>
                 {hasPermission('cadastros') && (
                   <ListItem disablePadding>
@@ -169,6 +170,16 @@ function Home() {
                         <PersonAddIcon />
                       </ListItemIcon>
                       <ListItemText primary="Cadastro" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
+                {hasPermission('relatorios') && (
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={() => handleMenuNavigation('/home/relatorios')}>
+                      <ListItemIcon>
+                        <BarChartIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Relatórios" />
                     </ListItemButton>
                   </ListItem>
                 )}

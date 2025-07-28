@@ -1,0 +1,265 @@
+/* Página de Relatórios - Material-UI */
+.relatorios-container {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.relatorios-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.relatorios-header h3 {
+  color: #1976d2;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Cards com gradiente */
+.filtros-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.37);
+  border-radius: 12px;
+}
+
+.filtros-card .MuiCardContent-root {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+}
+
+/* Botões customizados */
+.MuiButton-containedPrimary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none;
+  box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.MuiButton-containedPrimary:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.6);
+}
+
+.MuiButton-outlined {
+  border-color: #667eea !important;
+  color: #667eea !important;
+  transition: all 0.3s ease;
+}
+
+.MuiButton-outlined:hover {
+  border-color: #764ba2 !important;
+  color: #764ba2 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Cards de estatísticas */
+.estatisticas-card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border: none;
+  box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.37);
+  border-radius: 12px;
+}
+
+.estatisticas-card .MuiCardContent-root {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+}
+
+/* Papers de estatísticas */
+.MuiPaper-root {
+  transition: all 0.3s ease;
+}
+
+.MuiPaper-root:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(25, 118, 210, 0.2);
+}
+
+/* Tabelas */
+.MuiTable-root {
+  background: white;
+}
+
+.MuiTableHead-root .MuiTableRow-root {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+  color: white !important;
+  font-weight: 600;
+}
+
+.MuiTableBody-root .MuiTableRow-root:hover {
+  background-color: #f0f7ff;
+}
+
+/* Select customizado */
+.MuiSelect-root {
+  transition: all 0.3s ease;
+}
+
+.MuiSelect-root:hover {
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+}
+
+/* DatePicker customizado */
+.MuiTextField-root {
+  transition: all 0.3s ease;
+}
+
+.MuiTextField-root:hover {
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #1976d2;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+/* Loading container */
+.loading-container {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.loading-container .MuiCircularProgress-root {
+  margin-bottom: 16px;
+}
+
+/* Cards principais */
+.MuiCard-root {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.MuiCard-root:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Alerts/Notificações */
+.MuiAlert-root {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .relatorios-container {
+    padding: 16px;
+  }
+  
+  .MuiGrid-item {
+    margin-bottom: 16px;
+  }
+  
+  .MuiTable-root {
+    font-size: 12px;
+  }
+  
+  .MuiTableCell-root {
+    padding: 8px;
+  }
+}
+
+/* Animações */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.MuiCard-root {
+  animation: fadeInUp 0.5s ease;
+}
+
+/* Customização dos ícones */
+.MuiSvgIcon-root {
+  transition: all 0.3s ease;
+}
+
+.MuiButton-root:hover .MuiSvgIcon-root {
+  transform: scale(1.1);
+}
+
+/* Customização do container principal */
+.MuiBox-root {
+  transition: all 0.3s ease;
+}
+
+/* Estilo para impressão */
+@media print {
+  .relatorios-container {
+    background: white;
+    padding: 0;
+  }
+  
+  .MuiButton-root,
+  .filtros-card {
+    display: none !important;
+  }
+  
+  .MuiCard-root {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .MuiTable-root {
+    border: 1px solid #000;
+  }
+  
+  .MuiTableCell-root {
+    border: 1px solid #ccc;
+  }
+}
+
+/* Customização específica dos selects */
+.MuiFormControl-root {
+  margin-top: 8px;
+}
+
+.MuiInputLabel-root {
+  font-weight: 500;
+  color: #555;
+}
+
+.MuiMenuItem-root {
+  transition: all 0.2s ease;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: rgba(25, 118, 210, 0.08);
+  transform: translateX(4px);
+}
+
+/* Typography customizado */
+.MuiTypography-h4 {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.MuiTypography-h6 {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Stack customizado */
+.MuiStack-root {
+  align-items: center;
+}
