@@ -14,6 +14,7 @@ import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import './home.css';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -156,6 +157,16 @@ function Home() {
                         <CurrencyExchangeIcon />
                       </ListItemIcon>
                       <ListItemText primary="Financeiro" />
+                    </ListItemButton>
+                  </ListItem>
+                )}
+                {hasPermission('relatorios') && (
+                  <ListItem disablePadding>
+                    <ListItemButton onClick={() => handleMenuNavigation('/home/relatorios')}>
+                      <ListItemIcon>
+                        <AssessmentIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Relatórios" />
                     </ListItemButton>
                   </ListItem>
                 )}

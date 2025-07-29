@@ -1,609 +1,542 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Card,
-  CardContent,
+  Box,
+  Paper,
   Typography,
-  Select,
-  MenuItem,
+  Grid,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
   Button,
-  Grid,
-  Box,
-  Divider,
-  CircularProgress,
+  Card,
+  CardContent,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
+  Chip,
   Alert,
-  Stack,
-  Chip
+  CircularProgress
 } from '@mui/material';
-import {
-  Description as FileTextIcon,
-  Download as DownloadIcon,
-  CalendarToday as CalendarIcon,
-  Person as UserIcon,
-  AttachMoney as DollarIcon,
-  BarChart as BarChartIcon,
-  Group as TeamIcon,
-  LocalHospital as MedicineBoxIcon
-} from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { PictureAsPdf, Assessment, TrendingUp, Group, LocalHospital } from '@mui/icons-material';
 import dayjs from 'dayjs';
-import relatoriosService from '../../services/relatoriosService';
+import 'dayjs/locale/pt-br';
+// import relatoriosService from '../../services/relatoriosService'; // Comentado enquanto usamos dados mock
 import { PDFGenerator } from '../../utils/pdfGenerator';
 import './relatorios.css';
 
-export default function Relatorios() {
-  const [loading, setLoading] = useState(false);
+dayjs.locale('pt-br');
+
+const Relatorios = () => {
   const [tipoRelatorio, setTipoRelatorio] = useState('agendamentos');
-  const [filtros, setFiltros] = useState({
-    dataInicio: dayjs().subtract(30, 'days').format('YYYY-MM-DD'),
-    dataFim: dayjs().format('YYYY-MM-DD'),
-    medico_id: null,
-    especialidade_id: null,
-    tipo_procedimento: null,
-    filial_id: null
-  });
+  const [dataInicio, setDataInicio] = useState(dayjs().startOf('month'));
+  const [dataFim, setDataFim] = useState(dayjs().endOf('month'));
   const [dados, setDados] = useState([]);
   const [estatisticas, setEstatisticas] = useState({});
-  const [medicos, setMedicos] = useState([]);
-  const [especialidades, setEspecialidades] = useState([]);
-  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+  const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState({ show: false, message: '', severity: 'info' });
 
-  // Carregar dados iniciais
+  const showAlert = (message, severity = 'info') => {
+    setAlert({ show: true, message, severity });
+    setTimeout(() => setAlert({ show: false, message: '', severity: 'info' }), 5000);
+  };
+
+  // Função para gerar dados mock enquanto a API não está disponível
+  const gerarDadosMock = (tipo) => {
+    const dataAtual = dayjs();
+    
+    switch (tipo) {
+      case 'agendamentos':
+        return {
+          data: [
+            {
+              data: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
+              horario: '09:00',
+              paciente: 'João Silva',
+              medico: 'Dr. Carlos Pereira',
+              especialidade: 'Cardiologia',
+              status: 'confirmado'
+            },
+            {
+              data: dataAtual.subtract(2, 'day').format('YYYY-MM-DD'),
+              horario: '14:30',
+              paciente: 'Maria Santos',
+              medico: 'Dra. Ana Costa',
+              especialidade: 'Dermatologia',
+              status: 'realizada'
+            },
+            {
+              data: dataAtual.subtract(3, 'day').format('YYYY-MM-DD'),
+              horario: '10:15',
+              paciente: 'Pedro Oliveira',
+              medico: 'Dr. Roberto Lima',
+              especialidade: 'Ortopedia',
+              status: 'pendente'
+            }
+          ],
+          estatisticas: {
+            total: 15,
+            confirmados: 8,
+            pendentes: 4,
+            cancelados: 3
+          }
+        };
+      
+      case 'financeiro':
+        return {
+          data: [
+            {
+              data: dataAtual.subtract(1, 'day').format('YYYY-MM-DD'),
+              descricao: 'Consulta Cardiologia',
+              tipo: 'receita',
+              valor: 150.00,
+              status: 'realizada'
+            },
+            {
+              data: dataAtual.subtract(2, 'day').format('YYYY-MM-DD'),
+              descricao: 'Material Médico',
+              tipo: 'despesa',
+              valor: 250.00,
+              status: 'aguardando'
+            },
+            {
+              data: dataAtual.subtract(3, 'day').format('YYYY-MM-DD'),
+              descricao: 'Exame Dermatológico',
+              tipo: 'receita',
+              valor: 120.00,
+              status: 'realizada'
+            }
+          ],
+          estatisticas: {
+            receita: 2850.00,
+            despesa: 1200.00,
+            lucro: 1650.00
+          }
+        };
+      
+      case 'medicos':
+        return {
+          data: [
+            {
+              nome: 'Dr. Carlos Pereira',
+              especialidade: 'Cardiologia',
+              total_agendamentos: 25,
+              total_receita: 3750.00
+            },
+            {
+              nome: 'Dra. Ana Costa',
+              especialidade: 'Dermatologia',
+              total_agendamentos: 18,
+              total_receita: 2160.00
+            },
+            {
+              nome: 'Dr. Roberto Lima',
+              especialidade: 'Ortopedia',
+              total_agendamentos: 22,
+              total_receita: 3300.00
+            }
+          ],
+          estatisticas: {
+            total: 3,
+            total_agendamentos: 65,
+            total_receita: 9210.00
+          }
+        };
+      
+      case 'especialidades':
+        return {
+          data: [
+            {
+              nome: 'Cardiologia',
+              total_agendamentos: 25,
+              total_medicos: 1,
+              total_receita: 3750.00
+            },
+            {
+              nome: 'Dermatologia',
+              total_agendamentos: 18,
+              total_medicos: 1,
+              total_receita: 2160.00
+            },
+            {
+              nome: 'Ortopedia',
+              total_agendamentos: 22,
+              total_medicos: 1,
+              total_receita: 3300.00
+            }
+          ],
+          estatisticas: {
+            total: 3,
+            total_agendamentos: 65,
+            total_receita: 9210.00
+          }
+        };
+      
+      default:
+        return { data: [], estatisticas: {} };
+    }
+  };
+
   useEffect(() => {
-    carregarDadosIniciais();
-  }, []);
+    const carregarDados = async () => {
+      setLoading(true);
+      try {
+        // Dados mock enquanto a API não está disponível
+        const dadosMock = gerarDadosMock(tipoRelatorio);
+        
+        // Simular delay da API
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        setDados(dadosMock.data);
+        setEstatisticas(dadosMock.estatisticas);
+        
+        /* 
+        // Código para quando a API estiver disponível:
+        const params = {
+          data_inicio: dataInicio.format('YYYY-MM-DD'),
+          data_fim: dataFim.format('YYYY-MM-DD')
+        };
 
-  const carregarDadosIniciais = async () => {
-    try {
-      // Aqui você pode carregar médicos, especialidades e filiais
-      // Por enquanto, vou simular os dados
-      setMedicos([
-        { id: 1, nome: 'Dr. João Silva' },
-        { id: 2, nome: 'Dra. Maria Santos' },
-        { id: 3, nome: 'Dr. Pedro Oliveira' }
-      ]);
-      
-      setEspecialidades([
-        { id: 1, nome: 'Cardiologia' },
-        { id: 2, nome: 'Neurologia' },
-        { id: 3, nome: 'Pediatria' }
-      ]);
-    } catch (error) {
-      console.error('Erro ao carregar dados iniciais:', error);
-      setNotification({ open: true, message: 'Erro ao carregar dados iniciais', severity: 'error' });
-    }
-  };
+        let response;
+        switch (tipoRelatorio) {
+          case 'agendamentos':
+            response = await relatoriosService.getRelatorioAgendamentos(params);
+            break;
+          case 'financeiro':
+            response = await relatoriosService.getRelatorioFinanceiro(params);
+            break;
+          case 'medicos':
+            response = await relatoriosService.getRelatorioMedicos(params);
+            break;
+          case 'especialidades':
+            response = await relatoriosService.getRelatorioEspecialidades(params);
+            break;
+          default:
+            response = { data: [], estatisticas: {} };
+        }
 
-  const buscarDados = async () => {
-    setLoading(true);
-    try {
-      let resultado = [];
-      
-      switch (tipoRelatorio) {
-        case 'agendamentos':
-          resultado = await relatoriosService.getRelatorioAgendamentos(filtros);
-          break;
-        case 'financeiro':
-          resultado = await relatoriosService.getRelatorioFinanceiro(filtros);
-          break;
-        case 'medicos':
-          resultado = await relatoriosService.getRelatorioMedicos(filtros);
-          break;
-        case 'especialidades':
-          resultado = await relatoriosService.getRelatorioEspecialidades(filtros);
-          break;
-        case 'consultas-dia':
-          resultado = await relatoriosService.getRelatorioConsultasPorDia(filtros);
-          break;
-        case 'exames-dia':
-          resultado = await relatoriosService.getRelatorioExamesPorDia(filtros);
-          break;
-        case 'consolidado':
-          resultado = await relatoriosService.getRelatorioConsolidado(filtros);
-          break;
-        default:
-          resultado = [];
+        setDados(response.data || []);
+        setEstatisticas(response.estatisticas || {});
+        */
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        showAlert('Erro ao carregar dados do relatório', 'error');
+      } finally {
+        setLoading(false);
       }
-      
-      setDados(resultado);
-      calcularEstatisticas(resultado);
-    } catch (error) {
-      console.error('Erro ao buscar dados:', error);
-      setNotification({ open: true, message: 'Erro ao carregar relatório', severity: 'error' });
-      // Simular dados para demonstração
-      simularDados();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const simularDados = () => {
-    // Dados simulados para demonstração
-    const dadosSimulados = [
-      {
-        id: 1,
-        data_agendamento: '2025-01-15',
-        hora_agendamento: '09:00',
-        nome_paciente: 'João Silva',
-        medico: { nome: 'Dr. Carlos Mendes' },
-        especialidade: { nome: 'Cardiologia' },
-        tipo_procedimento: 'consulta',
-        status: 'Confirmado',
-        valor: 150.00
-      },
-      {
-        id: 2,
-        data_agendamento: '2025-01-15',
-        hora_agendamento: '10:00',
-        nome_paciente: 'Maria Santos',
-        medico: { nome: 'Dra. Ana Costa' },
-        especialidade: { nome: 'Neurologia' },
-        tipo_procedimento: 'exame',
-        status: 'Realizado',
-        valor: 200.00
-      },
-      {
-        id: 3,
-        data_agendamento: '2025-01-16',
-        hora_agendamento: '14:00',
-        nome_paciente: 'Pedro Oliveira',
-        medico: { nome: 'Dr. Roberto Lima' },
-        especialidade: { nome: 'Pediatria' },
-        tipo_procedimento: 'consulta',
-        status: 'Agendado',
-        valor: 120.00
-      }
-    ];
-    
-    setDados(dadosSimulados);
-    calcularEstatisticas(dadosSimulados);
-  };
-
-  const calcularEstatisticas = (dados) => {
-    const stats = {
-      total: dados.length,
-      consultas: dados.filter(item => item.tipo_procedimento === 'consulta').length,
-      exames: dados.filter(item => item.tipo_procedimento === 'exame').length,
-      receitaTotal: dados.reduce((sum, item) => sum + (item.valor || 0), 0),
-      medicosUnicos: new Set(dados.map(item => item.medico?.nome)).size,
-      especialidadesUnicas: new Set(dados.map(item => item.especialidade?.nome)).size
     };
-    
-    setEstatisticas(stats);
-  };
+
+    carregarDados();
+  }, [tipoRelatorio, dataInicio, dataFim]);
 
   const gerarPDF = () => {
     try {
-      const pdfGen = new PDFGenerator();
+      const pdfGenerator = new PDFGenerator();
+      const titulo = getTituloRelatorio();
+      const periodo = `${dataInicio.format('DD/MM/YYYY')} a ${dataFim.format('DD/MM/YYYY')}`;
+      const filtros = { periodo, titulo };
       
+      // Chamar o método específico baseado no tipo de relatório
       switch (tipoRelatorio) {
         case 'agendamentos':
-          pdfGen.gerarRelatorioAgendamentos(dados, filtros);
+          pdfGenerator.gerarRelatorioAgendamentos(dados, filtros);
           break;
         case 'financeiro':
-          pdfGen.gerarRelatorioFinanceiro(dados, filtros);
+          pdfGenerator.gerarRelatorioFinanceiro(dados, filtros);
           break;
         case 'medicos':
-          pdfGen.gerarRelatorioPorMedicos(dados, filtros);
+          pdfGenerator.gerarRelatorioPorMedicos(dados, filtros);
           break;
         case 'especialidades':
-          pdfGen.gerarRelatorioPorEspecialidades(dados, filtros);
-          break;
-        case 'consolidado':
-          pdfGen.gerarRelatorioConsolidado({ agendamentos: dados, financeiro: dados }, filtros);
+          pdfGenerator.gerarRelatorioPorEspecialidades(dados, filtros);
           break;
         default:
-          pdfGen.gerarRelatorioAgendamentos(dados, filtros);
+          throw new Error('Tipo de relatório não suportado');
       }
       
-      const filename = `relatorio_${tipoRelatorio}_${dayjs().format('YYYY-MM-DD_HH-mm')}.pdf`;
-      pdfGen.save(filename);
-      
-      setNotification({ open: true, message: 'PDF gerado com sucesso!', severity: 'success' });
+      showAlert('PDF gerado com sucesso!', 'success');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      setNotification({ open: true, message: 'Erro ao gerar PDF', severity: 'error' });
+      showAlert('Erro ao gerar PDF', 'error');
     }
   };
 
-  const handleFiltroChange = (campo, valor) => {
-    setFiltros(prev => ({
-      ...prev,
-      [campo]: valor
-    }));
+  const getTituloRelatorio = () => {
+    const titulos = {
+      agendamentos: 'Relatório de Agendamentos',
+      financeiro: 'Relatório Financeiro',
+      medicos: 'Relatório de Médicos',
+      especialidades: 'Relatório de Especialidades'
+    };
+    return titulos[tipoRelatorio] || 'Relatório';
   };
 
-  const handleCloseNotification = () => {
-    setNotification({ ...notification, open: false });
-  };
+  const renderEstatisticas = () => {
+    if (!estatisticas || Object.keys(estatisticas).length === 0) return null;
 
-  const getColumns = () => {
-    switch (tipoRelatorio) {
-      case 'agendamentos':
-        return [
-          {
-            title: 'Data',
-            dataIndex: 'data_agendamento',
-            key: 'data',
-            render: (date) => dayjs(date).format('DD/MM/YYYY')
-          },
-          {
-            title: 'Hora',
-            dataIndex: 'hora_agendamento',
-            key: 'hora'
-          },
-          {
-            title: 'Paciente',
-            dataIndex: 'nome_paciente',
-            key: 'paciente'
-          },
-          {
-            title: 'Médico',
-            dataIndex: 'medico.nome',
-            key: 'medico'
-          },
-          {
-            title: 'Especialidade',
-            dataIndex: 'especialidade.nome',
-            key: 'especialidade'
-          },
-          {
-            title: 'Tipo',
-            dataIndex: 'tipo_procedimento',
-            key: 'tipo',
-            render: (tipo) => tipo === 'consulta' ? 'Consulta' : 'Exame'
-          },
-          {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status'
-          }
-        ];
-      
-      case 'financeiro':
-        return [
-          {
-            title: 'Data',
-            dataIndex: 'data_agendamento',
-            key: 'data',
-            render: (date) => dayjs(date).format('DD/MM/YYYY')
-          },
-          {
-            title: 'Paciente',
-            dataIndex: 'nome_paciente',
-            key: 'paciente'
-          },
-          {
-            title: 'Tipo',
-            dataIndex: 'tipo_procedimento',
-            key: 'tipo',
-            render: (tipo) => tipo === 'consulta' ? 'Consulta' : 'Exame'
-          },
-          {
-            title: 'Médico',
-            dataIndex: 'medico.nome',
-            key: 'medico'
-          },
-          {
-            title: 'Valor',
-            dataIndex: 'valor',
-            key: 'valor',
-            render: (valor) => `R$ ${(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-          }
-        ];
-      
-      default:
-        return [];
-    }
-  };
-
-  const tiposRelatorio = [
-    { value: 'agendamentos', label: 'Relatório de Agendamentos', icon: <CalendarIcon /> },
-    { value: 'financeiro', label: 'Relatório Financeiro', icon: <DollarIcon /> },
-    { value: 'medicos', label: 'Relatório por Médicos', icon: <UserIcon /> },
-    { value: 'especialidades', label: 'Relatório por Especialidades', icon: <MedicineBoxIcon /> },
-    { value: 'consultas-dia', label: 'Consultas por Dia', icon: <TeamIcon /> },
-    { value: 'exames-dia', label: 'Exames por Dia', icon: <BarChartIcon /> },
-    { value: 'consolidado', label: 'Relatório Consolidado', icon: <FileTextIcon /> }
-  ];
-
-  return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box className="relatorios-container" sx={{ p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-        <Card>
-          <CardContent>
-            <Box textAlign="center" mb={2}>
-              <Typography variant="h4" component="h1" color="primary" gutterBottom>
-                <FileTextIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Relatórios Gerenciais
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Gere relatórios detalhados do sistema em PDF
-              </Typography>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            {/* Filtros */}
-            <Card variant="outlined" sx={{ mb: 2 }}>
+    return (
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        {Object.entries(estatisticas).map(([key, value]) => (
+          <Grid item xs={12} sm={6} md={3} key={key}>
+            <Card className="estatistica-card">
               <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Filtros
-                </Typography>
-                
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={4}>
-                    <FormControl fullWidth>
-                      <InputLabel>Tipo de Relatório</InputLabel>
-                      <Select
-                        value={tipoRelatorio}
-                        onChange={(e) => setTipoRelatorio(e.target.value)}
-                        label="Tipo de Relatório"
-                      >
-                        {tiposRelatorio.map(tipo => (
-                          <MenuItem key={tipo.value} value={tipo.value}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {tipo.icon} {tipo.label}
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <DatePicker
-                      label="Data Início"
-                      value={dayjs(filtros.dataInicio)}
-                      onChange={(date) => handleFiltroChange('dataInicio', date.format('YYYY-MM-DD'))}
-                      slotProps={{ textField: { fullWidth: true } }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <DatePicker
-                      label="Data Fim"
-                      value={dayjs(filtros.dataFim)}
-                      onChange={(date) => handleFiltroChange('dataFim', date.format('YYYY-MM-DD'))}
-                      slotProps={{ textField: { fullWidth: true } }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <FormControl fullWidth>
-                      <InputLabel>Médico</InputLabel>
-                      <Select
-                        value={filtros.medico_id || ''}
-                        onChange={(e) => handleFiltroChange('medico_id', e.target.value)}
-                        label="Médico"
-                      >
-                        <MenuItem value="">Todos os médicos</MenuItem>
-                        {medicos.map(medico => (
-                          <MenuItem key={medico.id} value={medico.id}>
-                            {medico.nome}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <FormControl fullWidth>
-                      <InputLabel>Especialidade</InputLabel>
-                      <Select
-                        value={filtros.especialidade_id || ''}
-                        onChange={(e) => handleFiltroChange('especialidade_id', e.target.value)}
-                        label="Especialidade"
-                      >
-                        <MenuItem value="">Todas as especialidades</MenuItem>
-                        {especialidades.map(esp => (
-                          <MenuItem key={esp.id} value={esp.id}>
-                            {esp.nome}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <FormControl fullWidth>
-                      <InputLabel>Tipo de Procedimento</InputLabel>
-                      <Select
-                        value={filtros.tipo_procedimento || ''}
-                        onChange={(e) => handleFiltroChange('tipo_procedimento', e.target.value)}
-                        label="Tipo de Procedimento"
-                      >
-                        <MenuItem value="">Todos os tipos</MenuItem>
-                        <MenuItem value="consulta">Consulta</MenuItem>
-                        <MenuItem value="exame">Exame</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </Grid>
-
-                <Box sx={{ textAlign: 'center', mt: 2 }}>
-                  <Stack direction="row" spacing={2} justifyContent="center">
-                    <Button 
-                      variant="contained"
-                      onClick={buscarDados}
-                      disabled={loading}
-                      startIcon={loading ? <CircularProgress size={20} /> : <BarChartIcon />}
-                    >
-                      Gerar Relatório
-                    </Button>
-                    
-                    <Button 
-                      variant="outlined"
-                      onClick={gerarPDF}
-                      disabled={dados.length === 0}
-                      startIcon={<DownloadIcon />}
-                    >
-                      Baixar PDF
-                    </Button>
-                  </Stack>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  {getIconeEstatistica(key)}
+                  <Typography variant="h6" component="div" sx={{ ml: 1 }}>
+                    {formatarTituloEstatistica(key)}
+                  </Typography>
                 </Box>
+                <Typography variant="h4" color="primary">
+                  {formatarValorEstatistica(key, value)}
+                </Typography>
               </CardContent>
             </Card>
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
 
-            {/* Estatísticas */}
-            {Object.keys(estatisticas).length > 0 && (
-              <Card variant="outlined" sx={{ mb: 2 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Estatísticas
-                  </Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6} md={2}>
-                      <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h6" color="primary">
-                          {estatisticas.total}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Total
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6} md={2}>
-                      <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h6" color="primary">
-                          {estatisticas.consultas}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Consultas
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6} md={2}>
-                      <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h6" color="primary">
-                          {estatisticas.exames}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Exames
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6} md={2}>
-                      <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h6" color="primary">
-                          R$ {estatisticas.receitaTotal?.toFixed(2)}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Receita Total
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6} md={2}>
-                      <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h6" color="primary">
-                          {estatisticas.medicosUnicos}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Médicos
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                    <Grid item xs={6} md={2}>
-                      <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h6" color="primary">
-                          {estatisticas.especialidadesUnicas}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Especialidades
-                        </Typography>
-                      </Paper>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            )}
+  const getIconeEstatistica = (key) => {
+    const icones = {
+      total: <Assessment color="primary" />,
+      confirmados: <TrendingUp color="success" />,
+      pendentes: <Group color="warning" />,
+      cancelados: <LocalHospital color="error" />,
+      receita: <TrendingUp color="success" />,
+      despesa: <LocalHospital color="error" />,
+      lucro: <Assessment color="primary" />
+    };
+    return icones[key] || <Assessment color="primary" />;
+  };
 
-            {/* Tabela de dados */}
-            {dados.length > 0 && (
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Dados do Relatório
-                  </Typography>
-                  <TableContainer component={Paper}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          {getColumns().map((column) => (
-                            <TableCell key={column.key}>{column.title}</TableCell>
-                          ))}
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {dados.map((row) => (
-                          <TableRow key={row.id}>
-                            {getColumns().map((column) => (
-                              <TableCell key={column.key}>
-                                {column.render 
-                                  ? column.render(column.dataIndex.includes('.') 
-                                      ? column.dataIndex.split('.').reduce((obj, key) => obj?.[key], row)
-                                      : row[column.dataIndex])
-                                  : (column.dataIndex.includes('.') 
-                                      ? column.dataIndex.split('.').reduce((obj, key) => obj?.[key], row)
-                                      : row[column.dataIndex])
-                                }
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </CardContent>
-              </Card>
-            )}
+  const formatarTituloEstatistica = (key) => {
+    const titulos = {
+      total: 'Total',
+      confirmados: 'Confirmados',
+      pendentes: 'Pendentes',
+      cancelados: 'Cancelados',
+      receita: 'Receita',
+      despesa: 'Despesa',
+      lucro: 'Lucro'
+    };
+    return titulos[key] || key;
+  };
 
-            {/* Loading */}
-            {loading && (
-              <Box sx={{ textAlign: 'center', mt: 4 }}>
-                <CircularProgress size={60} />
-                <Typography variant="body1" sx={{ mt: 2 }}>
-                  Carregando relatório...
-                </Typography>
-              </Box>
-            )}
+  const formatarValorEstatistica = (key, value) => {
+    if (['receita', 'despesa', 'lucro'].includes(key)) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    }
+    return value;
+  };
 
-            {/* Mensagem quando não há dados */}
-            {!loading && dados.length === 0 && (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                Nenhum dado encontrado. Clique em 'Gerar Relatório' para carregar os dados ou ajuste os filtros.
-              </Alert>
-            )}
+  const renderTabela = () => {
+    if (!dados || dados.length === 0) {
+      return (
+        <Paper sx={{ p: 3, textAlign: 'center' }}>
+          <Typography>Nenhum dado encontrado para o período selecionado</Typography>
+        </Paper>
+      );
+    }
 
-            {/* Notificação */}
-            {notification.open && (
-              <Alert 
-                severity={notification.severity} 
-                onClose={handleCloseNotification}
-                sx={{ 
-                  position: 'fixed', 
-                  top: 20, 
-                  right: 20, 
-                  zIndex: 9999,
-                  minWidth: 300
-                }}
+    const colunas = getColunas();
+
+    return (
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              {colunas.map((coluna) => (
+                <TableCell key={coluna.id} sx={{ fontWeight: 'bold' }}>
+                  {coluna.label}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {dados.map((item, index) => (
+              <TableRow key={index}>
+                {colunas.map((coluna) => (
+                  <TableCell key={coluna.id}>
+                    {renderCelula(item, coluna)}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  };
+
+  const getColunas = () => {
+    const colunasPorTipo = {
+      agendamentos: [
+        { id: 'data', label: 'Data' },
+        { id: 'horario', label: 'Horário' },
+        { id: 'paciente', label: 'Paciente' },
+        { id: 'medico', label: 'Médico' },
+        { id: 'especialidade', label: 'Especialidade' },
+        { id: 'status', label: 'Status' }
+      ],
+      financeiro: [
+        { id: 'data', label: 'Data' },
+        { id: 'descricao', label: 'Descrição' },
+        { id: 'tipo', label: 'Tipo' },
+        { id: 'valor', label: 'Valor' },
+        { id: 'status', label: 'Status' }
+      ],
+      medicos: [
+        { id: 'nome', label: 'Nome' },
+        { id: 'especialidade', label: 'Especialidade' },
+        { id: 'total_agendamentos', label: 'Total Agendamentos' },
+        { id: 'total_receita', label: 'Total Receita' }
+      ],
+      especialidades: [
+        { id: 'nome', label: 'Especialidade' },
+        { id: 'total_agendamentos', label: 'Total Agendamentos' },
+        { id: 'total_medicos', label: 'Total Médicos' },
+        { id: 'total_receita', label: 'Total Receita' }
+      ]
+    };
+
+    return colunasPorTipo[tipoRelatorio] || [];
+  };
+
+  const renderCelula = (item, coluna) => {
+    const valor = item[coluna.id];
+
+    switch (coluna.id) {
+      case 'status':
+        return (
+          <Chip
+            label={valor}
+            color={getCorStatus(valor)}
+            size="small"
+          />
+        );
+      case 'data':
+        return dayjs(valor).format('DD/MM/YYYY');
+      case 'valor':
+      case 'total_receita':
+        return new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(valor);
+      case 'tipo':
+        return (
+          <Chip
+            label={valor}
+            color={valor === 'receita' ? 'success' : 'error'}
+            size="small"
+          />
+        );
+      default:
+        return valor;
+    }
+  };
+
+  const getCorStatus = (status) => {
+    const cores = {
+      'confirmado': 'success',
+      'pendente': 'warning',
+      'cancelado': 'error',
+      'realizada': 'success',
+      'aguardando': 'warning'
+    };
+    return cores[status?.toLowerCase()] || 'default';
+  };
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+      <Box className="relatorios-container">
+        {alert.show && (
+          <Alert severity={alert.severity} sx={{ mb: 2 }}>
+            {alert.message}
+          </Alert>
+        )}
+
+        <Paper className="relatorios-header">
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Assessment sx={{ fontSize: 40, color: '#1976d2', mr: 2 }} />
+            <Typography variant="h4" component="h1" sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+              Relatórios Gerenciais
+            </Typography>
+          </Box>
+
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Tipo de Relatório</InputLabel>
+                <Select
+                  value={tipoRelatorio}
+                  label="Tipo de Relatório"
+                  onChange={(e) => setTipoRelatorio(e.target.value)}
+                >
+                  <MenuItem value="agendamentos">Agendamentos</MenuItem>
+                  <MenuItem value="financeiro">Financeiro</MenuItem>
+                  <MenuItem value="medicos">Médicos</MenuItem>
+                  <MenuItem value="especialidades">Especialidades</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} md={3}>
+              <DatePicker
+                label="Data Início"
+                value={dataInicio}
+                onChange={setDataInicio}
+                format="DD/MM/YYYY"
+                sx={{ width: '100%' }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={3}>
+              <DatePicker
+                label="Data Fim"
+                value={dataFim}
+                onChange={setDataFim}
+                format="DD/MM/YYYY"
+                sx={{ width: '100%' }}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={3}>
+              <Button
+                variant="contained"
+                startIcon={<PictureAsPdf />}
+                onClick={gerarPDF}
+                fullWidth
+                disabled={loading || !dados.length}
               >
-                {notification.message}
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
+                Gerar PDF
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            {renderEstatisticas()}
+            {renderTabela()}
+          </>
+        )}
       </Box>
     </LocalizationProvider>
   );
-}
+};
+
+export default Relatorios;

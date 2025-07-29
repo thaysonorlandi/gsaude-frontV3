@@ -1,190 +1,67 @@
-/* Página de Relatórios - Material-UI */
 .relatorios-container {
   padding: 24px;
-  background-color: #f5f5f5;
-  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .relatorios-header {
-  text-align: center;
-  margin-bottom: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
-.relatorios-header h3 {
-  color: #1976d2;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-/* Cards com gradiente */
-.filtros-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.37);
+.estatistica-card {
+  height: 100%;
+  transition: none;
   border-radius: 12px;
 }
 
-.filtros-card .MuiCardContent-root {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
+.estatistica-card .MuiCardContent-root {
+  padding: 20px;
 }
 
-/* Botões customizados */
-.MuiButton-containedPrimary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border: none;
-  box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
-}
-
-.MuiButton-outlined {
-  border-color: #667eea !important;
-  color: #667eea !important;
-}
-
-/* Cards de estatísticas */
-.estatisticas-card {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  border: none;
-  box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.37);
-  border-radius: 12px;
-}
-
-.estatisticas-card .MuiCardContent-root {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-}
-
-/* Tabelas */
-.MuiTable-root {
-  background: white;
-}
-
-.MuiTableHead-root .MuiTableRow-root {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.relatorios-tabela {
+  margin-top: 24px;
 }
 
 .MuiTableHead-root .MuiTableCell-root {
-  color: white !important;
+  background-color: #f5f5f5;
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
-.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
-  border-color: #d9d9d9;
+.MuiTableBody-root .MuiTableRow-root {
+  background-color: #fff;
 }
 
-.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: #1976d2;
-  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+.MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
+  background-color: #fafafa;
 }
 
-/* Loading container */
-.loading-container {
+.MuiTableCell-root {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 16px;
+}
+
+.relatorios-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.relatorios-empty {
   text-align: center;
-  padding: 60px 0;
+  padding: 40px;
+  color: #666;
 }
 
-.loading-container .MuiCircularProgress-root {
-  margin-bottom: 16px;
-}
-
-/* Cards principais */
-.MuiCard-root {
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* Alerts/Notificações */
-.MuiAlert-root {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Responsive */
 @media (max-width: 768px) {
   .relatorios-container {
     padding: 16px;
   }
   
-  .MuiGrid-item {
-    margin-bottom: 16px;
+  .relatorios-header {
+    padding: 16px;
   }
-  
-  .MuiTable-root {
-    font-size: 12px;
-  }
-  
-  .MuiTableCell-root {
-    padding: 8px;
-  }
-}
-
-/* Animações */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.MuiCard-root {
-  animation: fadeInUp 0.5s ease;
-}
-
-/* Estilo para impressão */
-@media print {
-  .relatorios-container {
-    background: white;
-    padding: 0;
-  }
-  
-  .MuiButton-root,
-  .filtros-card {
-    display: none !important;
-  }
-  
-  .MuiCard-root {
-    box-shadow: none;
-    border: 1px solid #000;
-  }
-  
-  .MuiTable-root {
-    border: 1px solid #000;
-  }
-  
-  .MuiTableCell-root {
-    border: 1px solid #ccc;
-  }
-}
-
-/* Customização específica dos selects */
-.MuiFormControl-root {
-  margin-top: 8px;
-}
-
-.MuiInputLabel-root {
-  font-weight: 500;
-  color: #555;
-}
-
-/* Typography customizado */
-.MuiTypography-h4 {
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.MuiTypography-h6 {
-  font-weight: 600;
-  color: #333;
-}
-
-/* Stack customizado */
-.MuiStack-root {
-  align-items: center;
 }
