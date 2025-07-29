@@ -5,7 +5,6 @@ import Agendamento from '../pages/agendamento/agendamento.jsx';
 import Agendados from '../pages/agendados/agendados.jsx';
 import Financeiro from '../pages/financeiro/financeiro.jsx';
 import Cadastros from '../pages/cadastros/cadastros.jsx';
-import Relatorios from '../pages/relatorios/relatorios.jsx';
 import ProtectedRoute from '../components/ProtectedRoute.jsx';
 
 const router = createBrowserRouter([
@@ -50,14 +49,6 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredPage="cadastros">
             <Cadastros />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'relatorios',
-        element: (
-          <ProtectedRoute requiredPage="relatorios">
-            <Relatorios />
           </ProtectedRoute>
         ),
       },
