@@ -58,6 +58,7 @@ export default function VerificarAgendamentos() {
   const [medicoFiltro, setMedicoFiltro] = useState("");
   const [statusFiltro, setStatusFiltro] = useState(""); 
   const [dataFiltro, setDataFiltro] = useState(null);
+  const [periodoFiltro, setPeriodoFiltro] = useState("");
   const [tabValue, setTabValue] = useState(0);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -131,7 +132,24 @@ export default function VerificarAgendamentos() {
       if (exameFiltro && item.tipo === "Exame" && item.exame !== exameFiltro) return false;
       if (medicoFiltro && item.medico_nome !== medicoFiltro) return false;
       if (statusFiltro && item.status !== statusFiltro) return false;
+      
+      // Filtro específico por data
       if (dataFiltro && dayjs(item.data).format('YYYY-MM-DD') !== dataFiltro.format('YYYY-MM-DD')) return false;
+      
+      // Filtro por período rápido
+      if (periodoFiltro) {
+        const dataItem = dayjs(item.data);
+        const hoje = dayjs();
+        
+        if (periodoFiltro === 'hoje') {
+          if (!dataItem.isSame(hoje, 'day')) return false;
+        } else if (periodoFiltro === 'semana') {
+          if (!dataItem.isSame(hoje, 'week')) return false;
+        } else if (periodoFiltro === 'mes') {
+          if (!dataItem.isSame(hoje, 'month')) return false;
+        }
+      }
+      
       return true;
     })
     .sort((a, b) => {
@@ -603,6 +621,21 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+                  <DatePicker
+                    label="Filtrar por Data"
+                    value={dataFiltro}
+                    onChange={setDataFiltro}
+                    format="DD/MM/YYYY"
+                    sx={{ width: '100%' }}
+                    slotProps={{
+                      field: { clearable: true },
+                      textField: { size: 'small' }
+                    }}
+                  />
+                </LocalizationProvider>
+              </Grid>
             </>
           )}
 
@@ -643,24 +676,68 @@ export default function VerificarAgendamentos() {
                   </Select>
                 </FormControl>
               </Grid>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
+                  <DatePicker
+                    label="Filtrar por Data"
+                    value={dataFiltro}
+                    onChange={setDataFiltro}
+                    format="DD/MM/YYYY"
+                    sx={{ width: '100%' }}
+                    slotProps={{
+                      field: { clearable: true },
+                      textField: { size: 'small' }
+                    }}
+                  />
+                </LocalizationProvider>
+              </Grid>
             </>
           )}
           
-          {/* Filtro por Data - sempre visível */}
-          <Grid size={{ xs: 12, md: 3 }}>
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-              <DatePicker
-                label="Filtrar por Data"
-                value={dataFiltro}
-                onChange={setDataFiltro}
-                format="DD/MM/YYYY"
-                sx={{ width: '100%' }}
-                slotProps={{
-                  field: { clearable: true },
-                  textField: { size: 'small' }
+          {/* Filtros rápidos por período */}
+          <Grid size={{ xs: 12 }}>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+              <Button
+                variant={periodoFiltro === 'hoje' ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => {
+                  setPeriodoFiltro(periodoFiltro === 'hoje' ? '' : 'hoje');
+                  setDataFiltro(null); // Limpa filtro específico
                 }}
-              />
-            </LocalizationProvider>
+              >
+                Hoje
+              </Button>
+              <Button
+                variant={periodoFiltro === 'semana' ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => {
+                  setPeriodoFiltro(periodoFiltro === 'semana' ? '' : 'semana');
+                  setDataFiltro(null); // Limpa filtro específico
+                }}
+              >
+                Esta Semana
+              </Button>
+              <Button
+                variant={periodoFiltro === 'mes' ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => {
+                  setPeriodoFiltro(periodoFiltro === 'mes' ? '' : 'mes');
+                  setDataFiltro(null); // Limpa filtro específico
+                }}
+              >
+                Este Mês
+              </Button>
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => {
+                  setPeriodoFiltro('');
+                  setDataFiltro(null);
+                }}
+              >
+                Limpar Filtros
+              </Button>
+            </Box>
           </Grid>
         </Grid>
         
@@ -670,7 +747,7 @@ export default function VerificarAgendamentos() {
           </Box>
         ) : (
           <>
-            <Typography variant="h6" className="agenda-titulo-dia" style={{marginTop: 24}}>
+            <Typography variant="h6" className="agenda-titulo-dia" style={{marginTop: 8}}>
               Agendamentos
             </Typography>
             <List>

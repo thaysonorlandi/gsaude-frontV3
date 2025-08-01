@@ -1,96 +1,120 @@
 import api from './api';
 
-class RelatoriosService {
-  // Relatórios de agendamentos
-  async getRelatorioAgendamentos(filtros) {
+const relatoriosService = {
+  // Relatórios específicos por tipo
+  getExamesPorTipo: async (params) => {
     try {
-      const response = await api.get('/relatorios/agendamentos', {
-        params: filtros
-      });
+      const response = await api.get('/relatorios/exames-por-tipo', { params });
       return response.data;
     } catch (error) {
-      console.error('Erro ao buscar relatório de agendamentos:', error);
+      console.error('Erro ao buscar relatório de exames:', error);
       throw error;
     }
-  }
+  },
 
-  // Relatórios por médicos
-  async getRelatorioMedicos(filtros) {
+  getConsultasPorEspecialidade: async (params) => {
     try {
-      const response = await api.get('/relatorios/medicos', {
-        params: filtros
-      });
+      const response = await api.get('/relatorios/consultas-por-especialidade', { params });
       return response.data;
     } catch (error) {
-      console.error('Erro ao buscar relatório de médicos:', error);
+      console.error('Erro ao buscar relatório de consultas:', error);
       throw error;
     }
-  }
+  },
 
-  // Relatórios por especialidades
-  async getRelatorioEspecialidades(filtros) {
+  getRelatorioConsolidado: async (params) => {
     try {
-      const response = await api.get('/relatorios/especialidades', {
-        params: filtros
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar relatório de especialidades:', error);
-      throw error;
-    }
-  }
-
-  // Relatórios financeiros
-  async getRelatorioFinanceiro(filtros) {
-    try {
-      const response = await api.get('/relatorios/financeiro', {
-        params: filtros
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar relatório financeiro:', error);
-      throw error;
-    }
-  }
-
-  // Relatório consolidado por período
-  async getRelatorioConsolidado(filtros) {
-    try {
-      const response = await api.get('/relatorios/consolidado', {
-        params: filtros
-      });
+      const response = await api.get('/relatorios/consolidado', { params });
       return response.data;
     } catch (error) {
       console.error('Erro ao buscar relatório consolidado:', error);
       throw error;
     }
-  }
+  },
 
-  // Relatório de consultas por dia
-  async getRelatorioConsultasPorDia(filtros) {
+  // Endpoints para dados dos filtros
+  getProcedimentos: async () => {
     try {
-      const response = await api.get('/relatorios/consultas-dia', {
-        params: filtros
-      });
+      const response = await api.get('/relatorios/procedimentos');
       return response.data;
     } catch (error) {
-      console.error('Erro ao buscar relatório de consultas por dia:', error);
+      console.error('Erro ao buscar procedimentos:', error);
+      throw error;
+    }
+  },
+
+  getEspecialidades: async () => {
+    try {
+      const response = await api.get('/relatorios/especialidades');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar especialidades:', error);
+      throw error;
+    }
+  },
+
+  getConvenios: async () => {
+    try {
+      const response = await api.get('/relatorios/convenios');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar convênios:', error);
+      throw error;
+    }
+  },
+
+  // Métodos legados (mantidos para compatibilidade)
+  getRelatorioAgendamentos: async (params) => {
+    try {
+      const response = await api.get('/relatorios/agendamentos', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar relatório de agendamentos:', error);
+      throw error;
+    }
+  },
+
+  getRelatorioFinanceiro: async (params) => {
+    try {
+      const response = await api.get('/relatorios/financeiro', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar relatório financeiro:', error);
+      throw error;
+    }
+  },
+
+  getRelatorioPorMedicos: async (params) => {
+    try {
+      const response = await api.get('/relatorios/medicos', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar relatório de médicos:', error);
+      throw error;
+    }
+  },
+
+  // Novo método para relatório de agendamentos do dia
+  getRelatorioAgendamentosDia: async (params) => {
+    try {
+      const response = await api.get('/relatorios/agendamentos-dia', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar relatório de agendamentos do dia:', error);
+      throw error;
+    }
+  },
+
+  // Método para buscar dados do sistema para relatórios
+  getDadosRelatorios: async () => {
+    try {
+      const response = await api.get('/system-configs/relatorios/dados');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar dados do sistema:', error);
       throw error;
     }
   }
+};
 
-  // Relatório de exames por dia
-  async getRelatorioExamesPorDia(filtros) {
-    try {
-      const response = await api.get('/relatorios/exames-dia', {
-        params: filtros
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar relatório de exames por dia:', error);
-      throw error;
-    }
-  }
-}
-
-export default new RelatoriosService();
+export default relatoriosService;

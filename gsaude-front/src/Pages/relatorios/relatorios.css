@@ -1,13 +1,77 @@
 .relatorios-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 20px;
+  width: 100%;
+}
+
+.relatorios-paper {
+  padding: 20px;
+  height: 100%;
+}
+
+.relatorios-title {
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 20px !important;
+  font-weight: 500 !important;
+  color: #1976d2 !important;
+}
+
+.relatorios-icon {
+  margin-right: 10px !important;
+  font-size: 28px !important;
+  color: #1976d2 !important;
+}
+
+/* Estilo para os filtros */
+.relatorios-filtros {
+  margin-top: 5px;
+  margin-bottom: 12px;
+  padding: 10px 20px;
+  border-radius: 8px;
+}
+
+.relatorios-filtros .MuiGrid-item {
+  padding: 8px 10px;
+  min-width: 200px;
+}
+
+.relatorios-filtros .MuiFormControl-root {
+  width: 100%;
+  max-width: none;
+}
+
+.relatorios-filtros .MuiSelect-select {
+  min-width: 180px;
+  font-size: 1rem;
 }
 
 .relatorios-header {
   padding: 24px;
   margin-bottom: 24px;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.relatorios-table {
+  margin-top: 20px;
+}
+
+.relatorios-table .MuiTableHead-root .MuiTableCell-root {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.relatorios-table .MuiTableBody-root .MuiTableRow-root {
+  background-color: #fff;
+}
+
+.relatorios-table .MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
+  background-color: #fafafa;
+}
+
+.relatorios-table .MuiTableCell-root {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 16px;
 }
 
 .estatistica-card {
@@ -18,29 +82,6 @@
 
 .estatistica-card .MuiCardContent-root {
   padding: 20px;
-}
-
-.relatorios-tabela {
-  margin-top: 24px;
-}
-
-.MuiTableHead-root .MuiTableCell-root {
-  background-color: #f5f5f5;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.MuiTableBody-root .MuiTableRow-root {
-  background-color: #fff;
-}
-
-.MuiTableBody-root .MuiTableRow-root:nth-of-type(even) {
-  background-color: #fafafa;
-}
-
-.MuiTableCell-root {
-  border-bottom: 1px solid #e0e0e0;
-  padding: 12px 16px;
 }
 
 .relatorios-loading {
