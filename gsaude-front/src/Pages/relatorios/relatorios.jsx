@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import './relatorios.css';
 import {
   Box,
   Paper,
@@ -21,7 +22,8 @@ import {
   Alert,
   CircularProgress,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Tooltip
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -31,7 +33,6 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/pt-br';
 import relatoriosService from '../../services/relatoriosService';
 import { PDFGenerator } from '../../utils/pdfGenerator';
-import './relatorios.css';
 
 dayjs.locale('pt-br');
 
@@ -48,7 +49,7 @@ const Relatorios = () => {
   // Estados para filtros específicos
   const [procedimentoId, setProcedimentoId] = useState('');
   const [especialidadeId, setEspecialidadeId] = useState('');
-  const [situacao, setSituacao] = useState('');
+  const [tipoAgendamento, setTipoAgendamento] = useState(''); // Alterado de 'situacao' para 'tipoAgendamento'
   const [convenioId, setConvenioId] = useState('');
   
   // Estados para dados dos filtros
@@ -61,6 +62,12 @@ const Relatorios = () => {
     { value: 'exames-por-tipo', label: 'Relatório de Exames por Tipo' },
     { value: 'consultas-por-especialidade', label: 'Relatório de Consultas por Especialidade' },
     { value: 'consolidado', label: 'Relatório Consolidado' }
+  ];
+
+  const tiposAgendamento = [
+    { value: '', label: 'Todos os Tipos' },
+    { value: 'consulta', label: 'Consultas' },
+    { value: 'exame', label: 'Exames' }
   ];
 
   const situacoes = [
@@ -144,16 +151,33 @@ const Relatorios = () => {
             const agendamentosPorDia = Math.floor(Math.random() * 4) + 3;
             
             for (let i = 0; i < agendamentosPorDia; i++) {
+              const isConsulta = itemIndex % 2 === 0;
+              const especialidades = ['Cardiologia', 'Dermatologia', 'Pediatria', 'Ortopedia', 'Ginecologia'];
+              const procedimentos = ['Ultrassonografia', 'Raio-X', 'Ressonância Magnética', 'Tomografia', 'Ecocardiograma'];
+              
+              // Gerar mais status "agendado" (70% dos casos) para simular agendamentos aguardando
+              let statusAgendamento;
+              const statusRandom = Math.random();
+              if (statusRandom < 0.7) {
+                statusAgendamento = 'agendado'; // 70% agendado (Aguardando)
+              } else if (statusRandom < 0.85) {
+                statusAgendamento = 'confirmado'; // 15% confirmado
+              } else if (statusRandom < 0.95) {
+                statusAgendamento = 'realizado'; // 10% realizado
+              } else {
+                statusAgendamento = 'cancelado'; // 5% cancelado
+              }
+              
               dadosMock.push({
-                hora_agendamento: `${8 + i * 2}:${i % 2 === 0 ? '00' : '30'}`,
+                hora_agendamento: `${8 + (i * 2)}:${i % 2 === 0 ? '00' : '30'}`,
                 nome_paciente: `Paciente ${itemIndex + 1}`,
                 telefone_paciente: `(47) 9999-${1000 + itemIndex}`,
                 medico_nome: `Dr. Médico ${(itemIndex % 5) + 1}`,
-                tipo_procedimento: itemIndex % 2 === 0 ? 'consulta' : 'exame',
-                especialidade_nome: itemIndex % 2 === 0 ? (itemIndex % 4 === 0 ? 'Cardiologia' : 'Dermatologia') : null,
-                procedimento_nome: itemIndex % 2 === 1 ? (itemIndex % 4 === 1 ? 'Ultrassonografia' : 'Raio-X') : null,
-                convenio_nome: itemIndex % 2 === 0 ? 'UNIMED' : 'SUS',
-                status: itemIndex % 3 === 0 ? 'agendado' : itemIndex % 3 === 1 ? 'confirmado' : 'realizado',
+                tipo_procedimento: isConsulta ? 'consulta' : 'exame',
+                especialidade_nome: isConsulta ? especialidades[itemIndex % especialidades.length] : null,
+                procedimento_nome: !isConsulta ? procedimentos[itemIndex % procedimentos.length] : null,
+                convenio_nome: itemIndex % 3 === 0 ? 'UNIMED' : itemIndex % 3 === 1 ? 'SUS' : 'Particular',
+                status: statusAgendamento,
                 valor_consulta: mostrarValores ? (150 + itemIndex * 20) : null,
                 data_agendamento: dataAtual.format('YYYY-MM-DD'),
                 data: dataAtual.format('DD/MM/YYYY')
@@ -162,15 +186,15 @@ const Relatorios = () => {
             }
           }
           
-          // Filtrar por situação se especificada
+          // Por padrão, filtrar apenas agendamentos "Aguardando" se nenhum tipo específico foi selecionado
           let dadosFiltrados = dadosMock;
-          if (situacao) {
+          if (tipoAgendamento) {
             dadosFiltrados = dadosMock.filter(item => {
-              if (situacao === 'Aguardando') {
-                return item.status === 'agendado';
-              }
-              return item.status === situacao.toLowerCase();
+              return item.tipo_procedimento === tipoAgendamento;
             });
+          } else {
+            // Se não há filtro de tipo, mostrar apenas agendamentos "Aguardando" (status = 'agendado')
+            dadosFiltrados = dadosMock.filter(item => item.status === 'agendado');
           }
           
           estatisticasMock = {
@@ -193,6 +217,7 @@ const Relatorios = () => {
         }
 
         case 'exames-por-tipo': {
+          const procedimentos = ['Ultrassonografia', 'Raio-X', 'Ressonância Magnética', 'Tomografia', 'Ecocardiograma', 'Eletrocardiograma'];
           for (let i = 0; i < 15; i++) {
             const situacoes = ['Realizado', 'Aguardando', 'confirmado', 'cancelado'];
             dadosMock.push({
@@ -200,9 +225,9 @@ const Relatorios = () => {
               horario: `${8 + (i % 10)}:${(i % 6) * 10}`,
               paciente: `Paciente ${i + 1}`,
               telefone: `(47) 9999-${1000 + i}`,
-              exame: i % 3 === 0 ? 'Ultrassonografia' : i % 3 === 1 ? 'Raio-X' : 'Ressonância Magnética',
-              medico: `Dr. Médico ${i + 1}`,
-              convenio: i % 2 === 0 ? 'UNIMED' : 'SUS',
+              exame: procedimentos[i % procedimentos.length],
+              medico: `Dr. Médico ${(i % 5) + 1}`,
+              convenio: i % 3 === 0 ? 'UNIMED' : i % 3 === 1 ? 'SUS' : 'Particular',
               filial: 'Filial Centro',
               situacao: situacoes[i % 4],
               valor_recebido: mostrarValores ? (150 + i * 10) : null,
@@ -211,10 +236,10 @@ const Relatorios = () => {
             });
           }
           
-          // Filtrar por situação se especificada
+          // Filtrar por tipo de agendamento se especificado
           let dadosExamesFiltrados = dadosMock;
-          if (situacao) {
-            dadosExamesFiltrados = dadosMock.filter(item => item.situacao === situacao);
+          if (tipoAgendamento) {
+            dadosExamesFiltrados = dadosMock.filter(item => item.tipo_procedimento === tipoAgendamento);
           }
           
           estatisticasMock = {
@@ -233,6 +258,7 @@ const Relatorios = () => {
         }
 
         case 'consultas-por-especialidade': {
+          const especialidades = ['Cardiologia', 'Dermatologia', 'Pediatria', 'Ortopedia', 'Ginecologia', 'Neurologia'];
           for (let i = 0; i < 12; i++) {
             const situacoes = ['Realizado', 'Aguardando', 'confirmado', 'cancelado'];
             dadosMock.push({
@@ -240,9 +266,9 @@ const Relatorios = () => {
               horario: `${8 + (i % 10)}:${(i % 6) * 10}`,
               paciente: `Paciente ${i + 1}`,
               telefone: `(47) 9999-${1000 + i}`,
-              especialidade: i % 3 === 0 ? 'Cardiologia' : i % 3 === 1 ? 'Dermatologia' : 'Pediatria',
-              medico: `Dr. Especialista ${i + 1}`,
-              convenio: i % 2 === 0 ? 'UNIMED' : 'Particular',
+              especialidade: especialidades[i % especialidades.length],
+              medico: `Dr. Especialista ${(i % 4) + 1}`,
+              convenio: i % 3 === 0 ? 'UNIMED' : i % 3 === 1 ? 'SUS' : 'Particular',
               filial: 'Filial Centro',
               situacao: situacoes[i % 4],
               valor_recebido: mostrarValores ? (200 + i * 15) : null,
@@ -251,10 +277,10 @@ const Relatorios = () => {
             });
           }
           
-          // Filtrar por situação se especificada
+          // Filtrar por tipo de agendamento se especificado
           let dadosConsultasFiltrados = dadosMock;
-          if (situacao) {
-            dadosConsultasFiltrados = dadosMock.filter(item => item.situacao === situacao);
+          if (tipoAgendamento) {
+            dadosConsultasFiltrados = dadosMock.filter(item => item.tipo_procedimento === tipoAgendamento);
           }
           
           estatisticasMock = {
@@ -292,10 +318,10 @@ const Relatorios = () => {
             });
           }
           
-          // Filtrar por situação se especificada
+          // Filtrar por tipo de agendamento se especificado
           let dadosConsolidadosFiltrados = dadosMock;
-          if (situacao) {
-            dadosConsolidadosFiltrados = dadosMock.filter(item => item.situacao === situacao);
+          if (tipoAgendamento) {
+            dadosConsolidadosFiltrados = dadosMock.filter(item => item.tipo_procedimento === tipoAgendamento);
           }
           
           estatisticasMock = {
@@ -331,7 +357,7 @@ const Relatorios = () => {
       // Adicionar filtros específicos
       if (procedimentoId) params.procedimento_id = procedimentoId;
       if (especialidadeId) params.especialidade_id = especialidadeId;
-      if (situacao) params.situacao = situacao;
+      if (tipoAgendamento) params.tipo_agendamento = tipoAgendamento;
       if (convenioId) params.convenio_id = convenioId;
 
       let response;
@@ -372,7 +398,7 @@ const Relatorios = () => {
     } finally {
       setLoading(false);
     }
-  }, [tipoRelatorio, dataInicio, dataFim, mostrarValores, procedimentoId, especialidadeId, situacao, convenioId]);
+  }, [tipoRelatorio, dataInicio, dataFim, mostrarValores, procedimentoId, especialidadeId, tipoAgendamento, convenioId]);
 
   useEffect(() => {
     carregarDados();
@@ -387,7 +413,7 @@ const Relatorios = () => {
           await pdfGenerator.gerarRelatorioAgendamentosDia(dados, {
             data_inicio: dataInicio.format('DD/MM/YYYY'),
             data_fim: dataFim.format('DD/MM/YYYY'),
-            filtros: { especialidadeId, situacao }
+            filtros: { especialidadeId, tipoAgendamento }
           }, mostrarValores);
           break;
         case 'exames-por-tipo':
@@ -395,7 +421,7 @@ const Relatorios = () => {
             titulo: 'Relatório de Exames por Tipo',
             periodo: `${dataInicio.format('DD/MM/YYYY')} a ${dataFim.format('DD/MM/YYYY')}`,
             mostrarValores,
-            filtros: { procedimentoId, situacao, convenioId }
+            filtros: { procedimentoId, tipoAgendamento, convenioId }
           });
           break;
         case 'consultas-por-especialidade':
@@ -403,7 +429,7 @@ const Relatorios = () => {
             titulo: 'Relatório de Consultas por Especialidade',
             periodo: `${dataInicio.format('DD/MM/YYYY')} a ${dataFim.format('DD/MM/YYYY')}`,
             mostrarValores,
-            filtros: { especialidadeId, situacao, convenioId }
+            filtros: { especialidadeId, tipoAgendamento, convenioId }
           });
           break;
         case 'consolidado':
@@ -411,7 +437,7 @@ const Relatorios = () => {
             titulo: 'Relatório Consolidado',
             periodo: `${dataInicio.format('DD/MM/YYYY')} a ${dataFim.format('DD/MM/YYYY')}`,
             mostrarValores,
-            filtros: { situacao, convenioId }
+            filtros: { tipoAgendamento, convenioId }
           });
           break;
       }
@@ -428,7 +454,7 @@ const Relatorios = () => {
   const limparFiltros = () => {
     setProcedimentoId('');
     setEspecialidadeId('');
-    setSituacao('');
+    setTipoAgendamento('');
     setConvenioId('');
     setMostrarValores(false);
   };
@@ -478,23 +504,45 @@ const Relatorios = () => {
           </Grid>
         )}
 
-        {/* Filtro por Situação */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Situação</InputLabel>
-            <Select
-              value={situacao}
-              onChange={(e) => setSituacao(e.target.value)}
-              label="Situação"
-            >
-              {situacoes.map((sit) => (
-                <MenuItem key={sit.value} value={sit.value}>
-                  {sit.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
+        {/* Filtro por Tipo de Agendamento (apenas para relatório de Agendamentos) */}
+        {tipoRelatorio === 'agendamentos-dia' && (
+          <Grid size={{ xs: 12, md: 3 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Tipo de Agendamento</InputLabel>
+              <Select
+                value={tipoAgendamento}
+                onChange={(e) => setTipoAgendamento(e.target.value)}
+                label="Tipo de Agendamento"
+              >
+                {tiposAgendamento.map((tipo) => (
+                  <MenuItem key={tipo.value} value={tipo.value}>
+                    {tipo.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        )}
+
+        {/* Filtro por Situação (para outros relatórios) */}
+        {tipoRelatorio !== 'agendamentos-dia' && (
+          <Grid size={{ xs: 12, md: 3 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Situação</InputLabel>
+              <Select
+                value={tipoAgendamento}
+                onChange={(e) => setTipoAgendamento(e.target.value)}
+                label="Situação"
+              >
+                {situacoes.map((sit) => (
+                  <MenuItem key={sit.value} value={sit.value}>
+                    {sit.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        )}
 
         {/* Filtro por Convênio */}
         <Grid size={{ xs: 12, md: 3 }}>
@@ -649,23 +697,65 @@ const Relatorios = () => {
         return tipoRelatorio === 'agendamentos-dia' 
           ? item.hora_agendamento 
           : item.horario;
-      case 'Paciente': 
-        return tipoRelatorio === 'agendamentos-dia' 
+      case 'Paciente': {
+        const nomePaciente = tipoRelatorio === 'agendamentos-dia' 
           ? item.nome_paciente 
           : item.paciente;
+        return (
+          <Tooltip title={nomePaciente} placement="top">
+            <Box 
+              className="cell-content"
+              sx={{ 
+                fontSize: '0.875rem',
+                cursor: 'help'
+              }}
+            >
+              {nomePaciente}
+            </Box>
+          </Tooltip>
+        );
+      }
       case 'Telefone': 
         return tipoRelatorio === 'agendamentos-dia' 
           ? item.telefone_paciente 
           : item.telefone;
-      case 'Médico': 
-        return tipoRelatorio === 'agendamentos-dia' 
+      case 'Médico': {
+        const nomeMedico = tipoRelatorio === 'agendamentos-dia' 
           ? item.medico_nome 
           : item.medico;
+        return (
+          <Tooltip title={nomeMedico} placement="top">
+            <Box 
+              className="cell-content"
+              sx={{ 
+                fontSize: '0.875rem',
+                cursor: 'help'
+              }}
+            >
+              {nomeMedico}
+            </Box>
+          </Tooltip>
+        );
+      }
       case 'Tipo/Especialidade':
         if (tipoRelatorio === 'agendamentos-dia') {
-          return item.tipo_procedimento === 'consulta' 
+          const tipoTexto = item.tipo_procedimento === 'consulta' 
             ? `Consulta - ${item.especialidade_nome || 'N/A'}`
             : `Exame - ${item.procedimento_nome || 'N/A'}`;
+          
+          return (
+            <Tooltip title={tipoTexto} placement="top">
+              <Box 
+                className="cell-content"
+                sx={{ 
+                  fontSize: '0.875rem',
+                  cursor: 'help'
+                }}
+              >
+                {tipoTexto}
+              </Box>
+            </Tooltip>
+          );
         }
         return '-';
       case 'Status':
@@ -674,15 +764,17 @@ const Relatorios = () => {
             'agendado': 'Agendado',
             'confirmado': 'Confirmado',
             'realizado': 'Realizado',
-            'cancelado': 'Cancelado'
+            'cancelado': 'Cancelado',
+            'Aguardando': 'Aguardando'
           };
-          const statusText = statusMap[item.status?.toLowerCase()] || item.status || 'N/A';
+          const statusText = statusMap[item.status?.toLowerCase()] || statusMap[item.status] || item.status || 'N/A';
           return (
             <Chip 
               label={statusText} 
               color={
                 statusText === 'Realizado' ? 'success' : 
                 statusText === 'Confirmado' ? 'info' : 
+                statusText === 'Aguardando' ? 'warning' :
                 statusText === 'Agendado' ? 'default' : 'error'
               }
               size="small"
@@ -704,14 +796,15 @@ const Relatorios = () => {
           'cancelado': 'Cancelado',
           'Aguardando': 'Aguardando'
         };
-        const situacaoText = situacaoMap[item.situacao?.toLowerCase()] || item.situacao || 'N/A';
+        const situacaoText = situacaoMap[item.situacao?.toLowerCase()] || situacaoMap[item.situacao] || item.situacao || 'N/A';
         return (
           <Chip 
             label={situacaoText} 
             color={
               situacaoText === 'Realizado' ? 'success' : 
               situacaoText === 'Confirmado' ? 'info' : 
-              situacaoText === 'Aguardando' || situacaoText === 'Agendado' ? 'default' : 'error'
+              situacaoText === 'Aguardando' ? 'warning' :
+              situacaoText === 'Agendado' ? 'default' : 'error'
             }
             size="small"
           />

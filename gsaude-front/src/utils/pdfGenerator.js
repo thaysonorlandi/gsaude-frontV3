@@ -49,6 +49,41 @@ export class PDFGenerator {
     }
   }
 
+  // Função auxiliar para calcular larguras das colunas baseada no conteúdo
+  calculateOptimalColumnWidths(columns, rows, hasValues = false) {
+    if (hasValues) {
+      // Com valores financeiros - larguras fixas
+      return {
+        0: 60,  // Data
+        1: 45,  // Horário
+        2: 110, // Paciente
+        3: 75,  // Telefone
+        4: 90,  // Médico
+        5: 85,  // Tipo/Especialidade
+        6: 45,  // Status
+        7: 50   // Valor
+      };
+    } else {
+      // Sem valores financeiros - larguras fixas
+      return {
+        0: 70,  // Data
+        1: 50,  // Horário
+        2: 130, // Paciente
+        3: 85,  // Telefone
+        4: 110, // Médico
+        5: 100, // Tipo/Especialidade
+        6: 55   // Status
+      };
+    }
+  }
+
+  // Função auxiliar para truncar texto se necessário
+  truncateText(text, maxLength) {
+    if (!text) return 'N/A';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+  }
+
   // Função auxiliar para verificar se autoTable está disponível
   isAutoTableAvailable() {
     return typeof this.doc.autoTable === 'function';
@@ -57,15 +92,41 @@ export class PDFGenerator {
   // Função para usar autoTable com fallback melhorado
   createTable(options) {
     if (this.isAutoTableAvailable()) {
+      // Calcular larguras ótimas baseadas no número de colunas
+      const hasValues = options.head[0].includes('Valor');
+      const optimalWidths = this.calculateOptimalColumnWidths(options.head[0], options.body, hasValues);
+      
+      // Merge das configurações de coluna com larguras calculadas
+      const columnStyles = {};
+      Object.keys(optimalWidths).forEach(key => {
+        columnStyles[key] = {
+          cellWidth: optimalWidths[key],
+          ...options.columnStyles?.[key]
+        };
+      });
+      
+      // Se há coluna de valor, ajustar a última coluna
+      if (hasValues && options.head[0].length > Object.keys(optimalWidths).length) {
+        const lastIndex = options.head[0].length - 1;
+        columnStyles[lastIndex] = {
+          cellWidth: this.pageWidth - (this.margin * 2) - Object.values(optimalWidths).reduce((sum, width) => sum + width, 0),
+          halign: 'right',
+          ...options.columnStyles?.[lastIndex]
+        };
+      }
+      
       // Usar autoTable com configurações melhoradas
       const tableOptions = {
         ...options,
         theme: 'grid',
         styles: {
-          fontSize: 8,
+          fontSize: 8, // Aumentado para melhor legibilidade
           cellPadding: 3,
           lineColor: [200, 200, 200],
           lineWidth: 0.25,
+          overflow: 'linebreak',
+          valign: 'top',
+          halign: 'left',
           ...options.styles
         },
         headStyles: {
@@ -73,16 +134,19 @@ export class PDFGenerator {
           textColor: 255,
           fontStyle: 'bold',
           halign: 'center',
+          valign: 'middle',
+          fontSize: 9,
           ...options.headStyles
         },
         bodyStyles: {
-          valign: 'middle',
-          halign: 'left'
+          valign: 'top',
+          halign: 'left',
+          fontSize: 8,
+          ...options.bodyStyles
         },
-        columnStyles: {
-          0: { halign: 'center' }, // Data centralizada
-          6: { halign: 'center' }  // Status centralizado
-        }
+        columnStyles: columnStyles,
+        margin: { left: this.margin, right: this.margin },
+        tableWidth: 'auto'
       };
       
       this.doc.autoTable(tableOptions);
@@ -903,9 +967,28 @@ export class PDFGenerator {
       startY: currentY,
       head: [columns],
       body: rows,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [76, 175, 80] },
-      margin: { left: this.margin, right: this.margin }
+      styles: { 
+        fontSize: 8,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        valign: 'top'
+      },
+      headStyles: { 
+        fillColor: [76, 175, 80],
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      margin: { left: this.margin, right: this.margin },
+      tableWidth: 'auto',
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 'auto' }, // Data
+        1: { halign: 'center', cellWidth: 'auto' }, // Hora
+        2: { halign: 'left', cellWidth: 'auto', overflow: 'linebreak' }, // Paciente
+        3: { halign: 'left', cellWidth: 'auto', overflow: 'linebreak' }, // Médico
+        4: { halign: 'left', cellWidth: 'auto', overflow: 'linebreak' }, // Procedimento
+        5: { halign: 'center', cellWidth: 'auto' }, // Status
+        6: { halign: 'right', cellWidth: 'auto' } // Valor
+      }
     });
     
     this.addFooter(1, 1);
@@ -1037,9 +1120,9 @@ export class PDFGenerator {
     const dataFim = filtros.data_fim || dataInicio;
     const periodo = dataInicio === dataFim ? `Data: ${dataInicio}` : `Período: ${dataInicio} a ${dataFim}`;
     
-    let currentY = await this.addHeader('RELATÓRIO DE AGENDAMENTOS', periodo);
+    let currentY = await this.addHeader('RELATÓRIO DE AGENDAMENTOS - AGUARDANDO', periodo);
     
-    // Resumo do período
+    // Resumo do período focado em agendamentos aguardando
     const totalAgendamentos = dados.length;
     const consultas = dados.filter(item => item.tipo_procedimento === 'consulta').length;
     const exames = dados.filter(item => item.tipo_procedimento === 'exame').length;
@@ -1048,9 +1131,9 @@ export class PDFGenerator {
     const realizados = dados.filter(item => item.status === 'realizado').length;
     
     const resumoDados = [
-      `Total de agendamentos: ${totalAgendamentos}`,
-      `Consultas: ${consultas} | Exames: ${exames}`,
-      `Agendados: ${agendados} | Confirmados: ${confirmados} | Realizados: ${realizados}`,
+      `Total de agendamentos aguardando: ${totalAgendamentos}`,
+      `Consultas aguardando: ${consultas} | Exames aguardando: ${exames}`,
+      `Status: Agendados: ${agendados} | Confirmados: ${confirmados} | Realizados: ${realizados}`,
       `Período: ${dataInicio === dataFim ? dataInicio : `${dataInicio} a ${dataFim}`}`
     ];
     
@@ -1059,7 +1142,7 @@ export class PDFGenerator {
       resumoDados.push(`Último horário: ${dados[dados.length - 1].hora_agendamento || 'N/A'}`);
     }
     
-    currentY = this.addResumoSection(currentY, 'RESUMO DO PERÍODO', resumoDados);
+    currentY = this.addResumoSection(currentY, 'RESUMO - AGENDAMENTOS AGUARDANDO', resumoDados);
     
     // Espaço antes da tabela
     currentY += 10;
@@ -1068,7 +1151,7 @@ export class PDFGenerator {
     this.doc.setFontSize(12);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(66, 139, 202);
-    this.doc.text('HORÁRIOS RESERVADOS', this.margin, currentY);
+    this.doc.text('AGENDAMENTOS AGUARDANDO CONFIRMAÇÃO', this.margin, currentY);
     this.doc.setTextColor(0, 0, 0);
     
     currentY += 8;
@@ -1080,8 +1163,8 @@ export class PDFGenerator {
     
     const rows = dados.map(item => {
       const tipoEspecialidade = item.tipo_procedimento === 'consulta' 
-        ? `Consulta - ${item.especialidade_nome || 'N/A'}`
-        : `Exame - ${item.procedimento_nome || 'N/A'}`;
+        ? `Consulta - ${this.truncateText(item.especialidade_nome, 20)}`
+        : `Exame - ${this.truncateText(item.procedimento_nome, 20)}`;
       
       const dataFormatada = item.data_agendamento 
         ? new Date(item.data_agendamento).toLocaleDateString('pt-BR')
@@ -1090,9 +1173,9 @@ export class PDFGenerator {
       const baseRow = [
         dataFormatada,
         item.hora_agendamento || 'N/A',
-        item.nome_paciente || 'N/A',
+        this.truncateText(item.nome_paciente, 25),
         item.telefone_paciente || 'N/A',
-        item.medico_nome || 'N/A',
+        this.truncateText(item.medico_nome, 22),
         tipoEspecialidade,
         this.formatarStatus(item.status)
       ];
@@ -1109,18 +1192,30 @@ export class PDFGenerator {
       startY: currentY,
       head: [columns],
       body: rows,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [66, 139, 202] },
-      margin: { left: this.margin, right: this.margin },
+      styles: { 
+        fontSize: 7,
+        cellPadding: 2,
+        overflow: 'linebreak',
+        valign: 'top',
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
+      },
+      headStyles: { 
+        fillColor: [66, 139, 202],
+        fontStyle: 'bold',
+        halign: 'center',
+        valign: 'middle',
+        fontSize: 8
+      },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 18 }, // Data
-        1: { halign: 'center', cellWidth: 16 }, // Horário
-        2: { halign: 'left', cellWidth: 35 },   // Paciente
-        3: { halign: 'center', cellWidth: 25 }, // Telefone
-        4: { halign: 'left', cellWidth: 30 },   // Médico
-        5: { halign: 'left', cellWidth: 35 },   // Tipo/Especialidade
-        6: { halign: 'center', cellWidth: 20 }, // Status
-        7: { halign: 'right', cellWidth: 18 }   // Valor (se existir)
+        0: { halign: 'center' }, // Data
+        1: { halign: 'center' }, // Horário
+        2: { halign: 'left', overflow: 'linebreak' }, // Paciente
+        3: { halign: 'center' }, // Telefone
+        4: { halign: 'left', overflow: 'linebreak' }, // Médico
+        5: { halign: 'left', overflow: 'linebreak' }, // Tipo/Especialidade
+        6: { halign: 'center' }, // Status
+        7: { halign: 'right' } // Valor (se existir)
       }
     });
 
@@ -1135,8 +1230,8 @@ export class PDFGenerator {
     
     this.addFooter(1, 1);
     const nomeArquivo = dataInicio === dataFim 
-      ? `agendamentos-${dataInicio.replace(/\//g, '-')}.pdf`
-      : `agendamentos-${dataInicio.replace(/\//g, '-')}-a-${dataFim.replace(/\//g, '-')}.pdf`;
+      ? `agendamentos-aguardando-${dataInicio.replace(/\//g, '-')}.pdf`
+      : `agendamentos-aguardando-${dataInicio.replace(/\//g, '-')}-a-${dataFim.replace(/\//g, '-')}.pdf`;
     this.doc.save(nomeArquivo);
     return this.doc;
   }
@@ -1144,12 +1239,15 @@ export class PDFGenerator {
   // Método auxiliar para formatar status
   formatarStatus(status) {
     const statusMap = {
-      'agendado': 'Agendado',
+      'agendado': 'Aguardando',
       'confirmado': 'Confirmado', 
       'realizado': 'Realizado',
-      'cancelado': 'Cancelado'
+      'cancelado': 'Cancelado',
+      'Aguardando': 'Aguardando',
+      'Realizado': 'Realizado',
+      'Cancelado': 'Cancelado'
     };
-    return statusMap[status?.toLowerCase()] || status || 'N/A';
+    return statusMap[status?.toLowerCase()] || statusMap[status] || status || 'N/A';
   }
 
   // Texto dos filtros aplicados
