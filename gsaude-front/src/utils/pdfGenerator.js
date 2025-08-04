@@ -21,31 +21,17 @@ export class PDFGenerator {
       const { default: api } = await import('../services/api');
       const response = await api.get('/system-configs/relatorios/dados');
       
-      this.systemData = response.data?.data || {
-        hospital_nome: 'GSaúde Hospital',
-        hospital_logo: null,
-        hospital_endereco: 'Endereço não configurado',
-        hospital_telefone: 'Telefone não configurado',
-        hospital_email: 'Email não configurado',
-        hospital_cnpj: 'CNPJ não configurado',
-        mostrar_valores_padrao: false
-      };
+      // Usar apenas dados do banco de dados
+      this.systemData = response.data?.data;
+      
+      if (!this.systemData) {
+        throw new Error('Dados do sistema não encontrados no banco de dados');
+      }
       
       return this.systemData;
     } catch (error) {
-      console.warn('Erro ao buscar dados do sistema, usando valores padrão:', error);
-      // Valores padrão caso a API falhe
-      this.systemData = {
-        hospital_nome: 'GSaúde Hospital',
-        hospital_logo: null,
-        hospital_endereco: 'Rua Principal, 123 - Centro',
-        hospital_telefone: '(47) 3456-7890',
-        hospital_email: 'contato@gsaude.com.br',
-        hospital_cnpj: '12.345.678/0001-90',
-        mostrar_valores_padrao: false
-      };
-      
-      return this.systemData;
+      console.error('Erro ao buscar dados do sistema:', error);
+      throw new Error('Não foi possível carregar as configurações do sistema. Verifique a conexão com o banco de dados.');
     }
   }
 
@@ -58,8 +44,8 @@ export class PDFGenerator {
         1: 45,  // Horário
         2: 110, // Paciente
         3: 75,  // Telefone
-        4: 90,  // Médico
-        5: 85,  // Tipo/Especialidade
+        4: 75,  // Médico
+        5: 75,  // Tipo/Especialidade
         6: 45,  // Status
         7: 50   // Valor
       };
@@ -70,8 +56,8 @@ export class PDFGenerator {
         1: 50,  // Horário
         2: 130, // Paciente
         3: 85,  // Telefone
-        4: 110, // Médico
-        5: 100, // Tipo/Especialidade
+        4: 75, // Médico
+        5: 75, // Tipo/Especialidade
         6: 55   // Status
       };
     }
@@ -468,18 +454,22 @@ export class PDFGenerator {
   }
 
   // Adicionar rodapé melhorado
-  addFooter(pageNumber, totalPages) {
+  async addFooter(pageNumber, totalPages) {
+    const systemData = await this.getSystemData();
     const footerY = this.pageHeight - 20;
     
     // Linha separadora
     this.doc.setLineWidth(0.3);
     this.doc.line(this.margin, footerY - 5, this.pageWidth - this.margin, footerY - 5);
     
-    // Informações do hospital (lado esquerdo)
+    // Informações do hospital (lado esquerdo) - usando dados do banco
     this.doc.setFontSize(7);
     this.doc.setFont('helvetica', 'normal');
-    this.doc.text('GSaúde Hospital - Rua das Flores, 123 - Centro - São Paulo/SP', this.margin, footerY);
-    this.doc.text('CNPJ: 12.345.678/0001-90 | Tel: (11) 3456-7890', this.margin, footerY + 4);
+    const enderecoCompleto = `${systemData.hospital_nome} - ${systemData.hospital_endereco}`;
+    this.doc.text(enderecoCompleto, this.margin, footerY);
+    
+    const infoContato = `CNPJ: ${systemData.hospital_cnpj} | Tel: ${systemData.hospital_telefone}`;
+    this.doc.text(infoContato, this.margin, footerY + 4);
     
     // Numeração da página (centralizada)
     this.doc.setFont('helvetica', 'bold');
@@ -579,7 +569,7 @@ export class PDFGenerator {
       }
     }
     
-    this.addFooter(1, 1);
+    await this.addFooter(1, 1);
     this.doc.save('relatorio-agendamentos.pdf');
     return this.doc;
   }
@@ -663,14 +653,14 @@ export class PDFGenerator {
       this.addTotalsSection(totais, finalY);
     }
 
-    this.addFooter(1, 1);
+    await this.addFooter(1, 1);
     this.doc.save('relatorio-financeiro.pdf');
     return this.doc;
   }
 
   // Gerar relatório por médicos
-  gerarRelatorioPorMedicos(dados, filtros) {
-    let currentY = this.addHeader('RELATÓRIO POR MÉDICOS', this.getFiltrosText(filtros));
+  async gerarRelatorioPorMedicos(dados, filtros) {
+    let currentY = await this.addHeader('RELATÓRIO POR MÉDICOS', this.getFiltrosText(filtros));
     
     // Agrupar dados por médico
     const dadosPorMedico = dados.reduce((acc, item) => {
@@ -749,14 +739,14 @@ export class PDFGenerator {
       margin: { left: this.margin, right: this.margin }
     });
 
-    this.addFooter(1, 1);
+    await this.addFooter(1, 1);
     this.doc.save('relatorio-medicos.pdf');
     return this.doc;
   }
 
   // Gerar relatório por especialidades
-  gerarRelatorioPorEspecialidades(dados, filtros) {
-    let currentY = this.addHeader('RELATÓRIO POR ESPECIALIDADES', this.getFiltrosText(filtros));
+  async gerarRelatorioPorEspecialidades(dados, filtros) {
+    let currentY = await this.addHeader('RELATÓRIO POR ESPECIALIDADES', this.getFiltrosText(filtros));
     
     // Agrupar dados por especialidade
     const dadosPorEspecialidade = dados.reduce((acc, item) => {
@@ -835,14 +825,14 @@ export class PDFGenerator {
       margin: { left: this.margin, right: this.margin }
     });
 
-    this.addFooter(1, 1);
+    await this.addFooter(1, 1);
     this.doc.save('relatorio-especialidades.pdf');
     return this.doc;
   }
 
   // Gerar relatório específico de consultas
-  gerarRelatorioConsultas(dados, filtros) {
-    let currentY = this.addHeader('RELATÓRIO DE CONSULTAS', this.getFiltrosText(filtros));
+  async gerarRelatorioConsultas(dados, filtros) {
+    let currentY = await this.addHeader('RELATÓRIO DE CONSULTAS', this.getFiltrosText(filtros));
     
     // Resumo usando a nova função
     const realizadas = dados.filter(item => item.status === 'Realizado').length;
@@ -904,14 +894,14 @@ export class PDFGenerator {
       margin: { left: this.margin, right: this.margin }
     });
     
-    this.addFooter(1, 1);
+    await this.addFooter(1, 1);
     this.doc.save('relatorio-consultas.pdf');
     return this.doc;
   }
 
   // Gerar relatório específico de exames
-  gerarRelatorioExames(dados, filtros) {
-    let currentY = this.addHeader('RELATÓRIO DE EXAMES', this.getFiltrosText(filtros));
+  async gerarRelatorioExames(dados, filtros) {
+    let currentY = await this.addHeader('RELATÓRIO DE EXAMES', this.getFiltrosText(filtros));
     
     // Resumo usando a nova função
     const realizados = dados.filter(item => item.status === 'Realizado').length;
@@ -991,16 +981,16 @@ export class PDFGenerator {
       }
     });
     
-    this.addFooter(1, 1);
+    await this.addFooter(1, 1);
     this.doc.save('relatorio-exames.pdf');
     return this.doc;
   }
 
   // Nova função para relatório consolidado
-  gerarRelatorioConsolidado(dados, estatisticas, opcoes = {}) {
+  async gerarRelatorioConsolidado(dados, estatisticas, opcoes = {}) {
     this.doc = new jsPDF();
     
-    this.addHeader('RELATÓRIO CONSOLIDADO', opcoes.periodo);
+    await this.addHeader('RELATÓRIO CONSOLIDADO', opcoes.periodo);
     
     let yPosition = 60;
 
@@ -1106,7 +1096,7 @@ export class PDFGenerator {
       }
     });
 
-    this.addFooter();
+    await this.addFooter();
     this.doc.save('relatorio-consolidado.pdf');
   }
 
@@ -1228,7 +1218,7 @@ export class PDFGenerator {
       }
     }
     
-    this.addFooter(1, 1);
+    await this.addFooter(1, 1);
     const nomeArquivo = dataInicio === dataFim 
       ? `agendamentos-aguardando-${dataInicio.replace(/\//g, '-')}.pdf`
       : `agendamentos-aguardando-${dataInicio.replace(/\//g, '-')}-a-${dataFim.replace(/\//g, '-')}.pdf`;
